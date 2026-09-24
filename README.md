@@ -40,33 +40,48 @@ Variables d'environnement : `PORT` (8080), `HOST` (0.0.0.0), `DATA_DIR` (`./data
   (son profil et ses posts sont supprimés, il ne peut plus publier).
 
 ```bash
-npm test   # tests du serveur
+npm test   # tests du serveur, de D1 et des horaires
 ```
 
-## Mettre en ligne
+## Mettre en ligne (gratuit)
 
-### Option 1 — Appli complète (recommandé)
+L'appli est publiée sur **GitHub Pages** et le serveur (blog, avis, modération, sauvegardes)
+sur **Cloudflare Workers + D1**, deux offres gratuites, sans carte bancaire.
 
-N'importe quel hébergeur qui accepte Docker, avec un **disque persistant** monté sur `/data` :
+### 1. L'appli : GitHub Pages
+
+**Settings → Pages → Build and deployment → Deploy from a branch** : branche principale, dossier `/ (root)`.
+L'appli est sur **https://zcabande-arch.github.io/Pasl-temps/** (la page d'accueil redirige vers `public/`).
+
+### 2. Le serveur : Cloudflare (une seule fois, ~10 min)
+
+1. Créer un compte gratuit sur [cloudflare.com](https://dash.cloudflare.com/sign-up),
+   puis ouvrir **Workers & Pages** une fois (Cloudflare y crée votre adresse `….workers.dev`).
+2. **Clé d'accès** : icône de profil → **Profile → API Tokens → Create Token** →
+   modèle **Edit Cloudflare Workers** → **+ Add more** : `Account` · `D1` · `Edit` →
+   Account Resources : votre compte → **Continue to summary → Create Token** → copier la clé.
+3. **Account ID** : dans **Workers & Pages**, colonne de droite (ou dans l'adresse de la page, après `dash.cloudflare.com/`).
+4. Dans GitHub : **Settings → Secrets and variables → Actions → New repository secret**, créer :
+   - `CLOUDFLARE_API_TOKEN` : la clé de l'étape 2
+   - `CLOUDFLARE_ACCOUNT_ID` : l'identifiant de l'étape 3
+   - `ADMIN_TOKEN` : un code secret de votre choix, pour la page de modération `admin.html`
+5. **Actions → Publier l'API (Cloudflare, gratuit) → Run workflow.**
+
+Le workflow crée la base, publie le serveur, puis **branche l'appli dessus tout seul**
+(il écrit l'adresse dans `public/config.js`). Il se relance à chaque modification du serveur.
+
+### Autre possibilité : un serveur Node / Docker
+
+Le même serveur tourne aussi avec Node.js (`npm start`) ou Docker, chez n'importe quel hébergeur
+avec un **disque persistant** monté sur `/data` :
 
 ```bash
 docker build -t pas-ltemps .
-docker run -p 8080:8080 -v pasltemps-data:/data pas-ltemps
+docker run -p 8080:8080 -v pasltemps-data:/data -e ADMIN_TOKEN=… pas-ltemps
 ```
 
-- **Render** : New → Blueprint → choisir ce dépôt (le fichier `render.yaml` configure tout, disque compris).
-- **Fly.io, Railway, un VPS…** : même image, penser au volume `/data`.
-
-L'appli doit être servie en **HTTPS** pour la géolocalisation et l'installation sur téléphone (c'est le cas par défaut sur ces hébergeurs).
-
-### Option 2 — GitHub Pages (explorer seulement, gratuit)
-
-1. Fusionner dans `main`, puis **Settings → Pages → Source : GitHub Actions**.
-2. L'appli est publiée sur **https://zcabande-arch.github.io/Pasl-temps/**
-
-Sans serveur, l'exploration, le chrono, les favoris et l'historique fonctionnent (stockés sur le téléphone).
-Le blog, les avis et le code de récupération ont besoin du serveur : pour les activer,
-indiquer son adresse dans `public/config.js` (`apiBase: "https://mon-serveur.example"`).
+Sur Render : New → Blueprint → ce dépôt (`render.yaml`, offre payante pour le disque).
+Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 
 ## Installer sur le téléphone
 
@@ -87,8 +102,12 @@ indiquer son adresse dans `public/config.js` (`apiBase: "https://mon-serveur.exa
 | `public/js/api.js` | Échanges avec le serveur (compte anonyme par appareil) |
 | `public/config.js` | Adresse du serveur, si l'appli est publiée ailleurs |
 | `public/sw.js` | Service worker : fonctionnement hors connexion |
-| `server/server.js` | Serveur : fichiers de l'appli + API, règles d'accès |
-| `server/store.js` | Base de données SQLite |
+| `server/core.js` | L'API : règles d'accès, modération, anti-spam (commune à Node et Cloudflare) |
+| `server/server.js` | Serveur Node : fichiers de l'appli + API |
+| `server/store.js` | Base SQLite (Node) |
+| `server/schema.sql`, `server/queries.js` | Schéma et requêtes, communs à SQLite et D1 |
+| `worker/` | Version Cloudflare Workers (base D1) |
+| `wrangler.toml` | Configuration Cloudflare |
 
 > Après une modification des fichiers de `public/`, incrémenter `VERSION` dans `public/sw.js` pour que les téléphones récupèrent la nouvelle version.
 

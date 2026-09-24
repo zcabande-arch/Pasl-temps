@@ -4,13 +4,15 @@ const assert = require("node:assert");
 const { createServer } = require("../server/server");
 const { openStore } = require("../server/store");
 
-let srv, base;
+// API_BASE=http://… pour lancer les mêmes tests sur une autre API (ex. le Worker Cloudflare en local)
+let srv, base = process.env.API_BASE;
 test.before(async () => {
+  if(base) return;
   srv = createServer(openStore(":memory:"), {rateLimit:false, adminToken:"secret-admin"});
   await new Promise(ok => srv.listen(0, "127.0.0.1", ok));
   base = `http://127.0.0.1:${srv.address().port}`;
 });
-test.after(() => srv.close());
+test.after(() => srv && srv.close());
 
 async function session(){ return (await fetch(base + "/api/session", {method:"POST"})).json(); }
 function call(auth, method, url, body){
@@ -18,7 +20,7 @@ function call(auth, method, url, body){
 }
 const doc = p => "/api/doc?path=" + encodeURIComponent(p);
 
-test("sert l'appli et répond à /api/health", async () => {
+test("sert l'appli et répond à /api/health", {skip: !!process.env.API_BASE}, async () => {
   const r = await fetch(base + "/");
   assert.equal(r.status, 200);
   assert.match(await r.text(), /Pas l'temps/);

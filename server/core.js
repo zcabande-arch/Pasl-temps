@@ -1,0 +1,200 @@
+// Pas l'temps — l'API, indépendante de la plateforme.
+// Utilisée par le serveur Node (server/server.js) et par Cloudflare Workers (worker/index.js).
+// Le stockage peut être synchrone (SQLite) ou asynchrone (D1) : on attend toujours ses réponses.
+"use strict";
+
+// Tailles maximales d'un document, selon son chemin
+const LIMITS = { walls: 400_000, photos: 150_000, backups: 1_500_000, data: 300_000 };
+const MAX_BODY = 1_600_000;
+// Cibles de signalement : post:<uid>:<id>, comment:<uid>:<id>, user:<uid>
+const TARGET = /^(post|comment):[A-Za-z0-9_-]{1,80}:[A-Za-z0-9_-]{1,80}$|^user:[A-Za-z0-9_-]{1,80}$/;
+const REASONS = ["spam", "insulte", "inapproprie", "faux", "autre"];
+
+// ---------- Règles d'accès ----------
+// walls/<uid>                   : lisible par tous, modifiable par son propriétaire
+// walls/<uid>/photos/<id>       : idem
+// data/users/<uid>/...          : privé
+// backups/<hash du code>        : lisible et modifiable par qui connaît le code (contenu chiffré côté client)
+const SEG = /^[A-Za-z0-9_-]{1,80}$/;
+function parsePath(p){
+  if(typeof p !== "string") return null;
+  const s = p.split("/");
+  return s.length && s.length <= 8 && s.every(x => SEG.test(x)) ? s : null;
+}
+function rule(segs, uid, isList){
+  const n = segs.length;
+  if(segs[0] === "walls"){
+    if(isList) return n === 1 || (n === 3 && segs[2] === "photos") ? {read:true, write:false} : null;
+    if(n === 2) return {read:true, write:segs[1] === uid, limit:LIMITS.walls};
+    if(n === 4 && segs[2] === "photos") return {read:true, write:segs[1] === uid, limit:LIMITS.photos};
+    return null;
+  }
+  if(segs[0] === "data" && segs[1] === "users" && n >= 3){
+    const own = segs[2] === uid;
+    if(isList) return n >= 4 ? {read:own, write:false} : null;
+    return n >= 4 ? {read:own, write:own, limit:LIMITS.data} : null;
+  }
+  if(segs[0] === "backups"){
+    if(isList) return null;               // on ne liste jamais les sauvegardes
+    return n === 2 && segs[1].length >= 32 ? {read:true, write:true, limit:LIMITS.backups} : null;
+  }
+  return null;
+}
+
+// ---------- Limite de débit (en mémoire) ----------
+const buckets = new Map();
+let calls = 0;
+function allow(key, cost, cap = 240, refill = 2){ // par défaut 240 jetons, 2/s
+  const now = Date.now();
+  if(++calls % 1000 === 0){ const old = now - 600_000; for(const [k, b] of buckets) if(b.at < old) buckets.delete(k); }
+  let b = buckets.get(key);
+  if(!b){ b = {t:cap, at:now}; buckets.set(key, b); }
+  b.t = Math.min(cap, b.t + (now - b.at) / 1000 * refill); b.at = now;
+  if(b.t < cost) return false;
+  b.t -= cost; return true;
+}
+
+// ---------- Utilitaires ----------
+const enc = new TextEncoder();
+async function sha(s){
+  const h = await crypto.subtle.digest("SHA-256", enc.encode(s));
+  return Array.from(new Uint8Array(h), x => x.toString(16).padStart(2, "0")).join("");
+}
+function randomId(bytes){
+  const b = crypto.getRandomValues(new Uint8Array(bytes));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+const isObj = v => v && typeof v === "object" && !Array.isArray(v);
+const ok = body => ({status:200, body});
+const fail = (status, error) => ({status, body:{error}});
+
+// opts : {adminToken, reportThreshold, rateLimit}
+// req  : {method, url (URL), header(nom) → valeur, ip, json() → corps JSON (rejette {code})}
+// → {status, body}
+function createApi(store, opts = {}){
+  const threshold = opts.reportThreshold || 3;
+  const admin = opts.adminToken || "";
+  const limited = (key, cost, cap, refill) => opts.rateLimit === false || allow(key, cost, cap, refill);
+  const isAdmin = req => !!admin && req.header("x-admin-token") === admin;
+  async function whoIs(req){
+    const m = /^Bearer ([A-Za-z0-9_-]{20,100})$/.exec(req.header("authorization") || "");
+    return m ? store.userFor(await sha(m[1])) : null;
+  }
+  async function body(req){
+    try{ return {value: await req.json()}; }catch(e){ return {error: fail(e && e.code === 413 ? 413 : 400, "bad_body")}; }
+  }
+
+  return async function handle(req){
+    const {method, url} = req, path = url.pathname;
+    const write = method !== "GET";
+    if(!limited(req.ip, write ? 4 : 1)) return fail(429, "rate_limited");
+
+    if(path === "/api/health") return ok({ok:true, app:"pasltemps"});
+
+    if(path === "/api/session" && method === "POST"){
+      if(!limited(req.ip, 30)) return fail(429, "rate_limited");
+      const token = randomId(24);
+      const uid = "u" + randomId(9).replace(/[^A-Za-z0-9]/g, "x");
+      await store.addUser(uid, await sha(token));
+      return ok({uid, token});
+    }
+
+    // Contenus masqués par la modération (public)
+    if(path === "/api/hidden" && method === "GET") return ok({targets: await store.hidden()});
+
+    // Espace modération : réservé à qui connaît le code administrateur
+    if(path.startsWith("/api/admin/")){
+      if(!isAdmin(req)) return fail(403, "forbidden");
+      if(path === "/api/admin/reports" && method === "GET"){
+        // Joint un aperçu du contenu signalé pour pouvoir décider
+        const reports = await Promise.all((await store.reports()).map(async r => {
+          const [kind, owner, id] = r.target.split(":"), w = (await store.get("walls/" + owner)) || {};
+          const item = kind === "post" ? (w.posts || []).find(p => p.id === id) : kind === "comment" ? (w.comments || []).find(c => c.id === id) : null;
+          return {...r, owner, author: w.pseudo || "", preview: item ? [item.place, item.text].filter(Boolean).join(" — ").slice(0, 300) : kind === "user" ? "(profil)" : "(supprimé)"};
+        }));
+        return ok({reports, threshold});
+      }
+      const b = await body(req); if(b.error) return b.error;
+      const target = b.value && b.value.target;
+      if(path === "/api/admin/hide" && TARGET.test(target || "")){ await store.hide(target, "admin"); return ok({ok:true}); }
+      if(path === "/api/admin/unhide" && TARGET.test(target || "")){ await store.unhide(target); await store.clearReports(target); return ok({ok:true}); }
+      if(path === "/api/admin/ban" && /^[A-Za-z0-9_-]{1,80}$/.test(b.value && b.value.uid || "")){
+        const uid = b.value.uid;
+        await store.ban(uid); await store.hide("user:" + uid, "admin"); await store.del("walls/" + uid);
+        return ok({ok:true});
+      }
+      return fail(400, "bad_request");
+    }
+
+    const uid = await whoIs(req);
+    if(!uid) return fail(401, "unauthenticated");
+
+    if(path === "/api/report" && method === "POST"){
+      if(!limited("report:" + uid, 1, 20, 20 / 3600)) return fail(429, "rate_limited"); // 20 signalements par heure
+      const b = await body(req); if(b.error) return b.error;
+      const target = b.value && b.value.target, reason = b.value && b.value.reason;
+      if(!TARGET.test(target || "") || !REASONS.includes(reason)) return fail(400, "bad_report");
+      if(target.split(":")[1] === uid) return fail(400, "own_content");
+      const n = await store.report(target, uid, reason);
+      if(n >= threshold) await store.hide(target, "auto");
+      return ok({ok:true});
+    }
+
+    if(path === "/api/doc"){
+      const segs = parsePath(url.searchParams.get("path"));
+      const r = segs && rule(segs, uid, false);
+      if(!r) return fail(400, "bad_path");
+      const p = segs.join("/");
+      if(method === "GET"){
+        if(!r.read) return fail(403, "forbidden");
+        const d = await store.get(p);
+        return ok(d ? {exists:true, data:d} : {exists:false});
+      }
+      if(!r.write) return fail(403, "forbidden");
+      if(segs[0] === "walls"){
+        if(await store.isBanned(uid)) return fail(403, "banned");
+        if(!limited("walls:" + uid, 1, 30, 0.5)) return fail(429, "rate_limited"); // 30 d'un coup, puis 1 toutes les 2 s
+      }
+      if(method === "DELETE"){ await store.del(p); return ok({ok:true}); }
+      const b = await body(req); if(b.error) return b.error;
+      let data = b.value;
+      if(!isObj(data)) return fail(400, "bad_body");
+      if(method === "PATCH"){
+        const cur = await store.get(p);
+        if(!cur) return fail(404, "not_found");
+        data = {...cur, ...data};
+      } else if(method !== "PUT") return fail(405, "method");
+      if(segs[0] === "walls" && segs.length === 2){
+        const tooMany = (k, n) => data[k] !== undefined && (!Array.isArray(data[k]) || data[k].length > n);
+        if(tooMany("posts", 60) || tooMany("comments", 100)) return fail(400, "bad_body");
+      }
+      const json = JSON.stringify(data);
+      if(json.length > r.limit) return fail(413, "too_large");
+      await store.set(p, json, data.at ?? data.updatedAt);
+      return ok({ok:true});
+    }
+
+    if(path === "/api/list" && method === "GET"){
+      const segs = parsePath(url.searchParams.get("path"));
+      const r = segs && rule(segs, uid, true);
+      if(!r) return fail(400, "bad_path");
+      if(!r.read) return fail(403, "forbidden");
+      const limit = Math.max(1, Math.min(500, +url.searchParams.get("limit") || 300));
+      const desc = url.searchParams.get("dir") !== "asc";
+      return ok({docs: await store.list(segs.join("/"), desc, limit)});
+    }
+
+    return fail(404, "not_found");
+  };
+}
+
+// En-têtes communs : l'appli peut être servie ailleurs (ex. GitHub Pages), on autorise donc les autres origines.
+// L'authentification passe par un jeton dans l'en-tête, jamais par cookie.
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, PUT, PATCH, DELETE, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Admin-Token",
+  "Access-Control-Max-Age": "86400"
+};
+
+module.exports = { createApi, rule, parsePath, CORS, MAX_BODY };

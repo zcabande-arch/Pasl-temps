@@ -1,0 +1,79 @@
+name: Publier l'API (Cloudflare, gratuit)
+
+# Publie le serveur (blog, avis, modération, sauvegardes) sur Cloudflare Workers + D1.
+# Il faut une seule fois les secrets du dépôt : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# et, pour la page de modération, ADMIN_TOKEN (voir le README).
+on:
+  push:
+    branches: [main, claude/pas-ltemps-web-app-i23p2m]
+    paths: [server/**, worker/**, wrangler.toml, .github/workflows/deploy-api.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+      WRANGLER_SEND_METRICS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vérifier les secrets
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::error::Il manque les secrets CLOUDFLARE_API_TOKEN et/ou CLOUDFLARE_ACCOUNT_ID (Settings → Secrets and variables → Actions). Voir le README."
+            exit 1
+          fi
+
+      - name: Installer Wrangler
+        run: npm install -g wrangler@4
+
+      - name: Base de données D1 (créée la première fois)
+        run: |
+          find_db() { wrangler d1 list --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s).find(x=>x.name==="pasltemps");process.stdout.write(d?(d.uuid||d.database_id||""):"")})'; }
+          ID=$(find_db)
+          if [ -z "$ID" ]; then wrangler d1 create pasltemps; ID=$(find_db); fi
+          if [ -z "$ID" ]; then echo "::error::Impossible de créer ou retrouver la base D1 « pasltemps »."; exit 1; fi
+          sed -i "s/^database_id = .*/database_id = \"$ID\"/" wrangler.toml
+          wrangler d1 execute pasltemps --remote --file server/schema.sql
+
+      - name: Publier le Worker
+        run: wrangler deploy 2>&1 | tee deploy.log
+
+      - name: Code de la page de modération
+        if: env.ADMIN_TOKEN != ''
+        run: printf '%s' "$ADMIN_TOKEN" | wrangler secret put ADMIN_TOKEN
+
+      - name: Brancher l'appli sur l'API
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          URL=$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          if [ -z "$URL" ]; then
+            echo "::warning::Adresse workers.dev introuvable. Dans Cloudflare, ouvrez « Workers & Pages » une fois pour choisir un sous-domaine, puis relancez."
+            exit 0
+          fi
+          echo "API en ligne : $URL" >> "$GITHUB_STEP_SUMMARY"
+          curl -fsS "$URL/api/health"
+          sed -i "s#^  apiBase: \".*\"#  apiBase: \"$URL\"#" public/config.js
+          if git diff --quiet public/config.js; then echo "config.js déjà à jour"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Appli branchée sur l'API $URL"
+          git push origin "HEAD:${GITHUB_REF_NAME}"
+          # Une publication faite par ce robot ne relance pas GitHub Pages toute seule : on la demande.
+          curl -fsS -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/builds" || echo "::warning::Relance de GitHub Pages impossible, elle se fera à la prochaine modification."
