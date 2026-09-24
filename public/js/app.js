@@ -62,7 +62,6 @@ async function search(){
     groups.forEach(g => {
       const fit = (found[g.l] || []).map(p => ({...p, walk: walkOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
         .filter(p => 2*p.walk + g.stay <= T);
-      if(fit[0]) fit[0].first = true;
       LOADED[g.l] = {state:"ok", items: fit};
     });
   }catch(err){
@@ -83,7 +82,7 @@ function errText(err){
 function placeEl(p){
   const n = HIST.filter(h => h.pid === p.id && h.done).length;
   const el = document.createElement("div");
-  el.className = "place" + (p.id === pickedId ? " picked open" : "");
+  el.className = "place" + (p.id === pickedId ? " picked open" : "") + (p.open && p.open.level === "closed" ? " closed" : "");
   el.style.setProperty("--h", p.h);
   el.id = "p-" + p.id.replace(/[^\w-]/g,"");
   const wPct = Math.min(100, 2*p.walk/T*100), sPct = Math.min(100-wPct, p.stay/T*100);
@@ -91,7 +90,7 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${p.em}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min 🚶</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${p.em}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min 🚶</span></span></button>
     <div class="det">
       <p class="legend">🚶 ${2*p.walk} min de marche aller-retour · ⏱️ ~${p.stay} min sur place${free?` · ${free} min de rab`:""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
@@ -125,11 +124,24 @@ function renderResults(){
   const groups = groupsNow();
   if(!groups.length){ R.innerHTML = `<p class="status">${T} min, c'est court pour ça. Choisissez un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
   let total = 0;
+  // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
+  const known = allLoaded().some(p => HOURS.parse(p.oh));
+  if(known){
+    const f = document.createElement("div"); f.className = "sortrow openrow";
+    f.innerHTML = `<button class="chip" aria-pressed="${!!SET.openOnly}">🕐 Ouverts seulement</button><span>à ton arrivée</span>`;
+    f.querySelector("button").onclick = () => { SET.openOnly = !SET.openOnly; saveSet(); renderResults(); };
+    R.appendChild(f);
+  }
   const rd = radarEl(); if(rd) R.appendChild(rd);
   groups.forEach(g => {
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
-    const n = st && st.items ? st.items.length : 0; total += n;
+    // Ouvert / fermé à l'arrivée : les lieux fermés passent en bas (ou disparaissent avec le filtre)
+    const all = st && st.items ? st.items.map(p => ({...p, open: HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
+    const items = all.filter(p => !SET.openOnly || p.open.level !== "closed")
+      .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
+    if(items[0] && items[0].open.level !== "closed") items[0].first = true;
+    const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${g.em}</span>${esc(g.l)}</span> ${n?`<small>${n}</small>`:""}</h3>`;
     if(!st){
       sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Chercher « ${esc(g.q)} » sur la carte</a></p>`;
@@ -138,9 +150,9 @@ function renderResults(){
     } else if(st.state === "err"){
       sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Voir sur Google Maps</a></p>`;
     } else if(!n){
-      sec.innerHTML += `<p class="note">Rien d'assez proche pour ${T} min.</p>`;
+      sec.innerHTML += `<p class="note">${all.length ? "Tout est fermé à cette heure-ci." : `Rien d'assez proche pour ${T} min.`}</p>`;
     } else {
-      st.items.forEach(p => sec.appendChild(placeEl(p)));
+      items.forEach(p => sec.appendChild(placeEl(p)));
     }
     R.appendChild(sec);
   });
@@ -1134,6 +1146,8 @@ function pickForMe(list){
   const recent = new Set(HIST.slice(0,12).map(h => h.pid));
   const scored = list.map(p => {
     let w = hourBoost(p.g, hr) * (1.4 - Math.min(1, 2*p.walk/T) * .8);
+    const o = HOURS.forVisit(p.oh, p.walk, p.stay);
+    if(o.level === "closed") w *= .01; else if(o.level === "warn") w *= .4; else if(o.level === "ok") w *= 1.2;
     if(LISTS.todo[p.id]) w *= 2.2; else if(LISTS.fav[p.id]) w *= 1.5;
     if(recent.has(p.id)) w *= .25;
     if(p.id === pickedId) w *= .05;

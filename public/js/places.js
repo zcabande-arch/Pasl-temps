@@ -92,7 +92,7 @@
         out[g.l].push({
           id, name: t.name, cat: cuisineFr(t.cuisine), addr: addrOf(t),
           phone: t.phone || t["contact:phone"] || "", url: fixUrl(t.website || t["contact:website"] || t.url),
-          hours: hoursFr(t.opening_hours), wheelchair: t.wheelchair === "yes",
+          hours: hoursFr(t.opening_hours), oh: t.opening_hours || "", wheelchair: t.wheelchair === "yes",
           lat, lng, dist
         });
       });

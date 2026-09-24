@@ -432,3 +432,14 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .modbox p{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--soft)}
 .modbox .ghost{font-size:14px;padding:6px 12px}
 .rv1 .h .rm{border:0;background:none;color:var(--soft);font-size:12px;padding:0;text-decoration:underline}
+
+/* Horaires : ouvert / fermé à l'arrivée */
+.place .oh{display:block;font-size:13px;font-weight:700;margin-top:2px}
+.oh-ok{color:var(--leaf)}
+.oh-warn{color:#B76E00}
+.oh-closed{color:var(--warn)}
+.place.closed{opacity:.6}
+.place.closed .ticket{filter:grayscale(1)}
+.openrow{align-items:center;margin-bottom:12px}
+.openrow span{font-size:13px;color:var(--soft)}
+.openrow .chip[aria-pressed="true"]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
