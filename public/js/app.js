@@ -37,8 +37,8 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 // Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
 const TRAVEL = {
   walk: {l:"À pied",  ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:"de marche", way:"à pied",     rings:[2,5,10,15,20]},
-  bike: {l:"Vélo",    ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:5000, gm:"bicycling", of:"de vélo",   way:"à vélo",     rings:[3,5,10,15,20]},
-  car:  {l:"Voiture", ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:6000, gm:"driving",   of:"de route",  way:"en voiture", rings:[5,8,12,16,20]}
+  bike: {l:"Vélo",    ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:"de vélo",   way:"à vélo",     rings:[3,5,10,15,20]},
+  car:  {l:"Voiture", ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:"de route",  way:"en voiture", rings:[5,8,12,16,20]}
 };
 const TR = () => TRAVEL[SET.travel] || TRAVEL.walk;
 // Minutes de trajet pour une distance à vol d'oiseau (m)
@@ -99,10 +99,20 @@ async function search(){
   const fetchGroups = MOODS[M].groups.filter(g => wide[g.l]);
   try{
     searchCtl = new AbortController();
-    const found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:20});
-    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wide, found};
+    let radii = wide, found;
+    try{
+      found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:20, quick:true});
+    }catch(err){
+      if(!err || err.code === "aborted" || err.code === "bad_request" || err.code === "offline" || my !== runId) throw err;
+      // Service surchargé : on réessaie une fois, plus petit (juste le temps choisi) et plus léger
+      if(!hit){ groups.forEach(g => LOADED[g.l] = {state:"loading", slow:true}); renderResults(); }
+      radii = need;
+      found = await PLACES.nearby(pos, groups.map(g => ({l:g.l, osm:g.osm, radius:need[g.l]})), {signal:searchCtl.signal, limit:20, lite:true});
+    }
+    const wideUsed = radii;
+    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found};
     // on remplace seulement les anciennes recherches du même endroit entièrement couvertes par celle-ci
-    const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && Object.entries(e.radii).every(([g, r]) => (wide[g] || 0) >= r);
+    const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && Object.entries(e.radii).every(([g, r]) => (wideUsed[g] || 0) >= r);
     PCACHE = [entry, ...PCACHE.filter(e => !covered(e))];
     pcSave();
     if(my !== runId) return;
@@ -120,7 +130,8 @@ function errText(err){
   const c = err && err.code;
   if(c === "offline") return "Pas de connexion internet.";
   if(c === "rate_limited") return "Trop de recherches d'un coup, réessayez dans une minute.";
-  if(c === "server_unavailable") return "Le service de carte ne répond pas pour l'instant. Réessayez dans un moment.";
+  if(c === "server_unavailable") return "Le service de carte (OpenStreetMap, gratuit) est surchargé en ce moment. Réessayez dans une minute.";
+  if(c === "bad_request") return "La recherche n'a pas été comprise par le service de carte.";
   return "Recherche impossible pour l'instant.";
 }
 
@@ -191,9 +202,10 @@ function renderResults(){
     if(!st){
       sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Chercher « ${esc(g.q)} » sur la carte</a></p>`;
     } else if(st.state === "loading"){
-      sec.innerHTML += `<p class="note">Recherche…</p>`;
+      sec.innerHTML += `<p class="note">${st.slow ? "Le service de carte est chargé, je réessaie…" : "Recherche…"}</p>`;
     } else if(st.state === "err"){
-      sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Voir sur Google Maps</a></p>`;
+      sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">Réessayer</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Google Maps</a></p>`;
+      sec.querySelector(".retry").onclick = () => search();
     } else if(!n){
       sec.innerHTML += `<p class="note">${all.length ? "Tout est fermé à cette heure-ci." : `Rien d'assez proche pour ${T} min.`}</p>`;
     } else {

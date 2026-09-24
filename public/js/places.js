@@ -5,6 +5,7 @@
   const OVERPASS = CFG.overpass || [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.private.coffee/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
   ];
   const NOMINATIM = CFG.nominatim || "https://nominatim.openstreetmap.org";
@@ -64,10 +65,10 @@
       .catch(e => { throw e && e.code ? e : {code: navigator.onLine === false ? "offline" : "server_unavailable"}; })
       .finally(() => { clearTimeout(t); if(signal) signal.removeEventListener("abort", stop); });
   }
-  async function overpass(query, signal){
+  async function overpass(query, signal, quick){
     const order = OVERPASS.map((_, i) => OVERPASS[(ep + i) % OVERPASS.length]);
-    const first = order.slice(0, 2), rest = order.slice(2);
-    const tries = first.map(u => ask(u, query, signal, 15000).then(r => ({...r, u})));
+    const first = order.slice(0, 2), rest = quick ? [] : order.slice(2);
+    const tries = first.map(u => ask(u, query, signal, 30000).then(r => ({...r, u})));
     try{
       const win = await Promise.any(tries);
       tries.forEach(p => p.then(r => { if(r.u !== win.u) r.ctl.abort(); }, () => {}));
@@ -75,10 +76,10 @@
       return win.data;
     }catch(agg){
       if(signal && signal.aborted) throw {code:"aborted"};
-      let last = (agg.errors || [])[0];
+      let last = (agg.errors || []).find(e => e && e.code === "bad_request") || (agg.errors || [])[0];
       for(const u of rest){
-        try{ const r = await ask(u, query, signal, 20000); ep = OVERPASS.indexOf(u); return r.data; }
-        catch(e){ if(signal && signal.aborted) throw {code:"aborted"}; last = e; }
+        try{ const r = await ask(u, query, signal, 30000); ep = OVERPASS.indexOf(u); return r.data; }
+        catch(e){ if(signal && signal.aborted) throw {code:"aborted"}; if(!last || last.code !== "bad_request") last = e; }
       }
       throw last || {code:"server_unavailable"};
     }
@@ -89,9 +90,14 @@
     opts = opts || {};
     const around = r => `(around:${Math.round(r)},${pos.lat.toFixed(5)},${pos.lng.toFixed(5)})`;
     const parts = [];
-    groups.forEach(g => g.osm.forEach(sel => { const [k, v] = pair(sel); parts.push(`nwr["${k}"="${v}"]["name"]${around(g.radius)};`); }));
-    const q = `[out:json][timeout:15];(${parts.join("")});out center tags qt 500;`;
-    const data = await overpass(q, opts.signal);
+    // Les « relations » (grands parcs…) sont lentes à calculer : seulement pour les espaces verts,
+    // et jamais en recherche allégée (opts.lite).
+    groups.forEach(g => g.osm.forEach(sel => {
+      const [k, v] = pair(sel), type = !opts.lite && k === "leisure" ? "nwr" : "nw";
+      parts.push(`${type}["${k}"="${v}"]["name"]${around(g.radius)};`);
+    }));
+    const q = `[out:json][timeout:25];(${parts.join("")});out center tags 400;`;
+    const data = await overpass(q, opts.signal, opts.quick);
     const out = {};
     groups.forEach(g => out[g.l] = []);
     const seen = new Set();
