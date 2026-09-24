@@ -32,16 +32,21 @@ jobs:
           node-version: 22
 
       - name: Vérifier les secrets
+        id: check
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
-            echo "::error::Il manque les secrets CLOUDFLARE_API_TOKEN et/ou CLOUDFLARE_ACCOUNT_ID (Settings → Secrets and variables → Actions). Voir le README."
-            exit 1
+            echo "::notice::Pas de compte Cloudflare configuré : le serveur n'est pas publié (le blog et les avis restent masqués dans l'appli). Voir le README pour l'activer."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Installer Wrangler
+        if: steps.check.outputs.ok == 'true'
         run: npm install -g wrangler@4
 
       - name: Base de données D1 (créée la première fois)
+        if: steps.check.outputs.ok == 'true'
         run: |
           find_db() { wrangler d1 list --json | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const d=JSON.parse(s).find(x=>x.name==="pasltemps");process.stdout.write(d?(d.uuid||d.database_id||""):"")})'; }
           ID=$(find_db)
@@ -51,13 +56,15 @@ jobs:
           wrangler d1 execute pasltemps --remote --file server/schema.sql
 
       - name: Publier le Worker
+        if: steps.check.outputs.ok == 'true'
         run: wrangler deploy 2>&1 | tee deploy.log
 
       - name: Code de la page de modération
-        if: env.ADMIN_TOKEN != ''
+        if: steps.check.outputs.ok == 'true' && env.ADMIN_TOKEN != ''
         run: printf '%s' "$ADMIN_TOKEN" | wrangler secret put ADMIN_TOKEN
 
       - name: Brancher l'appli sur l'API
+        if: steps.check.outputs.ok == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

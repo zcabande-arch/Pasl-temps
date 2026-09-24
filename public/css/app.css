@@ -458,3 +458,10 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .radar .pt circle{fill:var(--card)}
 .entry .sub .ico{vertical-align:-3px}
 .radar .pt .ico{overflow:visible}
+
+/* Sans serveur : pas de blog, d'avis ni de code de récupération (réapparaissent quand le serveur répond) */
+body:not(.social-on) .tabs,
+body:not(.social-on) .sheet .social,
+body:not(.social-on) .entry .share{display:none!important}
+body:not(.social-on) main{padding-bottom:110px}
+body:not(.social-on) .idea{bottom:calc(18px + env(safe-area-inset-bottom,0px))}

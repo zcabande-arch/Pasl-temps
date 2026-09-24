@@ -1186,6 +1186,8 @@ async function initHistory(){
     const uid = user ? await user.id() : null;
     if(db) DB = db;
     UID = uid; dbState = db && uid ? "ok" : "none";
+    // Blog, avis et code de récupération n'apparaissent que si le serveur répond
+    document.body.classList.toggle("social-on", dbState === "ok");
     if(db && uid){ initBlog(); initLists(); }
     if(db && uid){
       const col = db.doc("data/users/" + uid + "/profile").collection("history");
