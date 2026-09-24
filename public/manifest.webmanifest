@@ -1,0 +1,20 @@
+{
+  "name": "Pas l'temps",
+  "short_name": "Pas l'temps",
+  "description": "10, 20, 30 minutes devant vous ? Trouvez à pied ce qui tient dans votre pause : boulangerie, café, parc, librairie…",
+  "lang": "fr",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F2FF",
+  "theme_color": "#F4F2FF",
+  "categories": ["lifestyle", "travel", "navigation"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

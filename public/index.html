@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pas l'temps</title>
+<meta name="description" content="10, 20, 30 minutes devant vous ? Pas l'temps trouve à pied ce qui tient dans votre pause : boulangerie, café, parc, librairie…">
+<meta name="theme-color" content="#F4F2FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Pas l'temps">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<div class="timer" id="timer" hidden></div>
+<main>
+  <p class="brand">Pas l'temps</p>
+  <button class="gear" id="gear" aria-label="Réglages">⚙️</button>
+  <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
+  <div id="viewExplore">
+  <header class="hero">
+    <p class="pre">J'ai</p>
+    <div class="ring" aria-hidden="true">
+      <svg viewBox="0 0 120 120"><circle class="trk" cx="60" cy="60" r="52"/><circle class="arc" id="arc" cx="60" cy="60" r="52" stroke-dashoffset="217.8"/></svg>
+      <div class="ringtxt"><b id="numTxt">20</b><small>minutes</small></div>
+    </div>
+    <p class="post">On fait quoi ?</p>
+  </header>
+
+  <div class="dial" id="dial" role="group" aria-label="Temps disponible">
+    <button data-t="10">10</button><button data-t="20" aria-pressed="true">20</button>
+    <button data-t="30">30</button><button data-t="45">45</button><button data-t="60">60</button>
+  </div>
+
+  <h2>Envie de…</h2>
+  <div class="moods" id="moods" role="group" aria-label="Envie"></div>
+
+  <div class="where" id="where">
+    <p class="here" id="here">📍 Où êtes-vous ?</p>
+    <form id="whereForm" autocomplete="off">
+      <input id="whereInput" type="text" placeholder="Adresse, quartier ou ville" aria-label="Adresse, quartier ou ville" enterkeyhint="search">
+      <button class="go" type="submit">Chercher</button>
+    </form>
+    <div class="row" id="whereRow"></div>
+    <p class="msg" id="whereMsg"></p>
+  </div>
+  <p class="status" id="status"></p>
+  <div class="idea" id="idea"><p id="ideaTxt"></p><button id="ideaBtn">🎲 Choisis pour moi</button></div>
+  <div id="results"></div>
+
+  <section class="saved" aria-labelledby="savedTitle">
+    <h2 id="savedTitle">Mes lieux</h2>
+    <div class="seg" id="savedSeg" style="margin-bottom:12px"><button data-v="fav" aria-pressed="true">⭐ Favoris</button><button data-v="todo" aria-pressed="false">📌 À tester</button></div>
+    <div id="savedList"></div>
+  </section>
+
+  <section class="hist" aria-labelledby="histTitle">
+    <h2 id="histTitle">Déjà fait <span id="histCount"></span></h2>
+    <div id="histList"><p class="empty">Chargement…</p></div>
+  </section>
+  </div>
+
+  <div id="viewBlog" hidden>
+    <h1 class="bloghead">Le blog</h1>
+    <p class="bloglead">Raconte tes pauses, tague tes potes et suis leurs sorties.</p>
+    <div id="blogMe"></div>
+    <div id="blogStats"></div>
+    <div id="blogFriends"></div>
+    <div id="blogCompose"></div>
+    <div id="blogFeed"></div>
+  </div>
+  <div id="viewReviews" hidden>
+    <h1 class="bloghead">Les avis</h1>
+    <p class="bloglead">Tous les lieux notés par la communauté, avec les commentaires.</p>
+    <div class="rvsearch">🔎<input id="rvQ" type="search" placeholder="Chercher un lieu" aria-label="Chercher un lieu"></div>
+    <div class="seg" id="rvScope" style="margin-bottom:10px"><button data-v="all" aria-pressed="true">🌍 Tout le monde</button><button data-v="friends" aria-pressed="false">👥 Mes potes</button></div>
+    <div class="sortrow" id="rvSort"><button class="chip" data-v="top" aria-pressed="true">🏆 Mieux notés</button><button class="chip" data-v="recent" aria-pressed="false">🕘 Récents</button><button class="chip" data-v="near" aria-pressed="false">📍 Proches</button><button class="chip" data-v="most" aria-pressed="false">💬 Plus d'avis</button></div>
+    <div id="rvList"></div>
+  </div>
+</main>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-v="explore" aria-selected="true">🧭<span>Explorer</span></button>
+  <button role="tab" data-v="reviews" aria-selected="false">⭐<span>Avis</span></button>
+  <button role="tab" data-v="blog" aria-selected="false">📝<span>Blog</span></button>
+</nav>
+<div class="sheet-bg" id="sheetBg"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="grab"></div>
+  <h2 id="setTitle">Réglages</h2>
+  <h4>Couleurs</h4>
+  <div class="swatches" id="swatches"></div>
+  <h4>Apparence</h4>
+  <div class="seg" id="modeSeg"><button data-v="auto">Auto</button><button data-v="light">☀️ Clair</button><button data-v="dark">🌙 Sombre</button></div>
+  <h4>Animations</h4>
+  <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
+  <h4>Code de récupération</h4>
+  <div class="rec" id="rec"></div>
+  <h4>Installer l'appli</h4>
+  <div class="rec" id="install"></div>
+  <p class="credits">Pas l'temps · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a></p>
+  <button class="done" id="sheetDone">Terminé</button>
+</div>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/places.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

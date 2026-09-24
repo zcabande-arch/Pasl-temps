@@ -1,0 +1,13 @@
+{
+  "name": "pas-ltemps",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pas l'temps : trouver à pied ce qui tient dans sa pause.",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server/server.js",
+    "dev": "PORT=8080 node --disable-warning=ExperimentalWarning --watch server/server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/*.test.js"
+  }
+}

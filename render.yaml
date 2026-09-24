@@ -1,0 +1,15 @@
+# Déploiement en un clic sur Render (https://render.com) : New → Blueprint → choisir ce dépôt.
+# Le disque garde la base de données entre deux mises à jour (offre payante « Starter » requise pour les disques).
+services:
+  - type: web
+    name: pas-ltemps
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: donnees
+      mountPath: /data
+      sizeGB: 1

@@ -1,0 +1,16 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node --check public/js/app.js && node --check public/js/api.js && node --check public/js/places.js
+      - run: npm test
