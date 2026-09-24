@@ -236,7 +236,7 @@ const THEMES = {
   soleil:{n:"Soleil", L:["#FFF9E6","#FFE9A3","#2A2410","#7D7456","#FFFFFF","#F1E7C4","#2A2410","#FFD84D","#FFF0BF"], D:["#16140C","#3D3510","#FFF6D6","#C2B791","#221F13","#3A351F","#FFD84D","#16140C","#3A3314"]}
 };
 const SET_KEY = "pasltemps.settings";
-let SET = {theme:"creme", mode:"auto", motion:"on"};
+let SET = {theme:"creme", mode:"auto", motion:"on", layout:"auto"};
 try{ SET = {...SET, ...JSON.parse(localStorage.getItem(SET_KEY) || "{}")}; }catch(e){}
 if(!THEMES[SET.theme]) SET.theme = "creme";
 if((SET.v || 1) < 2){ SET.theme = "creme"; SET.v = 2; try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} } // passage au thème Crème, assorti à l'icône
@@ -259,6 +259,11 @@ function renderSettings(){
     return `<button class="sw" data-k="${k}" aria-pressed="${k===SET.theme}"><i style="background:linear-gradient(135deg, ${v[6]} 0 50%, ${v[1]} 50% 100%)"></i>${t.n}</button>`;
   }).join("");
   document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.mode)));
+  document.querySelectorAll("#layoutSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.layout || "auto"))));
+  const L = {phone:"Mobile", tablet:"Tablette", wide:"Ordi (grand écran)"};
+  $("layoutNote").textContent = (SET.layout || "auto") === "auto"
+    ? `Choisi selon la taille de l'écran : ${L[layoutNow()].toLowerCase()} en ce moment.`
+    : innerWidth < 600 && SET.layout !== "phone" ? "Cet écran est trop petit : l'affichage reste en format mobile." : "";
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
 }
 function openSheet(on){
@@ -270,6 +275,21 @@ $("sheetBg").onclick = $("sheetDone").onclick = () => openSheet(false);
 document.addEventListener("keydown", e => { if(e.key === "Escape" && $("sheet").classList.contains("on")) openSheet(false); });
 $("swatches").addEventListener("click", e => { const b = e.target.closest(".sw"); if(!b) return; SET.theme = b.dataset.k; saveSet(); applyTheme(); renderSettings(); });
 $("modeSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.mode = b.dataset.v; saveSet(); applyTheme(); renderSettings(); });
+// ---------- Format d'affichage ----------
+// auto : selon la largeur de la fenêtre (téléphone < 720 px ≤ tablette < 1100 px ≤ grand écran)
+function layoutNow(){
+  const w = innerWidth, l = SET.layout || "auto";
+  if(w < 600) return "phone";
+  if(l !== "auto") return l;
+  return w >= 1100 ? "wide" : w >= 720 ? "tablet" : "phone";
+}
+function applyLayout(){
+  const l = layoutNow(), b = document.body.classList;
+  b.toggle("lay-tablet", l === "tablet"); b.toggle("lay-wide", l === "wide");
+}
+addEventListener("resize", () => { applyLayout(); if($("sheet").classList.contains("on")) renderSettings(); });
+$("layoutSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.layout = b.dataset.v; saveSet(); applyLayout(); renderSettings(); });
+applyLayout();
 $("motionSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.motion = b.dataset.v; saveSet(); applyTheme(); renderSettings(); });
 if(mq){ const f = () => { if(SET.mode === "auto"){ applyTheme(); if($("sheet").classList.contains("on")) renderSettings(); } }; mq.addEventListener ? mq.addEventListener("change", f) : mq.addListener(f); }
 applyTheme();

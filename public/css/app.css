@@ -398,3 +398,30 @@ body.flat{--sh:none;--fr:1.5px solid var(--ink);background:var(--bg)}
 .flat .tog2[aria-pressed="true"]{background:var(--acc)!important;color:var(--accink)!important;box-shadow:none}
 .brand::before{box-shadow:0 0 0 1px rgba(0,0,0,.14)}
 .flat .brand::before{box-shadow:0 0 0 1.5px var(--ink)}
+
+/* ---------- Format d'affichage : tablette et grand écran ---------- */
+.setnote{font-size:13px;color:var(--soft);margin:8px 2px 0}
+.setnote:empty{display:none}
+#layoutSeg button{font-size:14px}
+body.lay-tablet main{max-width:860px;padding-left:28px;padding-right:28px}
+body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
+.lay-tablet .moods{grid-template-columns:repeat(6,1fr)}
+.lay-tablet .ring,.lay-wide .ring{width:200px;height:200px}
+/* Lieux, favoris, historique, avis : en grille */
+.lay-tablet .group,.lay-wide .group{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;align-items:start}
+.lay-tablet .group > h3,.lay-tablet .group > .note,.lay-wide .group > h3,.lay-wide .group > .note{grid-column:1/-1;margin-bottom:0}
+.lay-tablet .group .place,.lay-wide .group .place{margin-bottom:0}
+.lay-tablet #savedList,.lay-tablet #histList,.lay-wide #savedList,.lay-wide #histList,
+.lay-tablet #rvList,.lay-wide #rvList{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;align-items:start}
+.lay-tablet #savedList > *,.lay-tablet #histList > *,.lay-wide #savedList > *,.lay-wide #histList > *,
+.lay-tablet #rvList > *,.lay-wide #rvList > *{margin-bottom:0}
+#savedList > p,#histList > p,#histList > .link,#rvList > .emptyfeed,#rvList > .status{grid-column:1/-1}
+.lay-tablet .radar svg,.lay-wide .radar svg{max-width:380px}
+.lay-tablet .rvsearch,.lay-tablet #rvScope,.lay-wide .rvsearch,.lay-wide #rvScope{max-width:560px}
+/* Grand écran : deux colonnes (réglages de la pause à gauche, résultats à droite) */
+.lay-wide #viewExplore:not([hidden]),.lay-wide #viewBlog .cols{display:grid;grid-template-columns:400px minmax(0,1fr);gap:48px;align-items:start}
+.lay-wide .col-b > #results{margin-top:6px}
+.lay-wide .tabs{justify-content:center}
+.lay-wide .tabs button{max-width:160px}
+.lay-wide .gear{right:36px}
+.lay-tablet .gear{right:28px}

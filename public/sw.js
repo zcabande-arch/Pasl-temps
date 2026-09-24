@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v6";
+const VERSION = "pasltemps-v7";
 const CORE = [
   "./",
   "./index.html",
