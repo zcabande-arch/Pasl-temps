@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v3";
+const VERSION = "pasltemps-v4";
 const CORE = [
   "./",
   "./index.html",
@@ -18,7 +18,7 @@ const CORE = [
 ];
 
 self.addEventListener("install", e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(CORE.map(u => new Request(u, {cache: "reload"})))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", e => {
@@ -48,19 +48,23 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Fichiers de l'appli et polices Google : cache d'abord, mise à jour en arrière-plan
+  // Fichiers de l'appli : réseau d'abord (toujours la dernière version), cache si hors connexion
+  if (sameOrigin) {
+    e.respondWith(
+      fetch(req, {cache: "no-cache"})
+        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); } return res; })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Polices Google : cache d'abord
   const fonts = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
-  if (!sameOrigin && !fonts) return;
+  if (!fonts) return;
   e.respondWith(
-    caches.match(req).then(hit => {
-      const net = fetch(req).then(res => {
-        if (res && (res.ok || res.type === "opaque")) {
-          const copy = res.clone();
-          caches.open(VERSION).then(c => c.put(req, copy));
-        }
-        return res;
-      }).catch(() => hit);
-      return hit || net;
-    })
+    caches.match(req).then(hit => hit || fetch(req).then(res => {
+      if (res && (res.ok || res.type === "opaque")) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
+      return res;
+    }))
   );
 });

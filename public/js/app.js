@@ -239,6 +239,7 @@ const SET_KEY = "pasltemps.settings";
 let SET = {theme:"creme", mode:"auto", motion:"on"};
 try{ SET = {...SET, ...JSON.parse(localStorage.getItem(SET_KEY) || "{}")}; }catch(e){}
 if(!THEMES[SET.theme]) SET.theme = "creme";
+if((SET.v || 1) < 2){ SET.theme = "creme"; SET.v = 2; try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} } // passage au thème Crème, assorti à l'icône
 const mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
 function applyTheme(){
   const dark = SET.mode === "dark" || (SET.mode === "auto" && mq && mq.matches);
