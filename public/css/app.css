@@ -465,3 +465,9 @@ body:not(.social-on) .sheet .social,
 body:not(.social-on) .entry .share{display:none!important}
 body:not(.social-on) main{padding-bottom:110px}
 body:not(.social-on) .idea{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+
+/* À pied / vélo / voiture */
+.travel{max-width:360px;margin:-16px auto 26px}
+.travel button{display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px}
+.travel button[aria-pressed="true"] .ico{--ico-a:var(--accink);--ico-k:var(--accink)}
+.ticket .ico{vertical-align:-2px}

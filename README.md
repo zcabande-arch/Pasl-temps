@@ -3,7 +3,7 @@
 **10, 20, 30 minutes devant vous ? Pas l'temps trouve à pied ce qui tient dans votre pause.**
 
 On choisit son temps (10 à 60 min) et son envie (manger, prendre l'air, shopping, culture, se poser, bouger) :
-l'appli liste les lieux autour dont **l'aller-retour à pied + le temps sur place** tient dans la pause.
+l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en voiture) + le temps sur place** tient dans la pause.
 
 - 🧭 **Explorer** : lieux classés par rubrique, radar « autour de vous », site web, itinéraire à pied
 - 🕐 **Ouvert à ton arrivée** : « Ouvert · jusqu'à 19h30 », « Ferme dans 10 min », « Fermé · ouvre demain à 9h » (horaires OpenStreetMap), filtre « Ouverts seulement »

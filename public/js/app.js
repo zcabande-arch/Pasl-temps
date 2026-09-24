@@ -34,10 +34,20 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
 // Marche : 80 m/min, +30 % de détours
-const walkOf = d => Math.max(1, Math.round(d * 1.3 / 80));
-const radiusFor = (stay, t = T) => Math.min(3000, Math.max(150, (t - stay) / 2 * 80 / 1.3));
-const groupsNow = () => MOODS[M].groups.filter(g => !g.minT || T >= g.minT).filter(g => T - g.stay >= 2);
-function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=walking`; }
+// Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
+const TRAVEL = {
+  walk: {l:"À pied",  ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:"de marche", way:"à pied",     rings:[2,5,10,15,20]},
+  bike: {l:"Vélo",    ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:5000, gm:"bicycling", of:"de vélo",   way:"à vélo",     rings:[3,5,10,15,20]},
+  car:  {l:"Voiture", ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:6000, gm:"driving",   of:"de route",  way:"en voiture", rings:[5,8,12,16,20]}
+};
+const TR = () => TRAVEL[SET.travel] || TRAVEL.walk;
+// Minutes de trajet pour une distance à vol d'oiseau (m)
+const travelOf = d => { const t = TR(); return Math.max(1, Math.round(d * t.detour / t.speed + t.over)); };
+// Distance maximale pour que aller + retour + temps sur place tiennent dans t minutes
+const radiusFor = (stay, t = T) => { const m = TR(); return Math.min(m.cap, Math.max(150, ((t - stay) / 2 - m.over) * m.speed / m.detour)); };
+const fits = (g, t) => (!g.minT || t >= g.minT) && t - g.stay - 2 * TR().over >= 2;
+const groupsNow = () => MOODS[M].groups.filter(g => fits(g, T));
+function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${TR().gm}`; }
 function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+" à proximité")}`; }
 
 // ---------- Recherche des lieux ----------
@@ -62,7 +72,7 @@ function showFound(entry, groups, need){
     const fit = (entry.found[g.l] || []).map(p => ({...p, dist: PLACES.meters(pos, p)}))
       .filter(p => p.dist <= need[g.l] * 1.05)
       .sort((a, b) => a.dist - b.dist)
-      .map(p => ({...p, walk: walkOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
+      .map(p => ({...p, walk: travelOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
       .filter(p => 2*p.walk + g.stay <= T);
     LOADED[g.l] = {state:"ok", items: fit};
   });
@@ -84,14 +94,16 @@ async function search(){
   }
   // On cherche au moins pour 30 min (les petits changements de temps restent instantanés)
   const Tw = Math.max(T, 30);
-  const wide = Object.fromEntries(MOODS[M].groups.filter(g => !g.minT || Tw >= g.minT).filter(g => Tw - g.stay >= 2).map(g => [g.l, Math.round(radiusFor(g.stay, Tw))]));
+  const wide = Object.fromEntries(MOODS[M].groups.filter(g => fits(g, Tw)).map(g => [g.l, Math.round(radiusFor(g.stay, Tw))]));
   groups.forEach(g => { wide[g.l] = Math.max(wide[g.l] || 0, need[g.l]); });
   const fetchGroups = MOODS[M].groups.filter(g => wide[g.l]);
   try{
     searchCtl = new AbortController();
     const found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:20});
     const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wide, found};
-    PCACHE = [entry, ...PCACHE.filter(e => !(e.m === M && PLACES.meters(e.pos, entry.pos) < 80))];
+    // on remplace seulement les anciennes recherches du même endroit entièrement couvertes par celle-ci
+    const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && Object.entries(e.radii).every(([g, r]) => (wide[g] || 0) >= r);
+    PCACHE = [entry, ...PCACHE.filter(e => !covered(e))];
     pcSave();
     if(my !== runId) return;
     const before = JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => p.id)));
@@ -123,16 +135,16 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min 🚶</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
     <div class="det">
-      <p class="legend">🚶 ${2*p.walk} min de marche aller-retour · ⏱️ ~${p.stay} min sur place${free?` · ${free} min de rab`:""}</p>
+      <p class="legend">${TR().e} ${2*p.walk} min ${TR().of} aller-retour · ⏱️ ~${p.stay} min sur place${free?` · ${free} min de rab`:""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat)}</span>`:""}${p.wheelchair?`<span>♿ accessible</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">🚶 Je pars</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 À tester</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">Site web</a>`:""}</div>
+      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} Je pars</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 À tester</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">Site web</a>`:""}</div>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
@@ -152,7 +164,7 @@ function renderResults(){
   // Statut
   if(geoState === "wait") s.textContent = "Localisation en cours…";
   else if(geoState === "no") s.textContent = "Tapez une adresse ou une ville ci-dessus pour voir les lieux autour.";
-  else s.textContent = `Lieux où l'aller-retour à pied tient dans vos ${T} min.`;
+  else s.textContent = `Lieux où l'aller-retour ${TR().way} tient dans vos ${T} min.`;
 
   const groups = groupsNow();
   if(!groups.length){ R.innerHTML = `<p class="status">${T} min, c'est court pour ça. Choisissez un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
@@ -204,6 +216,14 @@ $("dial").addEventListener("click", e => {
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
   const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
   search();
+});
+function renderTravel(){
+  $("travelSeg").innerHTML = Object.entries(TRAVEL).map(([k, t]) =>
+    `<button data-v="${k}" aria-pressed="${k === (SET.travel || "walk")}">${ICONS.ico(t.ico, 22)}<span>${t.l}</span></button>`).join("");
+}
+$("travelSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.travel || "walk")) return;
+  SET.travel = b.dataset.v; saveSet(); renderTravel(); search();
 });
 $("moods").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
@@ -882,10 +902,10 @@ function renderSaved(){
   if(!items.length){ L.innerHTML = `<p class="hist empty" style="margin:0;color:var(--soft);font-size:15px">${savedTab === "fav" ? "Touche ⭐ sur un lieu pour le garder ici." : "Touche 📌 sur un lieu repéré pour le tester plus tard."}</p>`; return; }
   items.forEach(x => {
     const r = document.createElement("div"); r.className = "srow";
-    const km = pos ? kmBetween(pos, x) : null, walk = km != null ? walkOf(km*1000) : null;
-    r.innerHTML = `<span class="e">${ICONS.ico(x.em, 28)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">🚶 Je pars</a><button class="x" aria-label="Retirer">✕</button>`;
+    const km = pos ? kmBetween(pos, x) : null, walk = km != null ? travelOf(km*1000) : null;
+    r.innerHTML = `<span class="e">${ICONS.ico(x.em, 28)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">${TR().e} Je pars</a><button class="x" aria-label="Retirer">✕</button>`;
     r.querySelector("b").textContent = x.name;
-    r.querySelector("small").textContent = walk != null ? (km < 30 ? `${walk} min à pied` : "loin d'ici") + " · " + (x.addr||"").split(",")[0] : (x.addr||"").split(",")[0];
+    r.querySelector("small").textContent = walk != null ? (km < 30 ? `${walk} min ${TR().way}` : "loin d'ici") + " · " + (x.addr||"").split(",")[0] : (x.addr||"").split(",")[0];
     r.querySelector(".go").onclick = () => { const w = walk || 5; const h = logVisit({...x, g:x.g}); startTimer({...x, walk:w, stay:x.stay||10}, h, Math.max(T, 2*w + (x.stay||10))); };
     r.querySelector(".x").onclick = () => { delete LISTS[savedTab][x.id]; saveLists(); renderResults(); };
     L.appendChild(r);
@@ -901,7 +921,7 @@ function radarEl(){
   const maxD = Math.max(150, ...items.map(p => p.dist)) * 1.08, k = 138 / maxD;
   const cosL = Math.cos(pos.lat * Math.PI / 180);
   let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de vous">`;
-  [2,5,10,15,20].forEach(m => { const r = m*80/1.3*k; if(r <= 150 && r > 14) svg += `<circle class="ring" r="${r.toFixed(1)}"/><text class="rl" x="3" y="${(-r+11).toFixed(1)}">${m} min</text>`; });
+  const tm = TR(); tm.rings.forEach(m => { const r = Math.max(0, m - tm.over) * tm.speed / tm.detour * k; if(r <= 150 && r > 14) svg += `<circle class="ring" r="${r.toFixed(1)}"/><text class="rl" x="3" y="${(-r+11).toFixed(1)}">${m} min</text>`; });
   svg += `<text class="rl" x="0" y="-150" text-anchor="middle">N</text>`;
   items.forEach(p => {
     const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k;
@@ -923,7 +943,7 @@ let TIMER = null, timerTick = null, vibrated = false;
 try{ TIMER = JSON.parse(localStorage.getItem("pasltemps.timer") || "null"); }catch(e){}
 function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.stringify(TIMER)) : localStorage.removeItem("pasltemps.timer"); }catch(e){} }
 function startTimer(p, h, total){
-  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), name:p.name, em:p.em||"📍", hid:h ? h.id : null};
+  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   vibrated = false; saveTimer(); renderTimer();
 }
 function stopTimer(done){
@@ -938,9 +958,10 @@ function renderTimer(){
   box.hidden = false; document.body.classList.add("timing");
   const el = (Date.now() - TIMER.start)/1000, total = TIMER.T*60, remain = total - el, walkS = TIMER.walk*60;
   let phase, sub, cls = "";
-  if(el < walkS){ phase = "🚶 En route"; sub = `Arrivée dans ~${Math.ceil((walkS-el)/60)} min`; }
+  const tv = TRAVEL[TIMER.mode] || TRAVEL.walk;
+  if(el < walkS){ phase = tv.e + " En route"; sub = `Arrivée dans ~${Math.ceil((walkS-el)/60)} min`; }
   else if(remain > walkS){ phase = "⏱️ Sur place"; sub = `Repars dans ${Math.ceil((remain-walkS)/60)} min`; }
-  else if(remain > 0){ phase = "🏃 C'est l'heure de repartir !"; sub = `${TIMER.walk} min de marche pour rentrer`; cls = "back";
+  else if(remain > 0){ phase = "🏃 C'est l'heure de repartir !"; sub = `${TIMER.walk} min ${tv.of} pour rentrer`; cls = "back";
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
   else { phase = "⏰ Temps écoulé"; sub = `Tu dépasses de ${Math.ceil(-remain/60)} min`; cls = "late"; }
   box.className = "timer " + cls;
@@ -1120,7 +1141,7 @@ function renderReviews(){
   const me = myWall();
   gs.slice(0,60).forEach(g => {
     const el = document.createElement("div"); el.className = "rvp" + (rvOpen.has(g.id) ? " open" : "");
-    const distTxt = g.dist != null ? (g.dist < 30 ? ` · ${walkOf(g.dist*1000)} min à pied` : " · loin d'ici") : "";
+    const distTxt = g.dist != null ? (g.dist < 30 ? ` · ${travelOf(g.dist*1000)} min ${TR().way}` : " · loin d'ici") : "";
     el.innerHTML = `<button aria-expanded="${rvOpen.has(g.id)}"><span class="emo">${ICONS.ico(g.em, 30)}</span><span class="t"><b></b><small></small>${g.avg ? starsHTML(g.avg) : ""}</span>
       <span class="score">${g.avg ? `<b>${g.avg.toFixed(1).replace(".",",")}</b><span>${g.rated} note${g.rated>1?"s":""}</span>` : `<b>—</b><span>pas noté</span>`}</span></button>
       <div class="body"></div>`;
@@ -1145,11 +1166,11 @@ function renderReviews(){
         B.appendChild(d);
       });
       const acts = document.createElement("div"); acts.className = "btns"; acts.style.marginTop = "10px";
-      if(g.lat != null) acts.innerHTML += `<a class="go" target="_blank" rel="noopener" href="${dirUrl(g)}">🚶 Je pars</a>`;
+      if(g.lat != null) acts.innerHTML += `<a class="go" target="_blank" rel="noopener" href="${dirUrl(g)}">${TR().e} Je pars</a>`;
       if(me && me.code) acts.innerHTML += `<button class="ghost give">✍️ Donner mon avis</button>`;
       B.appendChild(acts);
       const go = acts.querySelector(".go");
-      if(go) go.onclick = () => { const w = g.dist != null ? walkOf(g.dist*1000) : 5; const p = {id:g.pid || g.id, name:g.name, em:g.em, addr:g.addr, lat:g.lat, lng:g.lng, g:"", url:""}; const h = logVisit(p); startTimer({...p, walk:w}, h, Math.max(T, 2*w + 10)); };
+      if(go) go.onclick = () => { const w = g.dist != null ? travelOf(g.dist*1000) : 5; const p = {id:g.pid || g.id, name:g.name, em:g.em, addr:g.addr, lat:g.lat, lng:g.lng, g:"", url:""}; const h = logVisit(p); startTimer({...p, walk:w}, h, Math.max(T, 2*w + 10)); };
       const give = acts.querySelector(".give");
       if(give) give.onclick = () => { composePreset = {name:g.name, pid:g.pid, lat:g.lat, lng:g.lng, em:g.em, addr:g.addr}; composeOpen = true; composeFrom = null; showView("blog"); renderCompose(); setTimeout(() => $("blogCompose").scrollIntoView({behavior:"smooth"}), 50); };
     }
@@ -1195,7 +1216,7 @@ function pickForMe(list){
     recent.has(p.id) ? "une valeur sûre" :
     hourBoost(p.g, hr) > 1.5 ? `parfait ${MOMENT(hr)}` :
     !HIST.some(h => h.pid === p.id) ? "tu n'y es encore jamais allé·e" : "ça change un peu";
-  return {p, txt:`${p.name} : ${why}. ${p.walk} min à pied${free ? `, et ${free} min de rab` : ""}.`};
+  return {p, txt:`${p.name} : ${why}. ${p.walk} min ${TR().way}${free ? `, et ${free} min de rab` : ""}.`};
 }
 $("ideaBtn").addEventListener("click", () => {
   const list = allLoaded(); if(!list.length) return;
@@ -1300,6 +1321,7 @@ function renderHistory(){
 }
 
 // ---------- Démarrage ----------
+renderTravel();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
