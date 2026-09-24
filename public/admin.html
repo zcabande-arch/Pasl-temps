@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Modération · Pas l'temps</title>
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<style>
+:root{--bg:#F4ECDF;--card:#FBF7F0;--ink:#141210;--soft:#6E655A;--acc:#E60A00;--line:#DDD2C1}
+@media (prefers-color-scheme:dark){:root{--bg:#161310;--card:#201C18;--ink:#F4ECDF;--soft:#A99F92;--acc:#FF3B2F;--line:#3A332C}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:24px;margin:0 0 4px}
+p.lead{color:var(--soft);margin:0 0 18px;font-size:14px}
+form,.rep{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+form{display:flex;gap:8px;flex-wrap:wrap}
+input{flex:1;min-width:180px;font:inherit;padding:8px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+button{font:inherit;font-weight:700;border:0;border-radius:999px;padding:7px 14px;cursor:pointer;background:var(--acc);color:#fff}
+button.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.rep .top{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--soft)}
+.rep .pv{margin:8px 0;white-space:pre-wrap;word-wrap:break-word}
+.rep .acts{display:flex;gap:8px;flex-wrap:wrap}
+.tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;border:1.5px solid var(--ink)}
+.tag.h{background:var(--ink);color:var(--bg)}
+#msg{color:var(--soft);font-size:14px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Modération</h1>
+  <p class="lead">Les contenus signalés. Au-delà du seuil, ils sont masqués automatiquement : vous pouvez les rétablir, les masquer vous-même ou bannir l'auteur.</p>
+  <form id="f"><input id="tok" type="password" placeholder="Code de modération (ADMIN_TOKEN)" autocomplete="off"><button>Voir les signalements</button></form>
+  <p id="msg"></p>
+  <div id="list"></div>
+</main>
+<script src="config.js"></script>
+<script>
+const BASE = String((window.PASLTEMPS_CONFIG || {}).apiBase || "").replace(/\/+$/, "");
+const $ = id => document.getElementById(id);
+const REASONS = {spam:"Spam, pub", insulte:"Insultant", inapproprie:"Inapproprié", faux:"Faux lieu", autre:"Autre"};
+let tok = ""; try{ tok = sessionStorage.getItem("pasltemps.admin") || ""; }catch(e){}
+$("tok").value = tok;
+async function api(path, body){
+  const r = await fetch(BASE + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Token": tok, "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
+  if(r.status === 403) throw new Error("Code de modération incorrect.");
+  if(!r.ok) throw new Error("Le serveur ne répond pas.");
+  return r.json();
+}
+async function load(){
+  $("msg").textContent = "Chargement…";
+  try{
+    const {reports, threshold} = await api("/api/admin/reports");
+    $("msg").textContent = reports.length ? `${reports.length} contenu(s) signalé(s). Masquage automatique à partir de ${threshold} signalements.` : "Aucun signalement. Tout va bien ✓";
+    $("list").innerHTML = "";
+    reports.forEach(r => {
+      const el = document.createElement("div"); el.className = "rep";
+      const kind = r.target.split(":")[0];
+      el.innerHTML = `<div class="top"><span><b></b> · ${kind === "post" ? "post" : kind === "comment" ? "commentaire" : "profil"}</span><span>${r.n} signalement(s) ${r.hidden ? '<span class="tag h">masqué</span>' : '<span class="tag">visible</span>'}</span></div>
+        <div class="pv"></div><div class="top" style="margin-bottom:10px"><span class="rs"></span><span>${new Date(r.last).toLocaleString("fr-FR")}</span></div>
+        <div class="acts">${r.hidden ? '<button class="ghost" data-a="unhide">Rétablir</button>' : '<button data-a="hide">Masquer</button>'}<button class="ghost" data-a="ban">Bannir l'auteur</button></div>`;
+      el.querySelector("b").textContent = r.author || "Quelqu'un";
+      el.querySelector(".pv").textContent = r.preview;
+      el.querySelector(".rs").textContent = "Motifs : " + [...new Set(String(r.reasons || "").split(" | "))].map(x => REASONS[x] || x).join(", ");
+      el.querySelector(".acts").onclick = async e => {
+        const a = e.target.closest("button"); if(!a) return;
+        if(a.dataset.a === "ban" && !confirm(`Bannir ${r.author || "cette personne"} ? Son profil et tous ses posts seront supprimés, et elle ne pourra plus publier.`)) return;
+        try{ await api("/api/admin/" + a.dataset.a, a.dataset.a === "ban" ? {uid:r.owner} : {target:r.target}); load(); }
+        catch(err){ $("msg").textContent = err.message; }
+      };
+      $("list").appendChild(el);
+    });
+  }catch(err){ $("msg").textContent = err.message; $("list").innerHTML = ""; }
+}
+$("f").onsubmit = e => { e.preventDefault(); tok = $("tok").value.trim(); try{ sessionStorage.setItem("pasltemps.admin", tok); }catch(_){} load(); };
+if(tok) load();
+</script>
+</body>
+</html>

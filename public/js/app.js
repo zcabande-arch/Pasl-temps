@@ -321,7 +321,7 @@ async function keyFor(code){
     base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
 function snapshot(){
-  return {v:1, settings:SET, lists:LISTS, recents:RECENTS.slice(0,5), profile: myWall() ? {code:myWall().code, pseudo:myWall().pseudo, avatar:myWall().avatar, photo:myWall().photo||"", posts:myWall().posts||[]} : null, friends:FRIENDS,
+  return {v:1, settings:SET, lists:LISTS, recents:RECENTS.slice(0,5), blocked:BLOCKED, profile: myWall() ? {code:myWall().code, pseudo:myWall().pseudo, avatar:myWall().avatar, photo:myWall().photo||"", posts:myWall().posts||[]} : null, friends:FRIENDS,
     history:HIST.slice(0,200).map(({id,at,n,q,pid,addr,url,mood,T,done,note,lat,lng}) => ({id,at,n,q,pid,addr,url,mood,T,done,note,lat,lng}))};
 }
 async function saveBackup(code){
@@ -363,6 +363,7 @@ async function restore(code){
     await saveWall({...w, code:data.profile.code, pseudo:data.profile.pseudo, avatar:data.profile.avatar, photo:safePhoto(data.profile.photo),
       posts:[...(w.posts||[]), ...(data.profile.posts||[]).filter(p => !have.has(p.id))].sort((a,b)=>b.at-a.at).slice(0,60)});
   }
+  if(Array.isArray(data.blocked)) BLOCKED = [...new Set([...BLOCKED, ...data.blocked])];
   if(Array.isArray(data.friends)){ FRIENDS = [...new Set([...FRIENDS, ...data.friends])]; saveFriends(); }
   // Historique : on ajoute ce qui manque, sans rien effacer
   const have = new Set(HIST.map(h => h.id));
@@ -446,7 +447,7 @@ document.querySelector(".tabs").addEventListener("click", e => { const b = e.tar
 // Chaque personne a un « mur » : walls/<son id>, lisible par tous, modifiable seulement par elle.
 // Il contient son profil public (pseudo, avatar, code ami), ses posts et ses réactions.
 const AVAS = ["😎","🦊","🐼","🐸","🦄","🐙","🌻","🍩","🚲","🎧","🌈","🐝","🥑","⚡","🌙","🐱"];
-let WALLS = {}, FRIENDS = [], blogReady = false, feedMode = "friends", viewing = null;
+let WALLS = {}, RAW_WALLS = {}, FRIENDS = [], BLOCKED = [], HIDDEN = new Set(), MOD = null, blogReady = false, feedMode = "friends", viewing = null;
 let composePreset = null, composeOpen = false, composeFrom = null, composeWith = [], editingProfile = false, blogMsg = "";
 let wallQueue = Promise.resolve();
 const myWall = () => UID ? WALLS[UID] : null;
@@ -460,7 +461,7 @@ function saveWall(w){
   scheduleBackup();
   return wallQueue;
 }
-function saveFriends(){ if(DB && UID) friendDocRef().set({friends:FRIENDS}).catch(()=>{}); scheduleBackup(); renderBlog(); syncDerived(); }
+function saveFriends(){ if(DB && UID) friendDocRef().set({friends:FRIENDS, blocked:BLOCKED}).catch(()=>{}); scheduleBackup(); renderBlog(); syncDerived(); }
 function byCode(code){
   // le mur le plus récent qui porte ce code
   return Object.values(WALLS).filter(w => w && w.code === code).sort((a,b) => (b.updatedAt||0)-(a.updatedAt||0))[0] || null;
@@ -470,13 +471,43 @@ function newFriendCode(){
   let c; do{ c = Array.from(crypto.getRandomValues(new Uint8Array(6)), x => ALPH[x % ALPH.length]).join(""); }while(taken.has(c));
   return c;
 }
+// ---------- Modération : contenus masqués, personnes bloquées ----------
+// Les murs sont filtrés dès leur arrivée : fil, avis, potes… n'affichent jamais ce qui est masqué ou bloqué.
+function moderate(walls){
+  const out = {};
+  Object.entries(walls).forEach(([uid, w]) => {
+    if(!w) return;
+    if(uid === UID){ out[uid] = w; return; }
+    if(BLOCKED.includes(uid) || HIDDEN.has("user:" + uid)) return;
+    out[uid] = {...w, posts:(w.posts||[]).filter(p => !HIDDEN.has(`post:${uid}:${p.id}`)),
+      comments:(w.comments||[]).filter(c => !HIDDEN.has(`comment:${uid}:${c.id}`))};
+  });
+  return out;
+}
+function remoderate(){ WALLS = moderate({...RAW_WALLS, ...(UID && WALLS[UID] ? {[UID]:WALLS[UID]} : {})}); groupCache = null; renderBlog(); renderReviews(); }
+const REPORT_REASONS = [["spam","Spam, pub"],["insulte","Insultant"],["inapproprie","Inapproprié"],["faux","Faux lieu"]];
+async function reportContent(target, reason){
+  HIDDEN.add(target); remoderate();           // disparaît tout de suite pour soi
+  try{ if(MOD) await MOD.report(target, reason); }catch(e){}
+}
+function blockUser(uid){
+  if(!uid || uid === UID || BLOCKED.includes(uid)) return;
+  const w = RAW_WALLS[uid];
+  BLOCKED = [...BLOCKED, uid];
+  if(w && w.code) FRIENDS = FRIENDS.filter(c => c !== w.code);
+  if(w && viewing === w.code) viewing = null;
+  saveFriends(); remoderate();
+}
+function unblockUser(uid){ BLOCKED = BLOCKED.filter(x => x !== uid); saveFriends(); remoderate(); }
+
 async function initBlog(){
-  try{ const f = await friendDocRef().get(); if(f.exists && Array.isArray(f.data().friends)) FRIENDS = f.data().friends; }catch(e){}
-  DB.collection("walls").onSnapshot(snap => {
+  try{ const f = await friendDocRef().get(); if(f.exists){ const d = f.data(); if(Array.isArray(d.friends)) FRIENDS = d.friends; if(Array.isArray(d.blocked)) BLOCKED = d.blocked; } }catch(e){}
+  DB.collection("walls").onSnapshot(async snap => {
     const next = {}; snap.docs.forEach(d => { next[d.id] = d.data(); });
     // garder notre version locale si une écriture est en cours
     if(WALLS[UID] && next[UID] && (WALLS[UID].updatedAt||0) > (next[UID].updatedAt||0)) next[UID] = WALLS[UID];
-    WALLS = next; blogReady = true; groupCache = null; renderBlog(); renderReviews(); if(!$("viewExplore").hidden) renderResults();
+    if(MOD){ const h = await MOD.hidden(); h.forEach(t => HIDDEN.add(t)); }
+    RAW_WALLS = next; WALLS = moderate(next); blogReady = true; groupCache = null; renderBlog(); renderReviews(); if(!$("viewExplore").hidden) renderResults();
   }, () => { blogReady = true; blogMsg = "Le blog n'est pas disponible pour l'instant."; renderBlog(); });
 }
 
@@ -579,7 +610,13 @@ function renderBlog(){
     <div class="friends" id="frList" style="margin-top:10px"></div>
     <div id="addBox" hidden style="margin-top:10px"><input class="field" id="frIn" maxlength="8" placeholder="Code ami (6 caractères)" autocapitalize="characters" autocomplete="off" spellcheck="false" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700">
       <div class="btns"><button class="go" id="frAdd">Ajouter</button><button class="ghost" id="frCancel">Annuler</button></div></div>
-    <p class="small" id="frMsg"></p></div>`;
+    <p class="small" id="frMsg"></p>${BLOCKED.length ? `<p class="small">🚫 Bloqué·es (touche pour débloquer) :</p><div class="tagpick" id="blkList" style="margin:6px 0 0"></div>` : ""}</div>`;
+  if($("blkList")) BLOCKED.forEach(uid => {
+    const b = document.createElement("button"); b.className = "chip";
+    b.textContent = ((RAW_WALLS[uid] && RAW_WALLS[uid].pseudo) || "Quelqu'un") + " ✕";
+    b.onclick = () => unblockUser(uid);
+    $("blkList").appendChild(b);
+  });
   const list = $("frList");
   FRIENDS.forEach(c => {
     const w = byCode(c), b = document.createElement("button"); b.className = "friend";
@@ -691,7 +728,7 @@ function renderFeed(){
   let head = "";
   if(viewing){
     const w = byCode(viewing);
-    head = `<div class="viewing"><span class="ava sm">${avaInner(w)}</span><b></b>${!FRIENDS.includes(viewing) && viewing !== me.code ? `<button class="go" id="vAdd">Ajouter</button>` : ""}<button class="ghost" id="vBack">Retour</button></div>`;
+    head = `<div class="viewing"><span class="ava sm">${avaInner(w)}</span><b></b>${!FRIENDS.includes(viewing) && viewing !== me.code ? `<button class="go" id="vAdd">Ajouter</button>` : ""}${viewing !== me.code ? `<button class="ghost" id="vBlock" aria-label="Bloquer">🚫</button>` : ""}<button class="ghost" id="vBack">Retour</button></div>`;
   } else {
     head = `<div class="seg feedseg" id="feedSeg"><button data-v="friends" aria-pressed="${feedMode==="friends"}">👥 Mes potes</button><button data-v="all" aria-pressed="${feedMode==="all"}">🌍 Tout le monde</button></div>`;
   }
@@ -701,6 +738,7 @@ function renderFeed(){
     const vw = byCode(viewing);
     if(vw && Array.isArray(vw.badges) && vw.badges.length){ const sp = document.createElement("div"); sp.className = "mini-b"; sp.textContent = vw.badges.map(id => (BADGES.find(b => b.id === id)||{}).e || "").join(""); Fd.querySelector(".viewing b").appendChild(sp); }
     $("vBack").onclick = () => { viewing = null; renderBlog(); };
+    if($("vBlock")) $("vBlock").onclick = () => { const w = byCode(viewing); if(w && confirm(`Bloquer ${w.pseudo || "cette personne"} ? Tu ne verras plus ses posts, avis et commentaires.`)) blockUser(Object.keys(WALLS).find(k => WALLS[k] === w)); };
     if($("vAdd")) $("vAdd").onclick = () => { FRIENDS = [...FRIENDS, viewing]; saveFriends(); };
   } else {
     $("feedSeg").onclick = e => { const b = e.target.closest("button"); if(!b) return; feedMode = b.dataset.v; renderFeed(); };
@@ -717,7 +755,17 @@ function renderFeed(){
       <div class="pl"><span class="e">${esc(p.emoji||"📍")}</span><div><b></b>${p.addr?`<small></small>`:""}</div></div>
       ${p.rating?`<p style="margin:-2px 0 10px">${starsHTML(p.rating)}</p>`:""}${p.photo?`<img class="pic" alt="">`:""}${p.hours?`<p class="hours"></p>`:""}
       ${p.text?`<p class="tx"></p>`:""}${(p.with||[]).length?`<p class="with"></p>`:""}
-      <div class="reacts">${["❤️","😋","🔥"].map(e => `<button data-e="${e}" aria-pressed="${mine===e}">${e} ${c[e]||""}</button>`).join("")}${p.author.code === me.code ? `<button class="del">Supprimer</button>` : ""}</div>`;
+      <div class="reacts">${["❤️","😋","🔥"].map(e => `<button data-e="${e}" aria-pressed="${mine===e}">${e} ${c[e]||""}</button>`).join("")}${p.author.code === me.code ? `<button class="del">Supprimer</button>` : `<button class="more" aria-label="Signaler ou bloquer" aria-expanded="false">⋯</button>`}</div>
+      <div class="modbox" hidden><p>Signaler ce post :</p><div class="btns">${REPORT_REASONS.map(([k,l]) => `<button class="ghost" data-r="${k}">${l}</button>`).join("")}</div>
+        <p style="margin-top:12px">Ne plus voir cette personne :</p><div class="btns"><button class="ghost blk">🚫 Bloquer</button></div></div>`;
+    const mb = el.querySelector(".modbox");
+    if(mb){
+      mb.onclick = e => {
+        const b = e.target.closest("button"); if(!b) return;
+        if(b.classList.contains("blk")){ blockUser(p.author._uid); return; }
+        if(b.dataset.r) reportContent(`post:${p.author._uid}:${p.id}`, b.dataset.r);
+      };
+    }
     el.querySelector(".nm").textContent = p.author.pseudo || "Quelqu'un";
     el.querySelector(".nm").onclick = () => { viewing = p.author.code; renderBlog(); window.scrollTo({top:$("blogFeed").offsetTop - 20, behavior:"smooth"}); };
     el.querySelector(".pl b").textContent = p.place;
@@ -729,6 +777,7 @@ function renderFeed(){
     if((p.with||[]).length) el.querySelector(".with").textContent = "👥 avec " + p.with.map(nameOf).join(", ");
     el.querySelector(".reacts").onclick = e => {
       const b = e.target.closest("button"); if(!b) return;
+      if(b.classList.contains("more")){ mb.hidden = !mb.hidden; b.setAttribute("aria-expanded", String(!mb.hidden)); return; }
       if(b.classList.contains("del")){ if(p.photo) DB.doc("walls/" + UID + "/photos/" + p.id).delete().catch(()=>{}); saveWall({...me, posts:(me.posts||[]).filter(x => x.id !== p.id)}); return; }
       const r = {...(me.reacts||{})};
       if(r[key] === b.dataset.e) delete r[key]; else r[key] = b.dataset.e;
@@ -945,10 +994,13 @@ function commentsEl(key, list, me){
   if(list.length > shown.length){ const m = document.createElement("button"); m.className = "link"; m.style.marginBottom = "8px"; m.textContent = `Voir les ${list.length} commentaires`; m.onclick = () => { openComments.add(key); renderFeed(); }; box.appendChild(m); }
   shown.forEach(c => {
     const r = document.createElement("div"); r.className = "cm";
-    r.innerHTML = `<span class="ava sm">${avaInner(c.author)}</span><div><b></b><span class="t"></span>${c.author.code === me.code ? `<button class="rm">supprimer</button>` : ""}</div>`;
+    r.innerHTML = `<span class="ava sm">${avaInner(c.author)}</span><div><b></b><span class="t"></span>${c.author.code === me.code ? `<button class="rm">supprimer</button>` : `<button class="rm rp">signaler</button>`}</div>`;
     r.querySelector("b").textContent = c.author.pseudo || "Quelqu'un";
     r.querySelector(".t").textContent = c.text;
-    const rm = r.querySelector(".rm"); if(rm) rm.onclick = () => saveWall({...me, comments:(me.comments||[]).filter(x => x.id !== c.id)});
+    const rm = r.querySelector(".rm");
+    if(rm) rm.onclick = rm.classList.contains("rp")
+      ? () => { if(confirm("Signaler ce commentaire ? Il sera masqué pour toi, et pour tout le monde s'il est signalé plusieurs fois.")) reportContent(`comment:${c.author._uid}:${c.id}`, "inapproprie"); }
+      : () => saveWall({...me, comments:(me.comments||[]).filter(x => x.id !== c.id)});
     box.appendChild(r);
   });
   const f = document.createElement("form"); f.className = "cform";
@@ -1038,9 +1090,10 @@ function renderReviews(){
       if(hr){ const p = document.createElement("p"); p.className = "small"; p.textContent = `🕐 Horaires signalés : ${hr.hours} (${hr.author.pseudo || "quelqu'un"}, ${whenTxt(hr.at).toLowerCase()})`; B.appendChild(p); }
       g.reviews.forEach(r => {
         const d = document.createElement("div"); d.className = "rv1";
-        d.innerHTML = `<span class="ava sm">${avaInner(r.author)}</span><div class="c"><div class="h"><b></b><time>${esc(whenTxt(r.at))}</time></div>${r.rating ? starsHTML(r.rating) : ""}${r.text ? `<p></p>` : ""}${r.photo ? `<img class="pic" alt="">` : ""}</div>`;
+        d.innerHTML = `<span class="ava sm">${avaInner(r.author)}</span><div class="c"><div class="h"><b></b><time>${esc(whenTxt(r.at))}${r.author._uid !== UID ? ` · <button class="rm rp">signaler</button>` : ""}</time></div>${r.rating ? starsHTML(r.rating) : ""}${r.text ? `<p></p>` : ""}${r.photo ? `<img class="pic" alt="">` : ""}</div>`;
         d.querySelector(".h b").textContent = r.author.pseudo || "Quelqu'un";
         if(r.text) d.querySelector("p").textContent = r.text;
+        const rp = d.querySelector(".rp"); if(rp) rp.onclick = () => { if(confirm("Signaler cet avis ? Il sera masqué pour toi, et pour tout le monde s'il est signalé plusieurs fois.")) reportContent(`post:${r.author._uid}:${r.id}`, "inapproprie"); };
         if(r.photo) loadPhoto(r.author._uid, r.id, d.querySelector(".pic"));
         B.appendChild(d);
       });
@@ -1115,6 +1168,7 @@ async function initHistory(){
   try{
     const conn = await PLT.connect();
     const db = conn && conn.db, user = conn && conn.user;
+    MOD = conn;
     const uid = user ? await user.id() : null;
     if(db) DB = db;
     UID = uid; dbState = db && uid ? "ok" : "none";

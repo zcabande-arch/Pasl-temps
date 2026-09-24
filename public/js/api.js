@@ -82,7 +82,10 @@
       }
       return {
         db: {doc: docRef, collection: colRef},
-        user: {id: async () => auth.uid}
+        user: {id: async () => auth.uid},
+        // Modération
+        report: (target, reason) => call("POST", "/api/report", {target, reason}),
+        hidden: async () => { try{ return (await call("GET", "/api/hidden")).targets || []; }catch(e){ return []; } }
       };
     }catch(e){ return null; }
   }

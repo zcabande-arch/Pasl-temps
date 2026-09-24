@@ -6,7 +6,7 @@ const { openStore } = require("../server/store");
 
 let srv, base;
 test.before(async () => {
-  srv = createServer(openStore(":memory:"), {rateLimit:false});
+  srv = createServer(openStore(":memory:"), {rateLimit:false, adminToken:"secret-admin"});
   await new Promise(ok => srv.listen(0, "127.0.0.1", ok));
   base = `http://127.0.0.1:${srv.address().port}`;
 });
@@ -73,4 +73,44 @@ test("supprimer un mur supprime aussi ses photos", async () => {
   await call(a, "PUT", doc(`walls/${a.uid}/photos/p1`), {data:"img"});
   await call(a, "DELETE", doc("walls/" + a.uid));
   assert.equal((await (await call(a, "GET", doc(`walls/${a.uid}/photos/p1`))).json()).exists, false);
+});
+
+test("signalements : masqué après 3 personnes différentes, pas son propre contenu", async () => {
+  const author = await session(), r1 = await session(), r2 = await session(), r3 = await session();
+  const target = `post:${author.uid}:p1`;
+  const report = (a, t, reason) => call(a, "POST", "/api/report", {target:t, reason:reason || "spam"});
+  assert.equal((await report(author, target)).status, 400);
+  assert.equal((await report(r1, target, "n'importe quoi")).status, 400);
+  assert.equal((await report(r1, target)).status, 200);
+  assert.equal((await report(r1, target)).status, 200); // même personne : compte une fois
+  assert.equal((await report(r2, target)).status, 200);
+  let hidden = await (await fetch(base + "/api/hidden")).json();
+  assert.ok(!hidden.targets.includes(target));
+  assert.equal((await report(r3, target, "insulte")).status, 200);
+  hidden = await (await fetch(base + "/api/hidden")).json();
+  assert.ok(hidden.targets.includes(target));
+});
+
+test("modération : réservée à l'admin, bannir supprime le mur et bloque l'écriture", async () => {
+  const bad = await session();
+  await call(bad, "PUT", doc("walls/" + bad.uid), {pseudo:"Spammeur"});
+  const adm = (path, body) => fetch(base + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Token":"secret-admin", "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
+  assert.equal((await fetch(base + "/api/admin/reports")).status, 403);
+  assert.equal((await fetch(base + "/api/admin/reports", {headers:{"X-Admin-Token":"faux"}})).status, 403);
+  const list = await (await adm("/api/admin/reports")).json();
+  assert.ok(Array.isArray(list.reports));
+  assert.equal((await adm("/api/admin/ban", {uid: bad.uid})).status, 200);
+  assert.equal((await (await call(bad, "GET", doc("walls/" + bad.uid))).json()).exists, false);
+  assert.equal((await call(bad, "PUT", doc("walls/" + bad.uid), {pseudo:"Revenu"})).status, 403);
+  const target = `post:${bad.uid}:x`;
+  assert.equal((await adm("/api/admin/hide", {target})).status, 200);
+  assert.ok((await (await fetch(base + "/api/hidden")).json()).targets.includes(target));
+  assert.equal((await adm("/api/admin/unhide", {target})).status, 200);
+  assert.ok(!(await (await fetch(base + "/api/hidden")).json()).targets.includes(target));
+});
+
+test("mur : refuse plus de 60 posts", async () => {
+  const a = await session();
+  const posts = Array.from({length:61}, (_, i) => ({id:"p" + i}));
+  assert.equal((await call(a, "PUT", doc("walls/" + a.uid), {posts})).status, 400);
 });

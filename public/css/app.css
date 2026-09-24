@@ -425,3 +425,10 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .lay-wide .tabs button{max-width:160px}
 .lay-wide .gear{right:36px}
 .lay-tablet .gear{right:28px}
+
+/* Modération */
+.reacts .more{margin-left:auto;background:none;color:var(--soft);font-size:18px;font-weight:800;padding:2px 10px;letter-spacing:1px}
+.modbox{margin-top:10px;background:var(--bg);border-radius:14px;padding:10px 12px}
+.modbox p{margin:0 0 8px;font-size:13px;font-weight:700;color:var(--soft)}
+.modbox .ghost{font-size:14px;padding:6px 12px}
+.rv1 .h .rm{border:0;background:none;color:var(--soft);font-size:12px;padding:0;text-decoration:underline}

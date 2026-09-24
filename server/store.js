@@ -15,6 +15,22 @@ function openStore(file){
       updated INTEGER NOT NULL
     );
     CREATE INDEX IF NOT EXISTS docs_parent ON docs(parent, sort);
+    CREATE TABLE IF NOT EXISTS reports (
+      target   TEXT NOT NULL,
+      reporter TEXT NOT NULL,
+      reason   TEXT NOT NULL,
+      at       INTEGER NOT NULL,
+      PRIMARY KEY (target, reporter)
+    );
+    CREATE TABLE IF NOT EXISTS hidden (
+      target TEXT PRIMARY KEY,
+      by     TEXT NOT NULL,
+      at     INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS banned (
+      uid TEXT PRIMARY KEY,
+      at  INTEGER NOT NULL
+    );
     CREATE TABLE IF NOT EXISTS users (
       uid     TEXT PRIMARY KEY,
       token   TEXT NOT NULL UNIQUE,
@@ -29,7 +45,18 @@ function openStore(file){
     listDesc: db.prepare("SELECT id, data FROM docs WHERE parent = ? ORDER BY sort DESC LIMIT ?"),
     listAsc: db.prepare("SELECT id, data FROM docs WHERE parent = ? ORDER BY sort ASC LIMIT ?"),
     addUser: db.prepare("INSERT INTO users (uid, token, created) VALUES (?, ?, ?)"),
-    user: db.prepare("SELECT uid FROM users WHERE token = ?")
+    user: db.prepare("SELECT uid FROM users WHERE token = ?"),
+    report: db.prepare("INSERT OR IGNORE INTO reports (target, reporter, reason, at) VALUES (?, ?, ?, ?)"),
+    reportCount: db.prepare("SELECT COUNT(*) AS n FROM reports WHERE target = ?"),
+    reportList: db.prepare(`SELECT target, COUNT(*) AS n, MAX(at) AS last, GROUP_CONCAT(reason, ' | ') AS reasons,
+      EXISTS(SELECT 1 FROM hidden h WHERE h.target = r.target) AS hidden
+      FROM reports r GROUP BY target ORDER BY last DESC LIMIT 200`),
+    reportClear: db.prepare("DELETE FROM reports WHERE target = ?"),
+    hide: db.prepare("INSERT OR REPLACE INTO hidden (target, by, at) VALUES (?, ?, ?)"),
+    unhide: db.prepare("DELETE FROM hidden WHERE target = ?"),
+    hiddenList: db.prepare("SELECT target FROM hidden"),
+    ban: db.prepare("INSERT OR REPLACE INTO banned (uid, at) VALUES (?, ?)"),
+    isBanned: db.prepare("SELECT 1 AS b FROM banned WHERE uid = ?")
   };
   const likeEsc = s => s.replace(/[\\%_]/g, c => "\\" + c);
   return {
@@ -44,6 +71,15 @@ function openStore(file){
       return (desc ? q.listDesc : q.listAsc).all(parent, limit).map(r => ({id:r.id, data:JSON.parse(r.data)}));
     },
     addUser(uid, tokenHash){ q.addUser.run(uid, tokenHash, Date.now()); },
+    // Modération
+    report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
+    reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },
+    clearReports(target){ q.reportClear.run(target); },
+    hide(target, by){ q.hide.run(target, by, Date.now()); },
+    unhide(target){ q.unhide.run(target); },
+    hidden(){ return q.hiddenList.all().map(r => r.target); },
+    ban(uid){ q.ban.run(uid, Date.now()); },
+    isBanned(uid){ return !!q.isBanned.get(uid); },
     userFor(tokenHash){ const r = q.user.get(tokenHash); return r ? r.uid : null; },
     close(){ db.close(); }
   };
