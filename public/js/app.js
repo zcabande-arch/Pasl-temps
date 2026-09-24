@@ -227,13 +227,13 @@ $("whereForm").addEventListener("submit", async e => {
 // ---------- Réglages : thèmes ----------
 const K = ["bg","glow","ink","soft","card","line","acc","accink","accsoft"];
 const THEMES = {
-  creme:{icon:["#F4ECDF","#E60A00","#111111"], n:"Crème", flat:true, L:["#F4ECDF","#F4ECDF","#141210","#6E655A","#FBF7F0","#DDD2C1","#E60A00","#FFFFFF","#EFE4D3"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
-  lavande:{icon:["#F4F2FF","#5B4BDB","#1E1846"], n:"Lavande", L:["#F4F2FF","#E0D9FF","#1E1846","#6B6790","#FFFFFF","#E4E0F5","#5B4BDB","#FFFFFF","#ECE9FF"], D:["#13112A","#2B2366","#F1EEFF","#A9A4CC","#1F1B3D","#302A58","#8F82FF","#13112A","#2A2459"]},
-  menthe:{icon:["#EEF7F3","#1F9D74","#143D33"], n:"Menthe", L:["#EEF7F3","#CDEEDD","#143D33","#5E7F75","#FFFFFF","#D6EAE1","#1F9D74","#FFFFFF","#DDF3EA"], D:["#0F1F1B","#17493B","#E8F7F1","#9DBDB2","#182D28","#24423A","#4FD1A5","#0F1F1B","#1D3E35"]},
-  peche:{icon:["#FFF3EE","#E8603C","#3A1F1A"], n:"Pêche", L:["#FFF3EE","#FFD9C9","#3A1F1A","#86655C","#FFFFFF","#F4DDD4","#E8603C","#FFFFFF","#FFE4DA"], D:["#1F1412","#4A2419","#FFEFEA","#C9A69C","#2C1D1A","#43302B","#FF8A66","#1F1412","#43261F"]},
-  ocean:{icon:["#EEF5FF","#1E6FE8","#0F2447"], n:"Océan", L:["#EEF5FF","#CFE2FF","#0F2447","#5B6E8F","#FFFFFF","#DCE6F5","#1E6FE8","#FFFFFF","#E0ECFF"], D:["#0B1526","#13305E","#EAF2FF","#9FB2D1","#14223A","#223556","#5B9BFF","#0B1526","#1A2F55"]},
-  bonbon:{icon:["#FFF0F7","#D63A8A","#3D1030"], n:"Bonbon", L:["#FFF0F7","#FFD1E8","#3D1030","#8A5F7A","#FFFFFF","#F5DCEA","#D63A8A","#FFFFFF","#FFE0EF"], D:["#1E0F19","#4B1638","#FFEAF5","#CFA3BD","#2B1724","#45263A","#FF6FB5","#1E0F19","#45203A"]},
-  soleil:{icon:["#FFF9E6","#F2B705","#2A2410"], n:"Soleil", L:["#FFF9E6","#FFE9A3","#2A2410","#7D7456","#FFFFFF","#F1E7C4","#2A2410","#FFD84D","#FFF0BF"], D:["#16140C","#3D3510","#FFF6D6","#C2B791","#221F13","#3A351F","#FFD84D","#16140C","#3A3314"]}
+  creme:{n:"Crème", flat:true, L:["#F4ECDF","#F4ECDF","#141210","#6E655A","#FBF7F0","#DDD2C1","#E60A00","#FFFFFF","#EFE4D3"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
+  lavande:{n:"Lavande", L:["#F4F2FF","#E0D9FF","#1E1846","#6B6790","#FFFFFF","#E4E0F5","#5B4BDB","#FFFFFF","#ECE9FF"], D:["#13112A","#2B2366","#F1EEFF","#A9A4CC","#1F1B3D","#302A58","#8F82FF","#13112A","#2A2459"]},
+  menthe:{n:"Menthe", L:["#EEF7F3","#CDEEDD","#143D33","#5E7F75","#FFFFFF","#D6EAE1","#1F9D74","#FFFFFF","#DDF3EA"], D:["#0F1F1B","#17493B","#E8F7F1","#9DBDB2","#182D28","#24423A","#4FD1A5","#0F1F1B","#1D3E35"]},
+  peche:{n:"Pêche", L:["#FFF3EE","#FFD9C9","#3A1F1A","#86655C","#FFFFFF","#F4DDD4","#E8603C","#FFFFFF","#FFE4DA"], D:["#1F1412","#4A2419","#FFEFEA","#C9A69C","#2C1D1A","#43302B","#FF8A66","#1F1412","#43261F"]},
+  ocean:{n:"Océan", L:["#EEF5FF","#CFE2FF","#0F2447","#5B6E8F","#FFFFFF","#DCE6F5","#1E6FE8","#FFFFFF","#E0ECFF"], D:["#0B1526","#13305E","#EAF2FF","#9FB2D1","#14223A","#223556","#5B9BFF","#0B1526","#1A2F55"]},
+  bonbon:{n:"Bonbon", L:["#FFF0F7","#FFD1E8","#3D1030","#8A5F7A","#FFFFFF","#F5DCEA","#D63A8A","#FFFFFF","#FFE0EF"], D:["#1E0F19","#4B1638","#FFEAF5","#CFA3BD","#2B1724","#45263A","#FF6FB5","#1E0F19","#45203A"]},
+  soleil:{n:"Soleil", L:["#FFF9E6","#FFE9A3","#2A2410","#7D7456","#FFFFFF","#F1E7C4","#2A2410","#FFD84D","#FFF0BF"], D:["#16140C","#3D3510","#FFF6D6","#C2B791","#221F13","#3A351F","#FFD84D","#16140C","#3A3314"]}
 };
 const SET_KEY = "pasltemps.settings";
 let SET = {theme:"creme", mode:"auto", motion:"on"};
@@ -250,38 +250,13 @@ function applyTheme(){
   document.body.classList.toggle("no-motion", SET.motion === "off");
   document.body.classList.toggle("flat", !!THEMES[SET.theme].flat);
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
-  applyIcon();
-}
-// Icône de l'appli aux couleurs du thème : [fond, assise, cadre]
-function iconSVG(c, size){
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"${size ? ` width="${size}" height="${size}"` : ""}><rect width="512" height="512" rx="116" fill="${c[0]}"/><g transform="translate(-4 -11)"><path d="M148 142 L236 300 H372" fill="none" stroke="${c[1]}" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/><path d="M166 420 L200 236 H320 L364 420 M184 352 H347" fill="none" stroke="${c[2]}" stroke-width="17"/></g></svg>`;
-}
-const svgUrl = svg => "data:image/svg+xml," + encodeURIComponent(svg);
-let iconFor = "";
-function applyIcon(){
-  const c = THEMES[SET.theme].icon; if(!c || iconFor === SET.theme) return;
-  iconFor = SET.theme;
-  const url = svgUrl(iconSVG(c));
-  document.documentElement.style.setProperty("--mark", `url("${url}")`);
-  const fav = document.querySelector('link[rel="icon"]'); if(fav) fav.href = url;
-  // Icône proposée par « Sur l'écran d'accueil » (iPhone, iPad) : PNG dessiné aux couleurs du thème
-  const img = new Image(), want = SET.theme;
-  img.onload = () => {
-    if(want !== SET.theme) return;
-    try{
-      const cv = document.createElement("canvas"); cv.width = cv.height = 180;
-      cv.getContext("2d").drawImage(img, 0, 0, 180, 180);
-      const a = document.querySelector('link[rel="apple-touch-icon"]'); if(a) a.href = cv.toDataURL("image/png");
-    }catch(e){}
-  };
-  img.src = svgUrl(iconSVG(c, 180).replace(' rx="116"', ""));
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
 function renderSettings(){
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   $("swatches").innerHTML = Object.entries(THEMES).map(([k,t]) => {
     const v = t[dark ? "D" : "L"];
-    return `<button class="sw" data-k="${k}" aria-pressed="${k===SET.theme}"><i>${iconSVG(t.icon, 48)}</i>${t.n}</button>`;
+    return `<button class="sw" data-k="${k}" aria-pressed="${k===SET.theme}"><i style="background:linear-gradient(135deg, ${v[6]} 0 50%, ${v[1]} 50% 100%)"></i>${t.n}</button>`;
   }).join("");
   document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.mode)));
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
