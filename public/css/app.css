@@ -145,7 +145,8 @@ main{position:relative}
 .sheet h4{font-size:14px;font-weight:600;color:var(--soft);margin:18px 0 10px}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .sw{border:0;background:var(--bg);border-radius:18px;padding:12px 6px 10px;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:14px;font-weight:600;position:relative}
-.sw i{width:44px;height:44px;border-radius:50%;display:block;box-shadow:inset 0 0 0 3px rgba(255,255,255,.6)}
+.sw i{width:48px;height:48px;display:block}
+.sw i svg{display:block;border-radius:12px;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
 .sw[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc)}
 .sw[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:8px;width:20px;height:20px;border-radius:50%;background:var(--acc);color:var(--accink);font-size:12px;display:grid;place-items:center;font-weight:800}
 .seg{display:flex;background:var(--bg);border-radius:999px;padding:4px}
@@ -348,7 +349,7 @@ body.timing main{padding-top:118px}
 
 /* Pas l'temps : marque, hors connexion, crédits */
 .brand{margin:0 0 6px;height:44px;display:flex;align-items:center;font-size:20px;font-weight:800;letter-spacing:-.03em;color:var(--acc)}
-.brand::before{content:"";width:26px;height:26px;margin-right:8px;border-radius:9px;background:#F4ECDF url("../icons/mark.svg") center/72% no-repeat;flex:none}
+.brand::before{content:"";width:26px;height:26px;margin-right:8px;border-radius:9px;background:var(--mark, url("../icons/icon.svg")) center/cover no-repeat;flex:none}
 .offline{background:var(--card);box-shadow:var(--sh);border-radius:16px;padding:10px 14px;font-size:14px;margin:0 0 14px}
 .credits{font-size:12px;color:var(--soft);margin:18px 0 0;text-align:center}
 .credits a{color:var(--soft)}
@@ -381,7 +382,6 @@ body.flat{--sh:none;--fr:1.5px solid var(--ink);background:var(--bg)}
 .flat .ring .arc{stroke-width:14}
 .flat .hero .pre{font-weight:800}
 .flat .brand{color:var(--ink)}
-.flat .brand::before{border:var(--fr)}
 .flat h2{color:var(--ink);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800}
 .flat .hist h2,.flat .saved h2{font-size:13px}
 .flat .timer .tin{border-radius:16px}
@@ -397,3 +397,5 @@ body.flat{--sh:none;--fr:1.5px solid var(--ink);background:var(--bg)}
 .flat .radar .pt circle{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
 .flat .radar .me{fill:var(--acc)}
 .flat .tog2[aria-pressed="true"]{background:var(--acc)!important;color:var(--accink)!important;box-shadow:none}
+.brand::before{box-shadow:0 0 0 1px rgba(0,0,0,.14)}
+.flat .brand::before{box-shadow:0 0 0 1.5px var(--ink)}
