@@ -90,7 +90,7 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${p.em}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min 🚶</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min 🚶</span></span></button>
     <div class="det">
       <p class="legend">🚶 ${2*p.walk} min de marche aller-retour · ⏱️ ~${p.stay} min sur place${free?` · ${free} min de rab`:""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
@@ -142,7 +142,7 @@ function renderResults(){
       .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
-    sec.innerHTML = `<h3><span><span class="gi">${g.em}</span>${esc(g.l)}</span> ${n?`<small>${n}</small>`:""}</h3>`;
+    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}</span> ${n?`<small>${n}</small>`:""}</h3>`;
     if(!st){
       sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Chercher « ${esc(g.q)} » sur la carte</a></p>`;
     } else if(st.state === "loading"){
@@ -163,7 +163,7 @@ function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); 
 
 function renderMoods(){
   $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
-    `<button data-m="${k}" aria-pressed="${k===M}"><span>${v.e}</span>${v.sl||v.l}</button>`).join("");
+    `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
@@ -764,7 +764,7 @@ function renderFeed(){
     const el = document.createElement("article"); el.className = "card post";
     const key = p.author.code + ":" + p.id, c = counts[key] || {}, mine = (me.reacts||{})[key];
     el.innerHTML = `<div class="ph"><span class="ava sm">${avaInner(p.author)}</span><div><button class="nm"></button><time>${esc(whenTxt(p.at))}</time></div></div>
-      <div class="pl"><span class="e">${esc(p.emoji||"📍")}</span><div><b></b>${p.addr?`<small></small>`:""}</div></div>
+      <div class="pl"><span class="e">${ICONS.ico(p.emoji||"📍", 30)}</span><div><b></b>${p.addr?`<small></small>`:""}</div></div>
       ${p.rating?`<p style="margin:-2px 0 10px">${starsHTML(p.rating)}</p>`:""}${p.photo?`<img class="pic" alt="">`:""}${p.hours?`<p class="hours"></p>`:""}
       ${p.text?`<p class="tx"></p>`:""}${(p.with||[]).length?`<p class="with"></p>`:""}
       <div class="reacts">${["❤️","😋","🔥"].map(e => `<button data-e="${e}" aria-pressed="${mine===e}">${e} ${c[e]||""}</button>`).join("")}${p.author.code === me.code ? `<button class="del">Supprimer</button>` : `<button class="more" aria-label="Signaler ou bloquer" aria-expanded="false">⋯</button>`}</div>
@@ -848,7 +848,7 @@ function renderSaved(){
   items.forEach(x => {
     const r = document.createElement("div"); r.className = "srow";
     const km = pos ? kmBetween(pos, x) : null, walk = km != null ? walkOf(km*1000) : null;
-    r.innerHTML = `<span class="e">${esc(x.em)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">🚶 Je pars</a><button class="x" aria-label="Retirer">✕</button>`;
+    r.innerHTML = `<span class="e">${ICONS.ico(x.em, 28)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">🚶 Je pars</a><button class="x" aria-label="Retirer">✕</button>`;
     r.querySelector("b").textContent = x.name;
     r.querySelector("small").textContent = walk != null ? (km < 30 ? `${walk} min à pied` : "loin d'ici") + " · " + (x.addr||"").split(",")[0] : (x.addr||"").split(",")[0];
     r.querySelector(".go").onclick = () => { const w = walk || 5; const h = logVisit({...x, g:x.g}); startTimer({...x, walk:w, stay:x.stay||10}, h, Math.max(T, 2*w + (x.stay||10))); };
@@ -870,11 +870,11 @@ function radarEl(){
   svg += `<text class="rl" x="0" y="-150" text-anchor="middle">N</text>`;
   items.forEach(p => {
     const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k;
-    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${p.walk} min</title><circle r="12" fill="hsl(${p.h} 75% 72%)"/><text text-anchor="middle" dy="4.5">${p.em}</text></g>`;
+    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${p.walk} min</title><circle r="13" fill="hsl(${p.h} 75% 72%)"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
   });
   svg += `<circle class="me" r="7"/><circle r="12" fill="none" stroke="var(--acc)" stroke-opacity=".35" stroke-width="3"/></svg>`;
   const d = document.createElement("div"); d.className = "radar";
-  d.innerHTML = `<h3>🧭 Autour de vous <small>touchez un point</small></h3>${svg}`;
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de vous <small>touchez un point</small></h3>${svg}`;
   d.querySelector("svg").addEventListener("click", e => {
     const g = e.target.closest(".pt"); if(!g) return;
     const el = document.getElementById("p-" + g.dataset.id.replace(/[^\w-]/g,""));
@@ -909,7 +909,7 @@ function renderTimer(){
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
   else { phase = "⏰ Temps écoulé"; sub = `Tu dépasses de ${Math.ceil(-remain/60)} min`; cls = "late"; }
   box.className = "timer " + cls;
-  box.innerHTML = `<div class="tin"><div class="top"><span class="e">${esc(TIMER.em)}</span><div class="mid"><b></b><span></span></div><div class="clock">${remain < 0 ? "+" : ""}${mmss(remain)}</div></div>
+  box.innerHTML = `<div class="tin"><div class="top"><span class="e">${ICONS.ico(TIMER.em, 28)}</span><div class="mid"><b></b><span></span></div><div class="clock">${remain < 0 ? "+" : ""}${mmss(remain)}</div></div>
     <div class="bar"><i style="width:${Math.min(100, el/total*100).toFixed(1)}%"></i></div>
     <div class="acts"><button class="ok" id="tDone">✓ Je suis rentré·e</button><button id="tStop">Arrêter</button></div></div>`;
   box.querySelector(".mid b").textContent = phase + " · " + TIMER.name;
@@ -1086,7 +1086,7 @@ function renderReviews(){
   gs.slice(0,60).forEach(g => {
     const el = document.createElement("div"); el.className = "rvp" + (rvOpen.has(g.id) ? " open" : "");
     const distTxt = g.dist != null ? (g.dist < 30 ? ` · ${walkOf(g.dist*1000)} min à pied` : " · loin d'ici") : "";
-    el.innerHTML = `<button aria-expanded="${rvOpen.has(g.id)}"><span class="emo">${esc(g.em)}</span><span class="t"><b></b><small></small>${g.avg ? starsHTML(g.avg) : ""}</span>
+    el.innerHTML = `<button aria-expanded="${rvOpen.has(g.id)}"><span class="emo">${ICONS.ico(g.em, 30)}</span><span class="t"><b></b><small></small>${g.avg ? starsHTML(g.avg) : ""}</span>
       <span class="score">${g.avg ? `<b>${g.avg.toFixed(1).replace(".",",")}</b><span>${g.rated} note${g.rated>1?"s":""}</span>` : `<b>—</b><span>pas noté</span>`}</span></button>
       <div class="body"></div>`;
     el.querySelector(".t b").textContent = g.name;
@@ -1242,7 +1242,7 @@ function renderHistory(){
       near = km < 1.5 ? " · près d'ici" : km < 50 ? ` · à ${Math.round(km)} km d'ici` : " · ailleurs";
     }
     el.innerHTML = `<div class="row"><strong></strong><time>${whenTxt(h.at)}</time></div>
-      <div class="sub">${mood ? mood.e + " " : ""}${esc(h.q||"")} · ${h.T} min${near}</div>
+      <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(h.q||"")} · ${h.T} min${near}</div>
       <input type="text" placeholder="Un souvenir, une note… (facultatif)" maxlength="120">
       <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? "Fait ✓" : "Marquer comme fait"}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">Site web</a>`:""}<button class="share">Raconter</button><button class="del">Supprimer</button></div>`;
     el.querySelector("strong").textContent = h.n;
@@ -1263,6 +1263,7 @@ function renderHistory(){
 }
 
 // ---------- Démarrage ----------
+document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
 HIST = lsLoad();

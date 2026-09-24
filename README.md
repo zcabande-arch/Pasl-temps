@@ -5,14 +5,17 @@
 On choisit son temps (10 à 60 min) et son envie (manger, prendre l'air, shopping, culture, se poser, bouger) :
 l'appli liste les lieux autour dont **l'aller-retour à pied + le temps sur place** tient dans la pause.
 
-- 🧭 **Explorer** : lieux classés par rubrique, radar « autour de vous », horaires, site web, itinéraire à pied
+- 🧭 **Explorer** : lieux classés par rubrique, radar « autour de vous », site web, itinéraire à pied
+- 🕐 **Ouvert à ton arrivée** : « Ouvert · jusqu'à 19h30 », « Ferme dans 10 min », « Fermé · ouvre demain à 9h » (horaires OpenStreetMap), filtre « Ouverts seulement »
 - 🎲 **Choisis pour moi** : un tirage qui tient compte de l'heure, de la distance, de vos lieux « à tester » et de ce que vous avez déjà fait
 - ⏱️ **Chrono « Je pars »** : en route → sur place → « c'est l'heure de repartir ! » (avec vibration)
 - ⭐ **Mes lieux** (favoris, à tester) et **Déjà fait** (historique avec notes)
 - 📝 **Blog** : profil, code ami, potes, sorties avec photo, note et commentaires, réactions, stats, badges et défi de la semaine
 - 🌟 **Avis** : tous les lieux notés par la communauté
 - 🔑 **Code de récupération** : sauvegarde chiffrée (AES-GCM) pour tout retrouver sur un autre appareil
-- 🎨 6 thèmes de couleurs, mode sombre, **installable** sur le téléphone et utilisable **hors connexion**
+- 🛡️ **Modération** : signaler un post, un commentaire ou un avis, bloquer quelqu'un ; masquage automatique après 3 signalements, page de modération
+- 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
+  **installable** sur le téléphone et utilisable **hors connexion**
 
 Les lieux et adresses viennent d'**OpenStreetMap** (Overpass et Nominatim) : gratuit, sans clé d'API.
 
@@ -26,7 +29,15 @@ npm start
 ```
 
 Les données (profils, posts, avis, sauvegardes) sont enregistrées dans `data/pasltemps.db` (SQLite).
-Variables d'environnement : `PORT` (8080), `HOST` (0.0.0.0), `DATA_DIR` (`./data`).
+Variables d'environnement : `PORT` (8080), `HOST` (0.0.0.0), `DATA_DIR` (`./data`),
+`ADMIN_TOKEN` (code de la page de modération, sans lui elle est désactivée), `REPORT_THRESHOLD` (3).
+
+## Modération
+
+- Dans l'appli, chacun peut **signaler** un post (bouton ⋯), un commentaire ou un avis, et **bloquer** une personne.
+- Un contenu signalé par `REPORT_THRESHOLD` personnes différentes (3 par défaut) est **masqué automatiquement** pour tout le monde.
+- La page **`/admin.html`** (avec le code `ADMIN_TOKEN`) liste les signalements : masquer, rétablir ou bannir l'auteur
+  (son profil et ses posts sont supprimés, il ne peut plus publier).
 
 ```bash
 npm test   # tests du serveur
@@ -70,6 +81,9 @@ indiquer son adresse dans `public/config.js` (`apiBase: "https://mon-serveur.exa
 | `public/css/app.css` | Styles et thèmes |
 | `public/js/app.js` | L'appli (explorer, chrono, blog, avis, réglages…) |
 | `public/js/places.js` | Recherche de lieux et d'adresses (OpenStreetMap) |
+| `public/js/hours.js` | Horaires d'ouverture : ouvert ou fermé à l'arrivée |
+| `public/js/icons.js` | Petits dessins au trait (à la place des emojis) |
+| `public/admin.html` | Page de modération |
 | `public/js/api.js` | Échanges avec le serveur (compte anonyme par appareil) |
 | `public/config.js` | Adresse du serveur, si l'appli est publiée ailleurs |
 | `public/sw.js` | Service worker : fonctionnement hors connexion |

@@ -244,7 +244,7 @@ body.timing main{padding-top:118px}
 .radar{background:var(--card);border-radius:22px;box-shadow:var(--sh);padding:12px;margin-bottom:22px}
 .radar h3{font-size:16px;margin:0 0 6px;display:flex;justify-content:space-between;color:var(--ink)}
 .radar h3 small{font-weight:400;color:var(--soft);font-size:12px}
-.radar svg{width:100%;height:auto;display:block;max-width:300px;margin:0 auto;overflow:visible}
+.radar > svg{width:100%;height:auto;display:block;max-width:300px;margin:0 auto;overflow:visible}
 .radar .ring{fill:none;stroke:var(--line);stroke-width:1.5;stroke-dasharray:4 5}
 .radar .rl{fill:var(--soft);font-size:10px;font-weight:600}
 .radar .pt{cursor:pointer}
@@ -416,7 +416,7 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .lay-tablet #savedList > *,.lay-tablet #histList > *,.lay-wide #savedList > *,.lay-wide #histList > *,
 .lay-tablet #rvList > *,.lay-wide #rvList > *{margin-bottom:0}
 #savedList > p,#histList > p,#histList > .link,#rvList > .emptyfeed,#rvList > .status{grid-column:1/-1}
-.lay-tablet .radar svg,.lay-wide .radar svg{max-width:380px}
+.lay-tablet .radar > svg,.lay-wide .radar > svg{max-width:380px}
 .lay-tablet .rvsearch,.lay-tablet #rvScope,.lay-wide .rvsearch,.lay-wide #rvScope{max-width:560px}
 /* Grand écran : deux colonnes (réglages de la pause à gauche, résultats à droite) */
 .lay-wide #viewExplore:not([hidden]),.lay-wide #viewBlog .cols{display:grid;grid-template-columns:400px minmax(0,1fr);gap:48px;align-items:start}
@@ -443,3 +443,18 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .openrow{align-items:center;margin-bottom:12px}
 .openrow span{font-size:13px;color:var(--soft)}
 .openrow .chip[aria-pressed="true"]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+
+/* Dessins au trait (à la place des emojis) */
+.ico{display:inline-block;vertical-align:middle;--ico-a:var(--acc);--ico-k:var(--ink);flex:none}
+.moods button span{display:grid;place-items:center;height:38px}
+.moods button[aria-pressed="true"] .ico{--ico-a:var(--accink);--ico-k:var(--accink)}
+.tabs .tabico{display:grid;place-items:center;height:28px;font-style:normal}
+.tabs button[aria-selected="true"] .ico{--ico-k:var(--ink)}
+.flat .tabs button[aria-selected="true"] .ico{--ico-k:var(--bg)}
+.timer .ico{--ico-k:var(--bg)}
+.timer.late .ico{--ico-a:#fff;--ico-k:#fff}
+.flat .place .emo,.flat .rvp .emo{transform:none}
+.radar h3 .ico{margin-right:4px;vertical-align:-4px}
+.radar .pt circle{fill:var(--card)}
+.entry .sub .ico{vertical-align:-3px}
+.radar .pt .ico{overflow:visible}

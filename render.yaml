@@ -9,6 +9,9 @@ services:
     envVars:
       - key: DATA_DIR
         value: /data
+      # Code de la page de modération (/admin.html) : Render le génère, à retrouver dans Environment
+      - key: ADMIN_TOKEN
+        generateValue: true
     disk:
       name: donnees
       mountPath: /data
