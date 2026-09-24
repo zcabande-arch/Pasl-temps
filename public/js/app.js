@@ -227,6 +227,7 @@ $("whereForm").addEventListener("submit", async e => {
 // ---------- Réglages : thèmes ----------
 const K = ["bg","glow","ink","soft","card","line","acc","accink","accsoft"];
 const THEMES = {
+  creme:{n:"Crème", flat:true, L:["#F4ECDF","#F4ECDF","#141210","#6E655A","#FBF7F0","#DDD2C1","#E60A00","#FFFFFF","#EFE4D3"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
   lavande:{n:"Lavande", L:["#F4F2FF","#E0D9FF","#1E1846","#6B6790","#FFFFFF","#E4E0F5","#5B4BDB","#FFFFFF","#ECE9FF"], D:["#13112A","#2B2366","#F1EEFF","#A9A4CC","#1F1B3D","#302A58","#8F82FF","#13112A","#2A2459"]},
   menthe:{n:"Menthe", L:["#EEF7F3","#CDEEDD","#143D33","#5E7F75","#FFFFFF","#D6EAE1","#1F9D74","#FFFFFF","#DDF3EA"], D:["#0F1F1B","#17493B","#E8F7F1","#9DBDB2","#182D28","#24423A","#4FD1A5","#0F1F1B","#1D3E35"]},
   peche:{n:"Pêche", L:["#FFF3EE","#FFD9C9","#3A1F1A","#86655C","#FFFFFF","#F4DDD4","#E8603C","#FFFFFF","#FFE4DA"], D:["#1F1412","#4A2419","#FFEFEA","#C9A69C","#2C1D1A","#43302B","#FF8A66","#1F1412","#43261F"]},
@@ -235,9 +236,9 @@ const THEMES = {
   soleil:{n:"Soleil", L:["#FFF9E6","#FFE9A3","#2A2410","#7D7456","#FFFFFF","#F1E7C4","#2A2410","#FFD84D","#FFF0BF"], D:["#16140C","#3D3510","#FFF6D6","#C2B791","#221F13","#3A351F","#FFD84D","#16140C","#3A3314"]}
 };
 const SET_KEY = "pasltemps.settings";
-let SET = {theme:"lavande", mode:"auto", motion:"on"};
+let SET = {theme:"creme", mode:"auto", motion:"on"};
 try{ SET = {...SET, ...JSON.parse(localStorage.getItem(SET_KEY) || "{}")}; }catch(e){}
-if(!THEMES[SET.theme]) SET.theme = "lavande";
+if(!THEMES[SET.theme]) SET.theme = "creme";
 const mq = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
 function applyTheme(){
   const dark = SET.mode === "dark" || (SET.mode === "auto" && mq && mq.matches);
@@ -246,6 +247,7 @@ function applyTheme(){
   const vals = THEMES[SET.theme][dark ? "D" : "L"];
   K.forEach((k,i) => root.style.setProperty("--" + k, vals[i]));
   document.body.classList.toggle("no-motion", SET.motion === "off");
+  document.body.classList.toggle("flat", !!THEMES[SET.theme].flat);
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
@@ -324,7 +326,7 @@ async function restore(code){
     data = JSON.parse(new TextDecoder().decode(plain));
   }catch(e){ throw {code:"not_found"}; }
   // Réglages et lieux récents
-  if(data.settings){ SET = {...SET, ...data.settings}; if(!THEMES[SET.theme]) SET.theme = "lavande"; try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} applyTheme(); }
+  if(data.settings){ SET = {...SET, ...data.settings}; if(!THEMES[SET.theme]) SET.theme = "creme"; try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} applyTheme(); }
   if(Array.isArray(data.recents) && data.recents.length){
     const seen = new Set(RECENTS.map(r => r.label));
     RECENTS = [...RECENTS, ...data.recents.filter(r => !seen.has(r.label))].slice(0,5);

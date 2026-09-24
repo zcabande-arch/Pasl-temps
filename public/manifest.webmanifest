@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#F4ECDF",
-  "theme_color": "#F4F2FF",
+  "theme_color": "#F4ECDF",
   "categories": ["lifestyle", "travel", "navigation"],
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

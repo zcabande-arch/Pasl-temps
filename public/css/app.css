@@ -1,6 +1,6 @@
 :root{
-  --bg:#F4F2FF; --glow:#E0D9FF; --ink:#1E1846; --soft:#6B6790; --card:#FFFFFF; --line:#E4E0F5;
-  --acc:#5B4BDB; --accink:#FFFFFF; --accsoft:#ECE9FF; --sun:#FFC53D; --leaf:#23895D; --leafbg:#E1F4EA; --warn:#C2412D;
+  --bg:#F4ECDF; --glow:#F4ECDF; --ink:#141210; --soft:#6E655A; --card:#FBF7F0; --line:#DDD2C1;
+  --acc:#E60A00; --accink:#FFFFFF; --accsoft:#EFE4D3; --sun:#FFC53D; --leaf:#23895D; --leafbg:#E1F4EA; --warn:#C2412D;
   --tl:93%; --ts:80%; --td:36%;
   --sh:0 1px 2px rgba(30,24,70,.05), 0 10px 28px -14px rgba(30,24,70,.22);
   box-sizing:border-box;
@@ -9,14 +9,14 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#13112A; --glow:#2B2366; --ink:#F1EEFF; --soft:#A9A4CC; --card:#1F1B3D; --line:#302A58;
-    --acc:#8F82FF; --accink:#13112A; --accsoft:#2A2459; --leaf:#5FD3A0; --leafbg:#1B3A33; --warn:#FF9A85;
+    --bg:#161310; --glow:#161310; --ink:#F4ECDF; --soft:#A99F92; --card:#201C18; --line:#3A332C;
+    --acc:#FF3B2F; --accink:#FFFFFF; --accsoft:#2E2620; --leaf:#5FD3A0; --leafbg:#1B3A33; --warn:#FF9A85;
     --tl:24%; --ts:42%; --td:76%; --sh:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
   }
 }
 :root[data-theme="dark"]{
-  --bg:#13112A; --glow:#2B2366; --ink:#F1EEFF; --soft:#A9A4CC; --card:#1F1B3D; --line:#302A58;
-  --acc:#8F82FF; --accink:#13112A; --accsoft:#2A2459; --leaf:#5FD3A0; --leafbg:#1B3A33; --warn:#FF9A85;
+  --bg:#161310; --glow:#161310; --ink:#F4ECDF; --soft:#A99F92; --card:#201C18; --line:#3A332C;
+  --acc:#FF3B2F; --accink:#FFFFFF; --accsoft:#2E2620; --leaf:#5FD3A0; --leafbg:#1B3A33; --warn:#FF9A85;
   --tl:24%; --ts:42%; --td:76%; --sh:0 1px 2px rgba(0,0,0,.3), 0 12px 30px -16px rgba(0,0,0,.6);
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -356,3 +356,44 @@ body.timing main{padding-top:118px}
 .det .tags span{font-size:12px;font-weight:600;background:var(--bg);border-radius:999px;padding:3px 9px;color:var(--soft)}
 .install-steps{margin:0;padding-left:18px;font-size:14px;color:var(--soft)}
 .install-steps li{margin:2px 0}
+
+/* Style « Crème » : à plat, graphique, cadres noirs fins (comme l'icône) */
+body.flat{--sh:none;--fr:1.5px solid var(--ink);background:var(--bg)}
+.flat .dial,.flat .moods button,.flat .where form,.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .srow,
+.flat .rvp,.flat .rvsearch,.flat .gear,.flat .offline,.flat .idea p{border:var(--fr);box-shadow:none}
+.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .rvp{border-radius:16px}
+.flat .moods button{border-radius:14px}
+.flat .moods button[aria-pressed="true"],.flat .dial button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.flat .moods button[aria-pressed="true"]{border-color:var(--acc)}
+.flat .where form:focus-within{box-shadow:0 0 0 3px var(--accsoft)}
+.flat .place.picked{box-shadow:0 0 0 3px var(--acc)}
+.flat .place{--bgT:var(--accsoft)}
+.flat .place .emo,.flat .rvp .emo{border-radius:12px}
+.flat .group h3 .gi{background:var(--accsoft);border-radius:8px}
+.flat .group h3 small{box-shadow:none;border:var(--fr);background:transparent}
+.flat .chip{background:transparent;border:var(--fr)}
+.flat .chip.gps{border-color:var(--leaf)}
+.flat .ghost{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.flat .tabs{background:var(--bg);box-shadow:none;border-top:var(--fr)}
+.flat .tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.flat .idea > button{background:var(--acc);color:var(--accink);box-shadow:none}
+.flat .ring .trk{stroke:var(--line)}
+.flat .ring .arc{stroke-width:14}
+.flat .hero .pre{font-weight:800}
+.flat .brand{color:var(--ink)}
+.flat .brand::before{border:var(--fr)}
+.flat h2{color:var(--ink);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800}
+.flat .hist h2,.flat .saved h2{font-size:13px}
+.flat .timer .tin{border-radius:16px}
+.flat .timer .bar i,.flat .timer .acts .ok{background:var(--acc);color:var(--accink)}
+.flat .sheet{border-top:var(--fr)}
+.flat .seg{background:transparent;border:var(--fr)}
+.flat .sw{border:var(--fr)}
+.flat .entry::before{display:none}
+.flat .entry.done{border-color:var(--leaf)}
+.flat .stats div,.flat .bdg{background:transparent;border:1px solid var(--line)}
+.flat .place{--inkT:var(--ink)}
+.flat .sticker{background:var(--ink);color:var(--bg);transform:none}
+.flat .radar .pt circle{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
+.flat .radar .me{fill:var(--acc)}
+.flat .tog2[aria-pressed="true"]{background:var(--acc)!important;color:var(--accink)!important;box-shadow:none}
