@@ -45,27 +45,43 @@
     korean:"coréen", spanish:"espagnol", moroccan:"marocain", african:"africain", brunch:"brunch", breakfast:"petit-déj", bubble_tea:"bubble tea"};
   const cuisineFr = c => c ? c.split(";").map(x => CUISINE[x.trim()] || x.trim().replace(/_/g, " ")).slice(0, 3).join(", ") : "";
 
+  // Les serveurs Overpass gratuits sont parfois surchargés : on en interroge deux en même temps
+  // et on garde la première réponse (l'autre requête est annulée). Le troisième sert de secours.
   let ep = 0;
+  function ask(url, query, signal, ms){
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms);
+    const stop = () => ctl.abort();
+    if(signal) signal.addEventListener("abort", stop, {once:true});
+    return fetch(url, {method:"POST", body:"data=" + encodeURIComponent(query),
+      headers:{"Content-Type":"application/x-www-form-urlencoded"}, signal:ctl.signal})
+      .then(async res => {
+        if(res.status === 429) throw {code:"rate_limited"};
+        if(!res.ok) throw {code: res.status >= 500 ? "server_unavailable" : "bad_request"};
+        const data = await res.json();
+        if(data.remark && /runtime error|timed out|out of memory/i.test(data.remark) && !(data.elements || []).length) throw {code:"server_unavailable"};
+        return {data, ctl};
+      })
+      .catch(e => { throw e && e.code ? e : {code: navigator.onLine === false ? "offline" : "server_unavailable"}; })
+      .finally(() => { clearTimeout(t); if(signal) signal.removeEventListener("abort", stop); });
+  }
   async function overpass(query, signal){
-    let lastErr;
-    for(let i = 0; i < OVERPASS.length; i++){
-      const url = OVERPASS[(ep + i) % OVERPASS.length];
-      try{
-        const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25000);
-        if(signal) signal.addEventListener("abort", () => ctl.abort(), {once:true});
-        const res = await fetch(url, {method:"POST", body:"data=" + encodeURIComponent(query),
-          headers:{"Content-Type":"application/x-www-form-urlencoded"}, signal:ctl.signal});
-        clearTimeout(t);
-        if(res.status === 429 || res.status >= 500){ lastErr = {code: res.status === 429 ? "rate_limited" : "server_unavailable"}; continue; }
-        if(!res.ok) throw {code:"bad_request"};
-        ep = (ep + i) % OVERPASS.length;
-        return await res.json();
-      }catch(e){
-        if(signal && signal.aborted) throw {code:"aborted"};
-        lastErr = e && e.code ? e : {code: navigator.onLine === false ? "offline" : "server_unavailable"};
+    const order = OVERPASS.map((_, i) => OVERPASS[(ep + i) % OVERPASS.length]);
+    const first = order.slice(0, 2), rest = order.slice(2);
+    const tries = first.map(u => ask(u, query, signal, 15000).then(r => ({...r, u})));
+    try{
+      const win = await Promise.any(tries);
+      tries.forEach(p => p.then(r => { if(r.u !== win.u) r.ctl.abort(); }, () => {}));
+      ep = OVERPASS.indexOf(win.u);
+      return win.data;
+    }catch(agg){
+      if(signal && signal.aborted) throw {code:"aborted"};
+      let last = (agg.errors || [])[0];
+      for(const u of rest){
+        try{ const r = await ask(u, query, signal, 20000); ep = OVERPASS.indexOf(u); return r.data; }
+        catch(e){ if(signal && signal.aborted) throw {code:"aborted"}; last = e; }
       }
+      throw last || {code:"server_unavailable"};
     }
-    throw lastErr || {code:"server_unavailable"};
   }
 
   // groups : [{l, osm:["shop=bakery", …], radius}] → {nomDuGroupe: [lieux triés par distance]}
@@ -74,7 +90,7 @@
     const around = r => `(around:${Math.round(r)},${pos.lat.toFixed(5)},${pos.lng.toFixed(5)})`;
     const parts = [];
     groups.forEach(g => g.osm.forEach(sel => { const [k, v] = pair(sel); parts.push(`nwr["${k}"="${v}"]["name"]${around(g.radius)};`); }));
-    const q = `[out:json][timeout:20];(${parts.join("")});out center tags 400;`;
+    const q = `[out:json][timeout:15];(${parts.join("")});out center tags qt 500;`;
     const data = await overpass(q, opts.signal);
     const out = {};
     groups.forEach(g => out[g.l] = []);

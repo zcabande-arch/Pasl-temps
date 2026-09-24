@@ -8,7 +8,7 @@ const MOODS = {
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:35, q:"restaurant", minT:45}]},
   air: {e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
-    {l:"Espaces verts, forêts", em:"🌲", h:150, osm:["leisure=nature_reserve","landuse=forest","natural=wood","tourism=viewpoint"], stay:15, q:"espace vert"}]},
+    {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
   shopping: {e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
@@ -29,46 +29,79 @@ const MOODS = {
 
 let T = 20, M = "manger", pos = null, geoState = "wait";
 let LOADED = {};               // groupe -> {state, items, err}
-const CACHE = new Map();       // clé de recherche -> items
 let runId = 0, pickedId = null;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
 // Marche : 80 m/min, +30 % de détours
 const walkOf = d => Math.max(1, Math.round(d * 1.3 / 80));
-const radiusFor = stay => Math.min(3000, Math.max(150, (T - stay) / 2 * 80 / 1.3));
+const radiusFor = (stay, t = T) => Math.min(3000, Math.max(150, (t - stay) / 2 * 80 / 1.3));
 const groupsNow = () => MOODS[M].groups.filter(g => !g.minT || T >= g.minT).filter(g => T - g.stay >= 2);
 function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=walking`; }
 function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+" à proximité")}`; }
 
+// ---------- Recherche des lieux ----------
+// Les résultats sont gardés sur l'appareil (12 h) : même endroit + même envie = affichage immédiat,
+// puis mise à jour discrète s'ils ont plus de 20 min. On cherche d'emblée assez loin pour 30 min,
+// pour que passer de 10 à 20 ou 30 min ne relance pas de recherche.
+const PC_KEY = "pasltemps.placecache", PC_FRESH = 20 * 60e3, PC_KEEP = 12 * 3600e3;
+let PCACHE = [];
+try{ PCACHE = JSON.parse(localStorage.getItem(PC_KEY) || "[]").filter(e => Date.now() - e.at < PC_KEEP); }catch(e){ PCACHE = []; }
+function pcSave(){
+  for(let n = 12; n > 0; n = Math.floor(n / 2)){
+    try{ localStorage.setItem(PC_KEY, JSON.stringify(PCACHE.slice(0, n))); return; }catch(e){}
+  }
+}
+function pcFind(mood, need){
+  return PCACHE.find(e => e.m === mood && Date.now() - e.at < PC_KEEP && PLACES.meters(e.pos, pos) < 80 &&
+    Object.entries(need).every(([g, r]) => (e.radii[g] || 0) >= r - 1));
+}
 let searchCtl = null;
+function showFound(entry, groups, need){
+  groups.forEach(g => {
+    const fit = (entry.found[g.l] || []).map(p => ({...p, dist: PLACES.meters(pos, p)}))
+      .filter(p => p.dist <= need[g.l] * 1.05)
+      .sort((a, b) => a.dist - b.dist)
+      .map(p => ({...p, walk: walkOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
+      .filter(p => 2*p.walk + g.stay <= T);
+    LOADED[g.l] = {state:"ok", items: fit};
+  });
+}
 async function search(){
   const my = ++runId; pickedId = null; $("ideaTxt").textContent = "";
   LOADED = {};
   if(searchCtl) searchCtl.abort();
   const groups = groupsNow();
   if(!pos){ renderResults(); return; }
-  groups.forEach(g => LOADED[g.l] = {state:"loading"});
-  renderResults();
-  const key = [M, T, pos.lat.toFixed(3), pos.lng.toFixed(3)].join("|");
-  try{
-    let found = CACHE.get(key);
-    if(!found){
-      searchCtl = new AbortController();
-      found = await PLACES.nearby(pos, groups.map(g => ({l:g.l, osm:g.osm, radius:radiusFor(g.stay)})), {signal:searchCtl.signal, limit:12});
-      CACHE.set(key, found);
-    }
-    if(my !== runId) return;
-    groups.forEach(g => {
-      const fit = (found[g.l] || []).map(p => ({...p, walk: walkOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
-        .filter(p => 2*p.walk + g.stay <= T);
-      LOADED[g.l] = {state:"ok", items: fit};
-    });
-  }catch(err){
-    if(my !== runId || (err && err.code === "aborted")) return;
-    groups.forEach(g => LOADED[g.l] = {state:"err", err});
+  const need = Object.fromEntries(groups.map(g => [g.l, Math.round(radiusFor(g.stay))]));
+  const hit = pcFind(M, need);
+  if(hit){
+    showFound(hit, groups, need); renderResults();
+    if(Date.now() - hit.at < PC_FRESH) return;
+  } else {
+    groups.forEach(g => LOADED[g.l] = {state:"loading"});
+    renderResults();
   }
-  renderResults();
+  // On cherche au moins pour 30 min (les petits changements de temps restent instantanés)
+  const Tw = Math.max(T, 30);
+  const wide = Object.fromEntries(MOODS[M].groups.filter(g => !g.minT || Tw >= g.minT).filter(g => Tw - g.stay >= 2).map(g => [g.l, Math.round(radiusFor(g.stay, Tw))]));
+  groups.forEach(g => { wide[g.l] = Math.max(wide[g.l] || 0, need[g.l]); });
+  const fetchGroups = MOODS[M].groups.filter(g => wide[g.l]);
+  try{
+    searchCtl = new AbortController();
+    const found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:20});
+    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wide, found};
+    PCACHE = [entry, ...PCACHE.filter(e => !(e.m === M && PLACES.meters(e.pos, entry.pos) < 80))];
+    pcSave();
+    if(my !== runId) return;
+    const before = JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => p.id)));
+    showFound(entry, groups, need);
+    if(!hit || JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => p.id))) !== before) renderResults();
+  }catch(err){
+    if(my !== runId || (err && err.code === "aborted") || hit) return;   // avec des résultats déjà affichés, on garde ceux-là
+    groups.forEach(g => LOADED[g.l] = {state:"err", err});
+    renderResults();
+  }
 }
 
 function errText(err){
@@ -188,7 +221,7 @@ function locate(manual){
     }, () => {
       if(manual) $("whereMsg").textContent = "Position GPS indisponible ici : tapez une adresse ou une ville.";
       if(!pos){ geoState = "no"; renderResults(); }
-    }, {enableHighAccuracy:true, timeout:8000, maximumAge:120000});
+    }, {enableHighAccuracy:false, timeout:7000, maximumAge:600000}); // position réseau/Wi-Fi : rapide et assez précise pour marcher
   }catch(e){ if(!pos){ geoState = "no"; renderResults(); } }
 }
 
@@ -198,6 +231,8 @@ const LOC_KEY = "pasltemps.places";
 try{ RECENTS = JSON.parse(localStorage.getItem(LOC_KEY) || "[]"); }catch(e){ RECENTS = []; }
 function saveRecents(){ try{ localStorage.setItem(LOC_KEY, JSON.stringify(RECENTS.slice(0,5))); }catch(e){} scheduleBackup(); }
 function setPlace(lat, lng, label, remember){
+  // Même endroit (à 60 m près) : pas besoin de relancer la recherche
+  if(pos && !remember && label === posLabel && PLACES.meters(pos, {lat, lng}) < 60){ geoState = "ok"; renderWhere(); return; }
   pos = {lat, lng}; posLabel = label; geoState = "ok";
   if(remember){
     RECENTS = [{lat, lng, label}, ...RECENTS.filter(r => r.label !== label)].slice(0,5);
