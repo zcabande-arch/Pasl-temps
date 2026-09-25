@@ -43,6 +43,7 @@ function addr(t){
 
 async function build(input, outDir){
   const tiles = new Map();
+  const postcodes = new Map();   // "75011|paris" → {pc, city, lat, lng, n}
   let n = 0, kept = 0, minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
   const rl = readline.createInterface({input: fs.createReadStream(input), crlfDelay: Infinity});
   for await (let line of rl){
@@ -62,6 +63,14 @@ async function build(input, outDir){
     const row = [lat, lng, sels.length === 1 ? sels[0] : sels, clip(t.name, 80), clip(addr(t), 100),
       clip(t.opening_hours, 160), clip(t.website || t["contact:website"] || t.url, 120),
       clip(t.phone || t["contact:phone"], 30), clip(t.cuisine, 40), t.wheelchair === "yes" ? 1 : 0, id];
+    // Codes postaux : centre des lieux qui portent ce code (et cette commune)
+    const pc = String(t["addr:postcode"] || "").trim();
+    if(/^\d{5}$/.test(pc)){
+      const city = String(t["addr:city"] || "").trim().slice(0, 60);
+      const k = pc + "|" + city.toLowerCase();
+      const e = postcodes.get(k) || {pc, city, lat: 0, lng: 0, n: 0};
+      e.lat += lat; e.lng += lng; e.n++; postcodes.set(k, e);
+    }
     const key = Math.floor(lat / CELL) + "_" + Math.floor(lng / CELL);
     if(!tiles.has(key)) tiles.set(key, []);
     tiles.get(key).push(row);
@@ -75,7 +84,20 @@ async function build(input, outDir){
     bytes += json.length;
     fs.writeFileSync(path.join(outDir, "t", key + ".json"), json);
   }
-  const index = {v: 1, built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
+  // postcodes.json : { "75011": [[lat, lng, "Paris", nombre de lieux], …], … } (communes triées par nombre de lieux)
+  const byPc = {};
+  for(const e of postcodes.values()){
+    if(e.n < 2 && !e.city) continue;
+    (byPc[e.pc] = byPc[e.pc] || []).push([+(e.lat / e.n).toFixed(5), +(e.lng / e.n).toFixed(5), e.city, e.n]);
+  }
+  for(const pc in byPc){
+    // même commune écrite de façons différentes / sans commune : on regroupe sous la plus fréquente
+    const list = byPc[pc].sort((a, b) => b[3] - a[3]);
+    const named = list.filter(x => x[2]);
+    byPc[pc] = (named.length ? named : list).slice(0, 6);
+  }
+  fs.writeFileSync(path.join(outDir, "postcodes.json"), JSON.stringify(byPc));
+  const index = {v: 1, postcodes: Object.keys(byPc).length, built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
     bbox: [+minLat.toFixed(3), +minLng.toFixed(3), +maxLat.toFixed(3), +maxLng.toFixed(3)],
     // colonnes de chaque lieu : [lat, lng, étiquette(s), nom, adresse, horaires, site, téléphone, cuisine, accessible, id]
     fields: ["lat","lng","sel","name","addr","oh","web","phone","cuisine","wc","id"]};

@@ -38,3 +38,21 @@ test("toutes les étiquettes utilisées par l'appli sont dans les tuiles", () =>
   assert.ok(used.length > 20);
   assert.deepEqual(used.filter(s => !SELS.includes(s)), []);
 });
+
+test("codes postaux : centre des lieux, plusieurs communes pour un même code", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "cp-"));
+  const f = (lng, lat, props) => JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[lng, lat]}, properties:{"@type":"node", "@id":Math.floor(Math.random()*1e9), name:"X", shop:"bakery", ...props}});
+  fs.writeFileSync(path.join(dir, "in.geojsonseq"), [
+    f(2.37, 48.85, {"addr:postcode":"75011", "addr:city":"Paris"}),
+    f(2.39, 48.87, {"addr:postcode":"75011", "addr:city":"Paris"}),
+    f(5.22, 46.20, {"addr:postcode":"01000", "addr:city":"Bourg-en-Bresse"}),
+    f(5.24, 46.21, {"addr:postcode":"01000", "addr:city":"Bourg-en-Bresse"}),
+    f(5.19, 46.20, {"addr:postcode":"01000", "addr:city":"Saint-Denis-lès-Bourg"}),
+    f(2.30, 48.80, {"addr:postcode":"750"})                         // code invalide : ignoré
+  ].join("\n"));
+  await build(path.join(dir, "in.geojsonseq"), path.join(dir, "out"));
+  const pcs = JSON.parse(fs.readFileSync(path.join(dir, "out", "postcodes.json"), "utf8"));
+  assert.deepEqual(pcs["75011"], [[48.86, 2.38, "Paris", 2]]);
+  assert.deepEqual(pcs["01000"].map(x => x[2]), ["Bourg-en-Bresse", "Saint-Denis-lès-Bourg"]);
+  assert.equal(pcs["750"], undefined);
+});
