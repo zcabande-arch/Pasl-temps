@@ -1,3 +1,15 @@
+// Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
+// on recharge une fois la page fraîche.
+const APP_VERSION = "26";
+(function(){
+  const m = document.querySelector('meta[name="app-version"]');
+  if((m && m.content) === APP_VERSION) return;
+  let done = false; try{ done = sessionStorage.getItem("pasltemps.reload") === APP_VERSION; sessionStorage.setItem("pasltemps.reload", APP_VERSION); }catch(e){}
+  if(done) return;
+  fetch(location.pathname, {cache: "reload"}).catch(() => {}).finally(() => location.reload());
+  throw new Error("Ancienne page : rechargement");
+})();
+
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
   manger: {img:"img/moods/manger.jpg", d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
@@ -216,8 +228,11 @@ function placeEl(p){
 }
 
 function renderResults(){
+  // « J'ai 20 minutes. » / « J'ai 1 heure. » / « J'ai 1 h 30. » / « J'ai 2 heures. »
   const [num, unit] = T < 60 ? [T, " minutes"] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? " heure" : " heures"];
-  $("numTxt").textContent = num; if($("unitTxt")) $("unitTxt").textContent = unit;
+  const h1 = document.querySelector(".hero2 .display, .hero .display");
+  if(h1 && !$("unitTxt")) h1.innerHTML = `J'ai <em id="numTxt"></em><span id="unitTxt"></span>.`;
+  $("numTxt").textContent = num; $("unitTxt").textContent = unit;
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = "";
   const s = $("status");
@@ -290,6 +305,9 @@ function renderMoods(){
       ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
+// Choix du temps : jusqu'à 2 h
+const TIMES = [10, 20, 30, 45, 60, 90, 120];
+$("dial").innerHTML = TIMES.map(t => `<button${t < 60 ? ` class="m"` : ""} data-t="${t}" aria-pressed="${t === T}">${t < 60 ? t : fmtDur(t)}</button>`).join("");
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   T = +b.dataset.t;

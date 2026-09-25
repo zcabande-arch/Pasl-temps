@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v25";
+const VERSION = "pasltemps-v26";
 const CORE = [
   "./",
   "./index.html",
@@ -50,8 +50,9 @@ self.addEventListener("fetch", e => {
   // Pages : réseau d'abord (pour recevoir les mises à jour), cache en secours
   if (req.mode === "navigate") {
     e.respondWith(
-      fetch(req)
-        .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put("./index.html", copy)); return res; })
+      // toujours une page fraîche (le cache du navigateur garderait sinon l'ancienne ~10 min)
+      fetch(req.url, {cache: "no-cache", credentials: "same-origin"})
+        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put("./index.html", copy)); } return res; })
         .catch(() => caches.match("./index.html"))
     );
     return;

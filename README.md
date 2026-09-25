@@ -118,7 +118,7 @@ Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 | `worker/` | Version Cloudflare Workers (base D1) |
 | `wrangler.toml` | Configuration Cloudflare |
 
-> Après une modification des fichiers de `public/`, incrémenter `VERSION` dans `public/sw.js` pour que les téléphones récupèrent la nouvelle version.
+> Après une modification des fichiers de `public/`, augmenter le numéro de version aux trois endroits : `VERSION` dans `public/sw.js`, `APP_VERSION` dans `public/js/app.js` et `app-version` dans `public/index.html` (un test le vérifie).
 
 ## Vie privée
 
