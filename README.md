@@ -17,7 +17,13 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
   **installable** sur le téléphone et utilisable **hors connexion**
 
-Les lieux et adresses viennent d'**OpenStreetMap** (Overpass et Nominatim) : gratuit, sans clé d'API.
+Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
+
+**Recherche rapide par tuiles** : chaque semaine, le workflow « Construire les lieux » télécharge
+OpenStreetMap France, garde les ~450 000 lieux utiles (avec horaires, site, téléphone) et les découpe
+en tuiles d'environ 5 km, publiées sur la branche `places`. L'appli ne charge que les 1 à 4 tuiles
+autour de soi (≈ 0,2 à 0,8 s), puis les garde sur l'appareil. Le service Overpass ne sert qu'en dehors
+de la France. Les adresses tapées sont cherchées avec Nominatim.
 
 ## Lancer l'appli
 
@@ -95,7 +101,8 @@ Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 | `public/index.html` | La page de l'appli |
 | `public/css/app.css` | Styles et thèmes |
 | `public/js/app.js` | L'appli (explorer, chrono, blog, avis, réglages…) |
-| `public/js/places.js` | Recherche de lieux et d'adresses (OpenStreetMap) |
+| `public/js/places.js` | Recherche de lieux (tuiles, Overpass en secours) et d'adresses (Nominatim) |
+| `scripts/build-places.js` | Fabrique les tuiles de lieux (workflow hebdomadaire) |
 | `public/js/hours.js` | Horaires d'ouverture : ouvert ou fermé à l'arrivée |
 | `public/js/icons.js` | Petits dessins au trait (à la place des emojis) |
 | `public/admin.html` | Page de modération |

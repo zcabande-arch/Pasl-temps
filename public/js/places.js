@@ -151,11 +151,18 @@
   // Tuiles d'abord (quasi instantané) ; service Overpass seulement hors zone couverte ou si les tuiles ne répondent pas.
   async function nearby(pos, groups, opts){
     opts = opts || {};
-    try{
-      const fromTiles = await nearbyFromTiles(pos, groups, opts.limit);
-      if(fromTiles) return fromTiles;
-    }catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
-    return nearbyOverpass(pos, groups, opts);
+    let out = null;
+    try{ out = await nearbyFromTiles(pos, groups, (opts.limit || 12) + 8); }
+    catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
+    if(!out) out = await nearbyOverpass(pos, groups, {...opts, limit: (opts.limit || 12) + 8});
+    // Un même lieu est parfois saisi deux fois dans OpenStreetMap (point + contour) : on n'en garde qu'un
+    const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+    Object.keys(out).forEach(k => {
+      const kept = [];
+      for(const p of out[k]) if(!kept.some(q => norm(q.name) === norm(p.name) && meters(q, p) < 150)) kept.push(p);
+      out[k] = kept.slice(0, opts.limit || 12);
+    });
+    return out;
   }
   async function nearbyOverpass(pos, groups, opts){
     const around = r => `(around:${Math.round(r)},${pos.lat.toFixed(5)},${pos.lng.toFixed(5)})`;
