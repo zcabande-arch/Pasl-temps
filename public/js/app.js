@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "29";
+const APP_VERSION = "30";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -12,7 +12,7 @@ const APP_VERSION = "29";
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
-  manger: {img:"img/moods/manger.jpg", d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
+  manger: {img:"img/moods/manger.jpg", imgs:["img/moods/manger.jpg","img/moods/manger-2.jpg","img/moods/manger-3.jpg","img/moods/manger-4.jpg"], d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
@@ -287,7 +287,7 @@ function renderResults(){
   // Bandeau photo de l'envie choisie, en tête des résultats
   if(pos && MOODS[M].img){
     const bn = document.createElement("div"); bn.className = "banner";
-    bn.style.backgroundImage = `url('${MOODS[M].img.replace(".jpg", "-large.jpg")}'), url('${MOODS[M].img}')`;
+    bn.style.backgroundImage = `url('${moodImg(M, true)}'), url('${moodImg(M)}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
     bn.innerHTML = `<span class="k">${fmtDur(T)} ${esc(TR().way)}, retour compris</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : `Rien à portée${T < 120 ? " : essaie plus de temps" : ""}${(SET.travel || "walk") !== "car" ? (T < 120 ? " ou " : " : essaie ") + ((SET.travel || "walk") === "walk" ? "le vélo" : "la voiture") : ""}`}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
@@ -299,10 +299,32 @@ function renderResults(){
 const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); }
 
+// Photo du moment d'une envie : si elle en a plusieurs, on passe à la suivante toutes les 10 minutes
+const PHOTO_EVERY = 10 * 60e3;
+const photoSlot = () => Math.floor(Date.now() / PHOTO_EVERY);
+function moodImg(k, large){
+  const v = MOODS[k], list = v.imgs || (v.img ? [v.img] : []);
+  if(!list.length) return "";
+  const img = list[photoSlot() % list.length];
+  return large ? img.replace(".jpg", "-large.jpg") : img;
+}
+let lastSlot = photoSlot();
+setInterval(() => {
+  if(photoSlot() === lastSlot) return;
+  lastSlot = photoSlot();
+  // on précharge les nouvelles photos, puis on les affiche en fondu
+  Object.keys(MOODS).filter(k => (MOODS[k].imgs || []).length > 1).forEach(k => { new Image().src = moodImg(k); new Image().src = moodImg(k, true); });
+  setTimeout(() => {
+    document.body.classList.add("photo-swap");
+    renderMoods(); if(!$("viewExplore").hidden) renderResults();
+    setTimeout(() => document.body.classList.remove("photo-swap"), 900);
+  }, 1500);
+}, 20e3);
+
 function renderMoods(){
   $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
     v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 // Choix du temps : jusqu'à 2 h
