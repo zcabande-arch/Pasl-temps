@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="35">
+<meta name="app-version" content="36">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pas l'temps</title>
 <meta name="description" content="10 minutes ou 2 heures devant toi ? Pas l'temps trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -43,7 +43,7 @@
   <div id="viewExplore">
   <div class="col-a">
   <header class="hero2">
-    <p class="kicker">✦ Ta pause, tout près</p>
+    <p class="kicker" id="kicker">✦ Ta pause, tout près</p>
     <h1 class="display">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
     <p class="post">On fait quoi ?</p>
   </header>
@@ -51,6 +51,11 @@
   <div class="dial" id="dial" role="group" aria-label="Temps disponible">
 
   </div>
+  <div class="backby" id="backBy">
+    <label for="atIn">⏰ Je dois être rentré·e à</label>
+    <span class="atbox"><input type="time" id="atIn" step="300"><button class="link" id="atClear" hidden aria-label="Revenir au choix en minutes">✕</button></span>
+  </div>
+  <p class="msg" id="atMsg"></p>
   <div class="seg travel" id="travelSeg" role="group" aria-label="Moyen de transport"></div>
 
   <h2>Envie de…</h2>
@@ -69,6 +74,11 @@
   </div>
   <div class="idea" id="idea"><p id="ideaTxt"></p><button id="ideaBtn">🎲 Choisis pour moi</button></div>
   <div class="col-b">
+  <div id="bannerBox"></div>
+  <div class="filters" id="filters" hidden>
+    <div class="sortrow" id="fchips"></div>
+    <div class="rvsearch fsearch">🔎<input id="fq" type="search" placeholder="Chercher un lieu par son nom" aria-label="Chercher un lieu par son nom" enterkeyhint="done"></div>
+  </div>
   <div id="results"></div>
 
   <section class="saved" aria-labelledby="savedTitle">
@@ -171,5 +181,6 @@
 <script src="js/icons.js"></script>
 <script src="js/app.js"></script>
 <script src="js/profile.js"></script>
+<script src="js/onboard.js"></script>
 </body>
 </html>

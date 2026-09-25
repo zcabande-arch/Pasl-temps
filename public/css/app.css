@@ -630,3 +630,43 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 /* Lieu atteint depuis le radar : il s'allume un instant */
 .place.flash{box-shadow:0 0 0 3px var(--acc),var(--sh);transition:box-shadow .3s}
 @media (prefers-reduced-motion:no-preference){ body:not(.no-motion) .place.flash{animation:flashIn 1.2s ease} @keyframes flashIn{0%,40%{background:var(--accsoft)}} }
+
+/* Radar : bulles de plusieurs lieux, et leur liste */
+.radar .cl circle{fill:var(--ink)!important}
+.radar .cl .cn{fill:var(--bg);font-size:13px;font-weight:800}
+.cllist{display:flex;flex-direction:column;gap:6px;margin:10px 0 4px}
+.cllist button{display:flex;align-items:center;gap:10px;text-align:left;background:var(--bg);border:0;border-radius:14px;padding:8px 12px;font-size:15px}
+.cllist button b{flex:1;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cllist button small{font-weight:800}
+.cllist .e{display:grid;place-items:center}
+
+/* « Je dois être rentré·e à… » */
+.backby{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:-4px 0 14px;font-size:15px;color:var(--soft)}
+.backby label{font-weight:600}
+.backby input{font:inherit;font-size:16px;font-weight:700;color:var(--ink);background:var(--card);border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;min-width:96px}
+.backby.on input{border-color:var(--acc);box-shadow:0 0 0 2px var(--acc)}
+.backby .link{font-size:16px;padding:4px 8px}
+#atMsg{font-size:14px;color:var(--warn);margin:-8px 0 12px}
+#atMsg:empty{display:none}
+/* Filtres des résultats */
+.filters{margin:0 0 14px}
+.filters .sortrow{margin-bottom:10px}
+.filters .chip{white-space:nowrap}
+.filters .chip[aria-pressed="true"]{background:var(--acc);color:var(--accink);border-color:var(--acc)}
+.fsearch{margin-bottom:0}
+.sticker.late{background:#2B3A67;color:#fff}
+.banner .wx{align-self:flex-start;background:rgba(255,255,255,.92);color:#1C1512;font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:auto}
+/* Premier lancement */
+#onb{position:fixed;inset:0;z-index:90;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 28px calc(28px + env(safe-area-inset-bottom,0px));opacity:0;transition:opacity .35s}
+#onb.in{opacity:1} #onb.out{opacity:0}
+#onb .skip{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:20px;font-size:15px;color:var(--soft)}
+#onb .art{width:170px;height:170px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--sh);margin-bottom:26px}
+#onb h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:32px;line-height:1.08;letter-spacing:-.02em;margin:0 0 10px;max-width:420px}
+#onb p{color:var(--soft);font-size:17px;margin:0 0 18px;max-width:380px}
+#onb .field{background:var(--card);box-shadow:var(--sh);max-width:320px;text-align:center;font-size:18px;margin-bottom:14px}
+#onb .dots{display:flex;gap:8px;margin:6px 0 22px}
+#onb .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
+#onb .dots i.on{background:var(--acc);width:22px;border-radius:99px}
+#onb .next{min-width:220px;font-size:17px;padding:14px 24px}
+.backby .atbox{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}

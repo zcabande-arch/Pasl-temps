@@ -1,6 +1,6 @@
 name: Construire les lieux (OpenStreetMap)
 
-# Chaque semaine : télécharge les données OpenStreetMap de la France, garde les lieux utiles à l'appli
+# Chaque semaine : télécharge les données OpenStreetMap de la France (métropole et Outre-mer), garde les lieux utiles à l'appli
 # (boulangeries, cafés, parcs, musées…) et les découpe en petites tuiles d'environ 5 km.
 # Les tuiles sont publiées sur la branche « places » ; l'appli les lit directement, sans passer par
 # le service Overpass (lent et souvent surchargé).
@@ -32,26 +32,36 @@ jobs:
       - name: Installer osmium
         run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
 
-      - name: Télécharger OpenStreetMap France (Geofabrik)
+      - name: Télécharger OpenStreetMap et garder les lieux utiles (Geofabrik)
         run: |
+          # Métropole (obligatoire), puis Outre-mer (Guadeloupe, Martinique, Guyane, La Réunion, Mayotte : ignorés s'ils manquent)
+          garder() {
+            osmium tags-filter "$1" \
+              nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books \
+              nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library \
+              nwr/leisure=park,garden,nature_reserve,common,track,fitness_centre,sports_centre \
+              nwr/tourism=picnic_site,viewpoint,attraction,museum,gallery \
+              nwr/historic=monument,castle \
+              -o "$2"
+            rm "$1"
+          }
           curl -fL --retry 3 --retry-delay 20 -o france.osm.pbf https://download.geofabrik.de/europe/france-latest.osm.pbf
-          ls -lh france.osm.pbf
-
-      - name: Garder les lieux utiles
-        run: |
-          osmium tags-filter france.osm.pbf \
-            nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books \
-            nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library \
-            nwr/leisure=park,garden,nature_reserve,common,track,fitness_centre,sports_centre \
-            nwr/tourism=picnic_site,viewpoint,attraction,museum,gallery \
-            nwr/historic=monument,castle \
-            -o lieux.osm.pbf
-          rm france.osm.pbf
+          garder france.osm.pbf part-france.osm.pbf
+          for r in guadeloupe martinique guyane reunion mayotte; do
+            if curl -fL --retry 3 --retry-delay 20 -o "$r.osm.pbf" "https://download.geofabrik.de/europe/france/$r-latest.osm.pbf"; then
+              garder "$r.osm.pbf" "part-$r.osm.pbf"
+            else
+              echo "::warning::$r non téléchargé, ignoré cette semaine"
+            fi
+          done
+          osmium merge part-*.osm.pbf -o lieux.osm.pbf
+          rm part-*.osm.pbf
           osmium export lieux.osm.pbf -f geojsonseq -a type,id \
             --geometry-types=point,linestring,polygon -o lieux.geojsonseq
           ls -lh lieux.osm.pbf lieux.geojsonseq
 
       - name: Découper en tuiles
+        # (la zone couverte n'est plus un seul rectangle : l'appli regarde s'il y a une tuile là où l'on est)
         run: node scripts/build-places.js lieux.geojsonseq sortie/ | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Publier sur la branche « places »

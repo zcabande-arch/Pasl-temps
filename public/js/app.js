@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "35";
+const APP_VERSION = "36";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -29,7 +29,7 @@ const MOODS = {
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
-    {l:"Musées", em:"🖼️", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
+    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
     {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stay:30, q:"galerie d'art"}]},
   poser: {img:"img/moods/poser.svg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
@@ -77,7 +77,7 @@ const PREF_TYPES = [
   {k:"shop",    l:tx("Shopping"),            ico:"bag",      sels:["shop=mall","shop=department_store","shop=gift","shop=souvenir"]},
   {k:"market",  l:tx("Marchés"),             ico:"market",   sels:["amenity=marketplace","shop=farm"]},
   {k:"books",   l:tx("Librairies"),          ico:"openbook", sels:["shop=books"]},
-  {k:"museum",  l:tx("Musées"),              ico:"frame",    sels:["tourism=museum"]},
+  {k:"museum",  l:tx("Musées"),              ico:"vase",     sels:["tourism=museum"]},
   {k:"gallery", l:tx("Galeries d'art"),      ico:"frame",    sels:["tourism=gallery"]},
   {k:"monument",l:tx("Monuments"),           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
   {k:"library", l:tx("Bibliothèques"),       ico:"books",    sels:["amenity=library"]},
@@ -216,26 +216,110 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{w} min aller · {s} sur place · {w} min retour", {w:p.walk, s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
     <div class="det">
       <p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
-      ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat)}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
+      ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}</div>
+      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button></div>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
   el.querySelector(".go").addEventListener("click", () => { const h = logVisit(p); startTimer(p, h); });
+  el.querySelector(".shr").onclick = e => sharePlace(p, e.currentTarget);
   el.querySelector(".fv").onclick = e => { toggleList("fav", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.fav[p.id])); };
   el.querySelector(".td").onclick = e => { toggleList("todo", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.todo[p.id])); };
   const rvBox = el.querySelector(".rvs");
   rv.filter(r => r.text).slice(0,2).forEach(r => { const q = document.createElement("div"); q.className = "quote"; q.innerHTML = `<b></b> `; q.firstChild.textContent = (r.author.pseudo||"Quelqu'un") + " :"; q.appendChild(document.createTextNode(r.text.length > 140 ? r.text.slice(0,140) + "…" : r.text)); rvBox.appendChild(q); });
   return el;
 }
+
+// ---------- Météo (Open-Meteo : gratuit, sans compte) ----------
+// Position arrondie (~1 km). S'il pleut, les lieux couverts passent d'abord ; s'il fait beau, le dehors est favorisé.
+const OUT_SELS = new Set(["leisure=park","leisure=garden","tourism=picnic_site","leisure=nature_reserve","tourism=viewpoint","leisure=common","amenity=marketplace","leisure=track"]);
+const isOutdoor = g => !!g && g.osm.every(x => OUT_SELS.has(x));
+const WX_KEY = "pasltemps.wx";
+let WX = null; try{ WX = JSON.parse(localStorage.getItem(WX_KEY) || "null"); }catch(e){}
+const wxFresh = (lat, lng) => WX && WX.lat === lat && WX.lng === lng && Date.now() - WX.at < 30 * 60e3;
+const wxNow = () => pos && wxFresh(+pos.lat.toFixed(2), +pos.lng.toFixed(2)) ? WX : null;
+async function loadWeather(){
+  if(!pos) return;
+  const lat = +pos.lat.toFixed(2), lng = +pos.lng.toFixed(2);
+  if(wxFresh(lat, lng)) return;
+  const ctl = new AbortController(), to = setTimeout(() => ctl.abort(), 6000);
+  try{
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,precipitation,weather_code,is_day&timezone=auto`, {signal:ctl.signal});
+    const c = r.ok && (await r.json()).current; if(!c) return;
+    const code = +c.weather_code;
+    const rain = c.precipitation > 0.1 || (code >= 51 && code <= 67) || (code >= 71 && code <= 86) || code >= 95;
+    WX = {lat, lng, at:Date.now(), rain, nice: !rain && code <= 2 && c.temperature_2m >= 14 && !!c.is_day, t:Math.round(c.temperature_2m)};
+    try{ localStorage.setItem(WX_KEY, JSON.stringify(WX)); }catch(e){}
+    renderResults();
+  }catch(e){ /* pas de météo : l'appli marche pareil */ }
+  finally{ clearTimeout(to); }
+}
+function wxLine(){
+  const w = wxNow(); if(!w) return "";
+  if(w.rain) return MOODS[M].groups.every(isOutdoor) ? tx("🌧️ Il pleut ({t}°) : pense à « Culture » ou « Au calme »", {t:w.t}) : tx("🌧️ Il pleut ({t}°) : les lieux couverts d'abord", {t:w.t});
+  if(w.nice) return tx("☀️ {t}°, beau temps : profite du dehors", {t:w.t});
+  return "";
+}
+
+// « On va là ? » : envoie le lieu (partage du téléphone, sinon lien copié)
+async function sharePlace(p, btn){
+  const url = `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+  const text = tx("On va là ? {n} ({a}), à {w} min {way}.", {n:p.name, a:(p.addr || "").split(",")[0] || tx("voir la carte"), w:p.walk, way:TR().way});
+  try{ if(navigator.share){ await navigator.share({title:p.name, text, url}); return; } }
+  catch(e){ if(e && e.name === "AbortError") return; }
+  try{ await navigator.clipboard.writeText(text + " " + url); btn.textContent = tx("Lien copié ✓"); }
+  catch(e){ prompt(tx("Copie ce message :"), text + " " + url); }
+}
+
+// ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
+const FILTER = {q:"", cu:""};
+const isNight = () => { const h = new Date().getHours(); return h >= 20 || h < 7; };
+// Pas de choix fait : « Ouverts seulement » s'active tout seul le soir et la nuit
+const openOnlyNow = () => SET.openOnly === true || (SET.openOnly == null && isNight());
+const cuisinesOf = p => p.cat ? p.cat.split(", ") : [];
+function passFilter(p, anyCuisine){
+  const o = p.open || HOURS.forVisit(p.oh, p.walk, p.stay);
+  if(openOnlyNow() && o.level === "closed") return false;
+  if(SET.wcOnly && !p.wheelchair) return false;
+  if(FILTER.cu && !anyCuisine && !cuisinesOf(p).includes(FILTER.cu)) return false;
+  if(FILTER.q && !norm(p.name).includes(norm(FILTER.q))) return false;
+  return true;
+}
+const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q);
+function renderFilters(){
+  const F = $("filters"), list = allLoaded();
+  F.hidden = !pos || !list.length && !filtering();
+  if(F.hidden) return;
+  const chips = [];
+  if(list.some(p => HOURS.parse(p.oh)))
+    chips.push(`<button class="chip" data-f="open" aria-pressed="${openOnlyNow()}">🕐 ${tx("Ouverts à ton arrivée")}</button>`);
+  if(list.some(p => p.wheelchair) || SET.wcOnly)
+    chips.push(`<button class="chip" data-f="wc" aria-pressed="${!!SET.wcOnly}">${tx("♿ Accessible")}</button>`);
+  // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
+  const count = {};
+  new Map(list.filter(p => passFilter(p, true)).map(p => [p.id, p])).forEach(p => cuisinesOf(p).forEach(c => count[c] = (count[c] || 0) + 1));
+  const top = Object.entries(count).sort((a, b) => b[1] - a[1]).slice(0, 8).map(x => x[0]);
+  if(FILTER.cu && !top.includes(FILTER.cu)) top.unshift(FILTER.cu);
+  if(top.length > 1) top.forEach(c => chips.push(`<button class="chip" data-cu="${esc(c)}" aria-pressed="${FILTER.cu === c}">${esc(tx(c))}</button>`));
+  $("fchips").innerHTML = chips.join("");
+}
+$("fchips").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
+  else if(b.dataset.f === "wc"){ SET.wcOnly = !SET.wcOnly; saveSet(); }
+  else if(b.dataset.cu != null) FILTER.cu = FILTER.cu === b.dataset.cu ? "" : b.dataset.cu;
+  renderResults();
+});
+$("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); renderResults(); });
+$("fq").addEventListener("keydown", e => { if(e.key === "Enter") $("fq").blur(); });
 
 function renderResults(){
   // « J'ai 20 minutes. » / « J'ai 1 heure. » / « J'ai 1 h 30. » / « J'ai 2 heures. »
@@ -244,14 +328,16 @@ function renderResults(){
   if(h1 && !$("unitTxt")) h1.innerHTML = `${tx("J'ai")} <em id="numTxt"></em><span id="unitTxt"></span>.`;
   $("numTxt").textContent = num; $("unitTxt").textContent = unit;
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
-  const R = $("results"); R.innerHTML = "";
+  const R = $("results"); R.innerHTML = ""; $("bannerBox").innerHTML = "";
+  renderFilters();
   const s = $("status");
   // Statut
   if(geoState === "wait") s.textContent = tx("Localisation en cours…");
   else if(geoState === "no") s.textContent = tx("Tape une adresse ou une ville ci-dessus pour voir les lieux autour.");
   else s.textContent = tx("Lieux où aller, en profiter et revenir {way} tient dans tes {d}.", {way:TR().way, d:fmtDur(T)});
 
-  const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
+  const wet = g => wxNow() && wxNow().rain && isOutdoor(g) ? 1 : 0;   // sous la pluie, le dehors passe après
+  const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (wet(a.g) - wet(b.g)) || (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
   const renderLater = () => laterGroups().forEach(({g, t}) => {
     const sec = document.createElement("section"); sec.className = "group later";
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}</span></h3>
@@ -259,23 +345,15 @@ function renderResults(){
     sec.querySelector(".more-time").onclick = () => $("dial").querySelector(`button[data-t="${t}"]`).click();
     R.appendChild(sec);
   });
-  if(!groups.length){ R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); return; }
+  if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); return; }
   let total = 0;
-  // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
-  const known = allLoaded().some(p => HOURS.parse(p.oh));
-  if(known){
-    const f = document.createElement("div"); f.className = "sortrow openrow";
-    f.innerHTML = `<button class="chip" aria-pressed="${!!SET.openOnly}">🕐 ${tx("Ouverts seulement")}</button><span>${tx("à ton arrivée")}</span>`;
-    f.querySelector("button").onclick = () => { SET.openOnly = !SET.openOnly; saveSet(); renderResults(); };
-    R.appendChild(f);
-  }
   const rd = radarEl(); if(rd) R.appendChild(rd);
   groups.forEach(g => {
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
     // Ouvert / fermé à l'arrivée : les lieux fermés passent en bas (ou disparaissent avec le filtre)
     const all = st && st.items ? st.items.map(p => ({...p, open: HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
-    const items = all.filter(p => !SET.openOnly || p.open.level !== "closed")
+    const items = all.filter(p => passFilter(p))
       .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
@@ -288,7 +366,7 @@ function renderResults(){
       sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">${tx("Réessayer")}</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(tx(g.q))}">Google Maps</a></p>`;
       sec.querySelector(".retry").onclick = () => search();
     } else if(!n){
-      sec.innerHTML += `<p class="note">${all.length ? tx("Tout est fermé à cette heure-ci.") : tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)})}</p>`;
+      sec.innerHTML += `<p class="note">${!all.length ? tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)}) : filtering() ? tx("Rien ne correspond à tes filtres ici.") : tx("Tout est fermé à cette heure-ci.")}</p>`;
     } else {
       const SHOW = 6, all = EXPANDED.has(g.l);
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
@@ -308,9 +386,10 @@ function renderResults(){
     bn.style.backgroundImage = `url('${moodImg(M, true)}'), url('${moodImg(M)}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
     const mode = SET.travel || "walk", tries = [T < 120 && tx("plus de temps"), mode !== "car" && tx(mode === "walk" ? "le vélo" : "la voiture")].filter(Boolean);
-    bn.innerHTML = `<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
+    const wl = wxLine();
+    bn.innerHTML = `${wl ? `<span class="wx">${esc(wl)}</span>` : ""}<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
-    R.insertBefore(bn, R.firstChild);
+    $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
 }
@@ -355,11 +434,45 @@ const TIMES = [10, 20, 30, 45, 60, 90, 120];
 $("dial").innerHTML = TIMES.map(t => `<button${t < 60 ? ` class="m"` : ""} data-t="${t}" aria-pressed="${t === T}">${t < 60 ? t : fmtDur(t)}</button>`).join("");
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
+  if(BACK_AT) setBackBy("");
   T = +b.dataset.t;
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
   const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
   search();
 });
+// ---------- « Je dois être rentré·e à… » ----------
+// Une heure de retour au lieu d'une durée : le temps disponible se recalcule tout seul à chaque minute.
+let BACK_AT = null;
+const minsLeft = () => Math.floor((BACK_AT - Date.now()) / 60000);
+const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2, "0"); return I18N.lang === "en" ? `${d.getHours()}:${m}` : `${d.getHours()}h${m}`; };
+function renderBackBy(){
+  $("atClear").hidden = !BACK_AT;
+  $("backBy").classList.toggle("on", !!BACK_AT);
+  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Ta pause, tout près");
+}
+function setBackBy(value){
+  $("atMsg").textContent = "";
+  if(!value){ BACK_AT = null; $("atIn").value = ""; renderBackBy(); return; }
+  const [h, m] = value.split(":").map(Number), d = new Date(); d.setHours(h, m, 0, 0);
+  if(d.getTime() <= Date.now()){ $("atMsg").textContent = tx("Cette heure est déjà passée."); return; }
+  if((d.getTime() - Date.now()) / 60000 < 10){ $("atMsg").textContent = tx("Moins de 10 min : là, t'as vraiment pas l'temps !"); return; }
+  BACK_AT = d.getTime();
+  if(minsLeft() > 240) $("atMsg").textContent = tx("Je cherche pour 4 h au maximum.");
+  applyBackBy();
+}
+function applyBackBy(){
+  if(!BACK_AT) return;
+  const left = minsLeft();
+  if(left < 5){ setBackBy(""); $("atMsg").textContent = tx("C'est l'heure de rentrer !"); return; }
+  document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", "false"));
+  renderBackBy();
+  const nt = Math.min(240, left);
+  if(nt !== T){ T = nt; search(); }
+}
+$("atIn").addEventListener("change", () => setBackBy($("atIn").value));
+$("atClear").onclick = () => { setBackBy(""); $("dial").querySelector('button[data-t="20"]').click(); };
+setInterval(applyBackBy, 30e3);
+
 // Une seule ligne, une bulle qui glisse sous le mode choisi
 function renderTravel(){
   const box = $("travelSeg"), keys = Object.keys(TRAVEL), cur = SET.travel || "walk";
@@ -407,7 +520,7 @@ function setPlace(lat, lng, label, remember){
     RECENTS = [{lat, lng, label}, ...RECENTS.filter(r => r.label !== label)].slice(0,5);
     saveRecents();
   }
-  renderWhere(); renderHistory(); renderSaved(); search();
+  renderWhere(); renderHistory(); renderSaved(); search(); loadWeather();
 }
 function renderWhere(choices){
   $("here").innerHTML = pos ? `📍 ${tx("Autour de")} <b></b>` : tx("📍 Où es-tu ?");
@@ -1081,7 +1194,7 @@ $("savedSeg").addEventListener("click", e => { const b = e.target.closest("butto
 // ---------- Radar ----------
 function radarEl(){
   if(!pos) return null;
-  const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id) && !(SET.openOnly && HOURS.forVisit(p.oh, p.walk, p.stay).level === "closed")) uniq.set(p.id, p); });
+  const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id) && passFilter(p)) uniq.set(p.id, p); });
   const items = [...uniq.values()]; if(!items.length) return null;
   const tm = TR(), leg = maxLeg();
   const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
@@ -1098,9 +1211,20 @@ function radarEl(){
     if(r > 16 && r <= 152) svg += `<text class="rl" x="4" y="${(-r + 11).toFixed(1)}" fill="${b.c}">${Math.round(m)} min</text>`;
   });
   svg += `<text class="rl" x="0" y="-152" text-anchor="middle">N</text>`;
-  items.forEach(p => {
-    const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k, b = bandOf(p.walk);
-    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${tx("{w} min aller · {d} au total", {w:p.walk, d:fmtDur(2*p.walk + p.stay)})}</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
+  // Lieux trop proches pour être touchés un par un : regroupés en une bulle « 3 » (toucher → la liste)
+  const clusters = [];
+  items.sort((a, b) => a.walk - b.walk).forEach(p => {
+    const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k;
+    const c = clusters.find(c => Math.hypot(c.x - x, c.y - y) < 20);
+    if(c) c.list.push(p); else clusters.push({x, y, list:[p]});
+  });
+  clusters.forEach(({x, y, list}) => {
+    const p = list[0], b = bandOf(p.walk), at = `transform="translate(${x.toFixed(1)},${y.toFixed(1)})"`;
+    if(list.length > 1){
+      svg += `<g class="pt cl" data-ids="${esc(list.map(q => q.id).join("|"))}" ${at}><title>${esc(list.map(q => q.name).join(", "))}</title><circle r="15" style="stroke:${b.c};stroke-width:2.5"/><text class="cn" text-anchor="middle" dy="5">${list.length}</text></g>`;
+      return;
+    }
+    svg += `<g class="pt" data-id="${esc(p.id)}" ${at}><title>${esc(p.name)} · ${tx("{w} min aller · {d} au total", {w:p.walk, d:fmtDur(2*p.walk + p.stay)})}</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
   });
   svg += `<circle class="me" r="7"/><circle r="12" fill="none" stroke="var(--acc)" stroke-opacity=".35" stroke-width="3"/></svg>`;
   const d = document.createElement("div"); d.className = "radar";
@@ -1108,10 +1232,18 @@ function radarEl(){
     const lo = i ? Math.round(BANDS[i-1].max * leg) : 0, hi = Math.round(Math.min(b.max, 1) * leg);
     return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : tx("+ de {m} min", {m:lo})}</small></span>`;
   }).join("");
-  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">${tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="cllist" hidden></div><div class="bands">${legend}</div><p class="bnote">${tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
   // (sur tout le bloc : le premier <svg> du bloc est la boussole du titre, pas la carte)
   d.addEventListener("click", e => {
-    const g = e.target.closest(".pt"); if(g) goToPlace(g.dataset.id);
+    const one = e.target.closest("[data-id]"); if(one){ goToPlace(one.dataset.id); return; }
+    const g = e.target.closest(".cl"); if(!g) return;
+    // bulle de plusieurs lieux : la liste s'ouvre sous la carte
+    const box = d.querySelector(".cllist"), ids = g.dataset.ids.split("|");
+    const list = ids.map(id => items.find(p => p.id === id)).filter(Boolean);
+    box.innerHTML = list.map(p => `<button data-id="${esc(p.id)}"><span class="e">${ICONS.ico(p.em, 22)}</span><b></b><small style="color:${bandOf(p.walk).c}">${p.walk} min</small></button>`).join("");
+    box.querySelectorAll("b").forEach((b, i) => b.textContent = list[i].name);
+    box.hidden = false;
+    box.scrollIntoView({behavior: SET.motion === "off" ? "auto" : "smooth", block:"nearest"});
   });
   return d;
 }
@@ -1122,6 +1254,7 @@ function goToPlace(id){
   let el = document.getElementById(elId);
   if(!el){
     const p = allLoaded().find(x => x.id === id); if(!p) return;
+    if(!passFilter(p)){ FILTER.q = ""; FILTER.cu = ""; $("fq").value = ""; }
     EXPANDED.add(p.g); renderResults();
     el = document.getElementById(elId); if(!el) return;
   }
@@ -1400,6 +1533,8 @@ function pickForMe(list){
     if(LISTS.todo[p.id]) w *= 2.2; else if(LISTS.fav[p.id]) w *= 1.5;
     if(isPreferred(MOODS[M].groups.find(g => g.l === p.g))) w *= 1.8;
     if(recent.has(p.id)) w *= .25;
+    const g = MOODS[M].groups.find(x => x.l === p.g), wx = wxNow();
+    if(wx && isOutdoor(g)) w *= wx.rain ? .25 : wx.nice ? 1.5 : 1;
     if(p.id === pickedId) w *= .05;
     return {p, w};
   });
@@ -1408,12 +1543,14 @@ function pickForMe(list){
   const p = hit.p, free = Math.max(0, T - 2*p.walk - p.stay);
   const why = LISTS.todo[p.id] ? tx("tu l'avais noté à tester, c'est le moment") :
     recent.has(p.id) ? tx("une valeur sûre") :
+    wxNow() && wxNow().rain && !isOutdoor(MOODS[M].groups.find(x => x.l === p.g)) ? tx("à l'abri de la pluie") :
+    wxNow() && wxNow().nice && isOutdoor(MOODS[M].groups.find(x => x.l === p.g)) ? tx("parfait avec ce soleil") :
     hourBoost(p.g, hr) > 1.5 ? tx("parfait {m}", {m:MOMENT(hr)}) :
     !HIST.some(h => h.pid === p.id) ? tx("tu n'y es encore jamais allé·e") : tx("ça change un peu");
   return {p, txt:`${p.name}${tx(" : ")}${why}. ${tx("{d} en tout ({w} min {way} à l'aller et au retour)", {d:fmtDur(2*p.walk + p.stay), w:p.walk, way:TR().way})}${free ? ", " + tx("il te restera {d}", {d:fmtDur(free)}) : ""}.`};
 }
 $("ideaBtn").addEventListener("click", () => {
-  const list = allLoaded(); if(!list.length) return;
+  const list = allLoaded().filter(p => passFilter(p)); if(!list.length) return;
   const {p, txt} = pickForMe(list);
   pickedId = p.id; $("ideaTxt").textContent = txt;
   EXPANDED.add(p.g);            // le lieu choisi peut être derrière « Voir plus »
@@ -1525,7 +1662,7 @@ document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.data
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
 HIST = lsLoad();
-renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); locate(false); initHistory();
+renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();
 
 // Hors connexion
 function renderOnline(){ $("offline").hidden = navigator.onLine !== false; }

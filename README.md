@@ -18,6 +18,11 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 🔑 **Code de récupération sans serveur** : un code (ou un lien) qui contient le profil, les réglages, les favoris et l'historique
 - 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
   **installable** sur le téléphone et utilisable **hors connexion**
+- ⏰ **« Je dois être rentré·e à… »** : une heure de retour au lieu d'une durée, le temps se recalcule tout seul
+- 🔎 **Filtres** : ouverts à l'arrivée (automatique le soir), accessibles en fauteuil, type de cuisine, recherche par nom
+- 🌧️ **Météo** (Open-Meteo) : sous la pluie les lieux couverts d'abord, au soleil le dehors est favorisé
+- 🗺️ **Radar** : toucher un point ouvre le lieu ; les lieux collés sont regroupés en bulles
+- 📤 **Envoyer un lieu à un pote**, 👋 accueil en 3 écrans au premier lancement, 🏝️ Outre-mer couvert par les tuiles
 - 🇬🇧 **Français et anglais** (réglage « Langue », auto = langue de l'appareil)
 - ⚖️ **Mentions légales**, confidentialité, conditions d'utilisation et crédits (`public/legal.html`), avec un bouton « Tout effacer »
 - 🖼️ Illustrations maison (aucune image sous droits) et polices hébergées avec l'appli (aucune requête vers Google)
