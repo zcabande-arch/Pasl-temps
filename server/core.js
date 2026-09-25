@@ -92,7 +92,8 @@ function createApi(store, opts = {}){
     if(path === "/api/health") return ok({ok:true, app:"pasltemps"});
 
     if(path === "/api/session" && method === "POST"){
-      if(!limited(req.ip, 30)) return fail(429, "rate_limited");
+      // Création de compte : 30 d'un coup par adresse, puis 1 toutes les 10 s (familles, bureaux derrière une même box)
+      if(!limited("session:" + req.ip, 1, 30, 0.1)) return fail(429, "rate_limited");
       const token = randomId(24);
       const uid = "u" + randomId(9).replace(/[^A-Za-z0-9]/g, "x");
       await store.addUser(uid, await sha(token));

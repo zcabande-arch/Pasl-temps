@@ -1246,6 +1246,7 @@ const LS_KEY = "pasltemps.history";
 const lsLoad = () => { try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); }catch(e){ return []; } };
 const lsSave = () => { try{ localStorage.setItem(LS_KEY, JSON.stringify(HIST.slice(0,300))); }catch(e){} };
 
+let initTries = 0;
 async function initHistory(){
   try{
     const conn = await PLT.connect();
@@ -1271,6 +1272,8 @@ async function initHistory(){
     }
   }catch(e){}
   dbState = "none";
+  // Serveur configuré mais injoignable ou saturé : nouvel essai un peu plus tard
+  if(initTries++ < 3 && (window.PASLTEMPS_CONFIG || {}).apiBase !== undefined) setTimeout(() => { if(!DB) initHistory(); }, 20000 * initTries);
   renderHistory(); renderRec(); renderBlog(); renderReviews();
 }
 async function write(id, fn){
