@@ -9,6 +9,11 @@
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter"
   ];
   const NOMINATIM = CFG.nominatim || "https://nominatim.openstreetmap.org";
+  // Tuiles de lieux préparées chaque semaine (branche « places » du dépôt, voir scripts/build-places.js)
+  const TILES = CFG.tiles || [
+    "https://raw.githubusercontent.com/zcabande-arch/Pasl-temps/places/",
+    "https://cdn.jsdelivr.net/gh/zcabande-arch/Pasl-temps@places/"
+  ];
 
   const R = 6371000, rad = x => x * Math.PI / 180;
   function meters(a, b){
@@ -85,9 +90,74 @@
     }
   }
 
+  // ---------- Tuiles (rapide) ----------
+  // Un fichier par case d'environ 5 km ; « null » = case vide (pas de fichier).
+  async function getTileFile(path){
+    let lastErr;
+    for(const base of TILES){
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 8000);
+      try{
+        const res = await fetch(base + path, {signal: ctl.signal});
+        if(res.status === 404) return null;
+        if(res.ok) return await res.json();
+        lastErr = {code: "server_unavailable"};
+      }catch(e){ lastErr = {code: navigator.onLine === false ? "offline" : "server_unavailable"}; }
+      finally{ clearTimeout(t); }
+    }
+    throw lastErr;
+  }
+  let indexP = null;
+  function tileIndex(){
+    if(!indexP) indexP = getTileFile("index.json").catch(() => { indexP = null; return null; });
+    return indexP;
+  }
+  const tileCache = new Map();
+  function tile(key){
+    if(!tileCache.has(key)) tileCache.set(key, getTileFile("t/" + key + ".json").then(r => r || [], e => { tileCache.delete(key); throw e; }));
+    return tileCache.get(key);
+  }
+  // → mêmes résultats que la recherche Overpass, ou null si on est hors de la zone couverte par les tuiles
+  async function nearbyFromTiles(pos, groups, limit){
+    const idx = await tileIndex();
+    if(!idx || !idx.cell) return null;
+    const [aLat, aLng, bLat, bLng] = idx.bbox, m = 0.05;
+    if(pos.lat < aLat - m || pos.lat > bLat + m || pos.lng < aLng - m || pos.lng > bLng + m) return null;
+    const maxR = Math.max(...groups.map(g => g.radius));
+    const dLat = maxR / 111320, dLng = maxR / (111320 * Math.cos(rad(pos.lat))), c = idx.cell;
+    const keys = [];
+    for(let i = Math.floor((pos.lat - dLat) / c); i <= Math.floor((pos.lat + dLat) / c); i++)
+      for(let j = Math.floor((pos.lng - dLng) / c); j <= Math.floor((pos.lng + dLng) / c); j++) keys.push(i + "_" + j);
+    const rows = (await Promise.all(keys.map(tile))).flat();
+    const out = {};
+    groups.forEach(g => out[g.l] = []);
+    const want = groups.map(g => new Set(g.osm));
+    for(const r of rows){
+      const [lat, lng, sel, name, addr, oh, web, phone, cuisine, wc, id] = r;
+      const sels = (Array.isArray(sel) ? sel : [sel]).map(i => idx.sels[i]);
+      let dist = -1;
+      groups.forEach((g, gi) => {
+        if(!sels.some(x => want[gi].has(x))) return;
+        if(dist < 0) dist = meters(pos, {lat, lng});
+        if(dist > g.radius * 1.05) return;
+        out[g.l].push({id: "osm:" + id, name, cat: cuisineFr(cuisine), addr: addr || "", phone: phone || "", url: fixUrl(web),
+          hours: hoursFr(oh), oh: oh || "", wheelchair: wc === 1, lat, lng, dist});
+      });
+    }
+    Object.keys(out).forEach(k => { out[k].sort((a, b) => a.dist - b.dist); out[k] = out[k].slice(0, limit || 12); });
+    return out;
+  }
+
   // groups : [{l, osm:["shop=bakery", …], radius}] → {nomDuGroupe: [lieux triés par distance]}
+  // Tuiles d'abord (quasi instantané) ; service Overpass seulement hors zone couverte ou si les tuiles ne répondent pas.
   async function nearby(pos, groups, opts){
     opts = opts || {};
+    try{
+      const fromTiles = await nearbyFromTiles(pos, groups, opts.limit);
+      if(fromTiles) return fromTiles;
+    }catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
+    return nearbyOverpass(pos, groups, opts);
+  }
+  async function nearbyOverpass(pos, groups, opts){
     const around = r => `(around:${Math.round(r)},${pos.lat.toFixed(5)},${pos.lng.toFixed(5)})`;
     const parts = [];
     // Les « relations » (grands parcs…) sont lentes à calculer : seulement pour les espaces verts,

@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v13";
+const VERSION = "pasltemps-v14";
 const CORE = [
   "./",
   "./index.html",
@@ -26,7 +26,7 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+      .then(keys => Promise.all(keys.filter(k => k !== VERSION && k !== "pasltemps-lieux").map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -56,6 +56,18 @@ self.addEventListener("fetch", e => {
       fetch(req, {cache: "no-cache"})
         .then(res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); } return res; })
         .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Tuiles de lieux : sur l'appareil d'abord (instantané, hors connexion), mise à jour en arrière-plan
+  const tiles = (url.hostname === "raw.githubusercontent.com" || url.hostname === "cdn.jsdelivr.net") && /Pasl-temps[@/]places\//.test(url.pathname);
+  if (tiles) {
+    e.respondWith(
+      caches.open("pasltemps-lieux").then(c => c.match(req).then(hit => {
+        const net = fetch(req).then(res => { if (res.ok || res.status === 404) c.put(req, res.clone()); return res; }).catch(() => hit);
+        return hit || net;
+      }))
     );
     return;
   }
