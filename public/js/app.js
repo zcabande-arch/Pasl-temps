@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "34";
+const APP_VERSION = "35";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -1081,7 +1081,7 @@ $("savedSeg").addEventListener("click", e => { const b = e.target.closest("butto
 // ---------- Radar ----------
 function radarEl(){
   if(!pos) return null;
-  const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id)) uniq.set(p.id, p); });
+  const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id) && !(SET.openOnly && HOURS.forVisit(p.oh, p.walk, p.stay).level === "closed")) uniq.set(p.id, p); });
   const items = [...uniq.values()]; if(!items.length) return null;
   const tm = TR(), leg = maxLeg();
   const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
@@ -1109,12 +1109,26 @@ function radarEl(){
     return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : tx("+ de {m} min", {m:lo})}</small></span>`;
   }).join("");
   d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">${tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
-  d.querySelector("svg").addEventListener("click", e => {
-    const g = e.target.closest(".pt"); if(!g) return;
-    const el = document.getElementById("p-" + g.dataset.id.replace(/[^\w-]/g,""));
-    if(el){ el.classList.add("open"); el.scrollIntoView({behavior:"smooth", block:"center"}); }
+  // (sur tout le bloc : le premier <svg> du bloc est la boussole du titre, pas la carte)
+  d.addEventListener("click", e => {
+    const g = e.target.closest(".pt"); if(g) goToPlace(g.dataset.id);
   });
   return d;
+}
+
+// Touche un point du radar → le lieu s'ouvre dans la liste (même s'il était caché derrière « Voir plus »)
+function goToPlace(id){
+  const elId = "p-" + id.replace(/[^\w-]/g,"");
+  let el = document.getElementById(elId);
+  if(!el){
+    const p = allLoaded().find(x => x.id === id); if(!p) return;
+    EXPANDED.add(p.g); renderResults();
+    el = document.getElementById(elId); if(!el) return;
+  }
+  el.classList.add("open", "flash");
+  const head = el.querySelector("button"); if(head) head.setAttribute("aria-expanded", "true");
+  el.scrollIntoView({behavior: SET.motion === "off" ? "auto" : "smooth", block:"center"});
+  setTimeout(() => el.classList.remove("flash"), 1600);
 }
 
 // ---------- Chrono « Je pars » ----------
