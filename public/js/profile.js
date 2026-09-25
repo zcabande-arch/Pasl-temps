@@ -11,6 +11,7 @@
     const n = (PROFILE.name || "").trim();
     $("pHello").innerHTML = n ? `Bonjour <em></em>` : "Bonjour";
     if(n) $("pHello").querySelector("em").textContent = n;
+    renderBrand();
   }
   function photo(){
     const ph = PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(PROFILE.photo) ? PROFILE.photo : "";

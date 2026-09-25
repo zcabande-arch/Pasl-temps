@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "30";
+const APP_VERSION = "31";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -56,6 +56,14 @@ function saveProfile(){
   catch(e){ try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({...PROFILE, photo:""})); }catch(_){} }
   scheduleBackup();
 }
+// En haut à gauche : « On n'a pas l'temps Prénom ? »
+function renderBrand(){
+  const b = $("brand"); if(!b) return;
+  const n = (PROFILE.name || "").trim();
+  b.innerHTML = n ? `On n'a pas l'temps <em></em> ?` : "On n'a pas l'temps ?";
+  if(n) b.querySelector("em").textContent = n;
+}
+renderBrand();
 // Types d'endroits qu'on peut préférer (étiquettes OpenStreetMap correspondantes)
 const PREF_TYPES = [
   {k:"bakery",  l:"Boulangeries",        ico:"baguette", sels:["shop=bakery","shop=pastry"]},
