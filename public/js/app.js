@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "33";
+const APP_VERSION = "34";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -12,30 +12,30 @@ const APP_VERSION = "33";
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
-  manger: {img:"img/moods/manger.jpg", imgs:["img/moods/manger.jpg","img/moods/manger-2.jpg","img/moods/manger-3.jpg","img/moods/manger-4.jpg"], d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
+  manger: {img:"img/moods/manger.svg", imgs:["img/moods/manger.svg","img/moods/manger-2.svg","img/moods/manger-3.svg","img/moods/manger-4.svg"], d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:20, q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:60, q:"restaurant"}]},
-  air: {img:"img/moods/air.jpg", d:"Parcs, jardins, points de vue", e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
+  air: {img:"img/moods/air.svg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
-  shopping: {img:"img/moods/shopping.jpg", d:"Galeries, marchés, cadeaux", e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
+  shopping: {img:"img/moods/shopping.svg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
-  culture: {img:"img/moods/culture.jpg", d:"Musées, librairies, monuments", e:"📚", l:"Culture", sl:"Culture", groups:[
+  culture: {img:"img/moods/culture.svg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
     {l:"Musées", em:"🖼️", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
     {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stay:30, q:"galerie d'art"}]},
-  poser: {img:"img/moods/poser.jpg", d:"Salons de thé, parcs", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
+  poser: {img:"img/moods/poser.svg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
-  bouger: {img:"img/moods/bouger.jpg", d:"Parcs, salles de sport", e:"🏃", l:"Bouger", sl:"Bouger", groups:[
+  bouger: {img:"img/moods/bouger.svg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
     {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]}
 };
@@ -61,27 +61,27 @@ function saveProfile(){
 function renderBrand(){
   const b = $("brand"); if(!b) return;
   const n = (PROFILE.name || "").trim();
-  b.innerHTML = n ? `On n'a pas l'temps <em></em> ?` : "On n'a pas l'temps ?";
+  b.innerHTML = n ? tx("On n'a pas l'temps <em></em> ?") : tx("On n'a pas l'temps ?");
   if(n) b.querySelector("em").textContent = n;
 }
 renderBrand();
 // Types d'endroits qu'on peut préférer (étiquettes OpenStreetMap correspondantes)
 const PREF_TYPES = [
-  {k:"bakery",  l:"Boulangeries",        ico:"baguette", sels:["shop=bakery","shop=pastry"]},
-  {k:"cafe",    l:"Cafés, salons de thé", ico:"cup",      sels:["amenity=cafe"]},
-  {k:"fast",    l:"Sur le pouce",        ico:"sandwich", sels:["amenity=fast_food","amenity=food_court"]},
-  {k:"ice",     l:"Glaciers",            ico:"icecream", sels:["amenity=ice_cream","shop=ice_cream"]},
-  {k:"resto",   l:"Restaurants",         ico:"plate",    sels:["amenity=restaurant"]},
-  {k:"park",    l:"Parcs, jardins",      ico:"tree",     sels:["leisure=park","leisure=garden","tourism=picnic_site"]},
-  {k:"nature",  l:"Nature, points de vue", ico:"forest", sels:["leisure=nature_reserve","tourism=viewpoint","leisure=common"]},
-  {k:"shop",    l:"Shopping",            ico:"bag",      sels:["shop=mall","shop=department_store","shop=gift","shop=souvenir"]},
-  {k:"market",  l:"Marchés",             ico:"market",   sels:["amenity=marketplace","shop=farm"]},
-  {k:"books",   l:"Librairies",          ico:"openbook", sels:["shop=books"]},
-  {k:"museum",  l:"Musées",              ico:"frame",    sels:["tourism=museum"]},
-  {k:"gallery", l:"Galeries d'art",      ico:"frame",    sels:["tourism=gallery"]},
-  {k:"monument",l:"Monuments",           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
-  {k:"library", l:"Bibliothèques",       ico:"books",    sels:["amenity=library"]},
-  {k:"sport",   l:"Sport",               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
+  {k:"bakery",  l:tx("Boulangeries"),        ico:"baguette", sels:["shop=bakery","shop=pastry"]},
+  {k:"cafe",    l:tx("Cafés, salons de thé"), ico:"cup",      sels:["amenity=cafe"]},
+  {k:"fast",    l:tx("Sur le pouce"),        ico:"sandwich", sels:["amenity=fast_food","amenity=food_court"]},
+  {k:"ice",     l:tx("Glaciers"),            ico:"icecream", sels:["amenity=ice_cream","shop=ice_cream"]},
+  {k:"resto",   l:tx("Restaurants"),         ico:"plate",    sels:["amenity=restaurant"]},
+  {k:"park",    l:tx("Parcs, jardins"),      ico:"tree",     sels:["leisure=park","leisure=garden","tourism=picnic_site"]},
+  {k:"nature",  l:tx("Nature, points de vue"), ico:"forest", sels:["leisure=nature_reserve","tourism=viewpoint","leisure=common"]},
+  {k:"shop",    l:tx("Shopping"),            ico:"bag",      sels:["shop=mall","shop=department_store","shop=gift","shop=souvenir"]},
+  {k:"market",  l:tx("Marchés"),             ico:"market",   sels:["amenity=marketplace","shop=farm"]},
+  {k:"books",   l:tx("Librairies"),          ico:"openbook", sels:["shop=books"]},
+  {k:"museum",  l:tx("Musées"),              ico:"frame",    sels:["tourism=museum"]},
+  {k:"gallery", l:tx("Galeries d'art"),      ico:"frame",    sels:["tourism=gallery"]},
+  {k:"monument",l:tx("Monuments"),           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
+  {k:"library", l:tx("Bibliothèques"),       ico:"books",    sels:["amenity=library"]},
+  {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
 ];
 function isPreferred(g){
   if(!PROFILE.prefs.length || !g) return false;
@@ -91,19 +91,19 @@ function isPreferred(g){
 
 // Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
 const TRAVEL = {
-  walk: {l:"À pied",  ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:"de marche", way:"à pied",     rings:[2,5,10,15,20]},
-  bike: {l:"Vélo",    ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:"de vélo",   way:"à vélo",     rings:[3,5,10,15,20]},
-  car:  {l:"Voiture", ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:"de route",  way:"en voiture", rings:[5,8,12,16,20]}
+  walk: {l:tx("À pied"), ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:tx("de marche"), way:tx("à pied"),     rings:[2,5,10,15,20]},
+  bike: {l:tx("Vélo"), ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:tx("de vélo"), way:tx("à vélo"),     rings:[3,5,10,15,20]},
+  car:  {l:tx("Voiture"), ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:tx("de route"), way:tx("en voiture"), rings:[5,8,12,16,20]}
 };
 const TR = () => TRAVEL[SET.travel] || TRAVEL.walk;
 // Durées lisibles : 45 → « 45 min », 60 → « 1 h », 90 → « 1 h 30 »
 const fmtDur = m => { m = Math.round(m); if(m < 60) return m + " min"; const h = Math.floor(m / 60), r = m % 60; return h + " h" + (r ? " " + String(r).padStart(2, "0") : ""); };
 // Code couleur selon l'éloignement : part du trajet aller maximal possible pour le temps choisi
 const BANDS = [
-  {max:.25, c:"#2E9E5B", l:"Tout près"},
-  {max:.5,  c:"#D39A00", l:"Proche"},
-  {max:.75, c:"#EA6A1B", l:"Un peu loin"},
-  {max:9,   c:"#D7261E", l:"Juste à temps"}
+  {max:.25, c:"#2E9E5B", l:tx("Tout près")},
+  {max:.5,  c:"#D39A00", l:tx("Proche")},
+  {max:.75, c:"#EA6A1B", l:tx("Un peu loin")},
+  {max:9,   c:"#D7261E", l:tx("Juste à temps")}
 ];
 function maxLeg(){
   const gs = groupsNow(); if(!gs.length) return 1;
@@ -117,7 +117,7 @@ const radiusFor = (stay, t = T) => { const m = TR(); return Math.min(m.cap, Math
 const fits = (g, t) => (!g.minT || t >= g.minT) && t - g.stay - 2 * TR().over >= 2;
 const groupsNow = () => MOODS[M].groups.filter(g => fits(g, T));
 function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${TR().gm}`; }
-function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+" à proximité")}`; }
+function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+tx(" à proximité"))}`; }
 
 // ---------- Recherche des lieux ----------
 // Les résultats sont gardés sur l'appareil (12 h) : même endroit + même envie = affichage immédiat,
@@ -197,11 +197,11 @@ async function search(){
 
 function errText(err){
   const c = err && err.code;
-  if(c === "offline") return "Pas de connexion internet.";
-  if(c === "rate_limited") return "Trop de recherches d'un coup, réessaie dans une minute.";
-  if(c === "server_unavailable") return "Le service de carte (OpenStreetMap, gratuit) est surchargé en ce moment. Réessaie dans une minute.";
-  if(c === "bad_request") return "La recherche n'a pas été comprise par le service de carte.";
-  return "Recherche impossible pour l'instant.";
+  if(c === "offline") return tx("Pas de connexion internet.");
+  if(c === "rate_limited") return tx("Trop de recherches d'un coup, réessaie dans une minute.");
+  if(c === "server_unavailable") return tx("Le service de carte (OpenStreetMap, gratuit) est surchargé en ce moment. Réessaie dans une minute.");
+  if(c === "bad_request") return tx("La recherche n'a pas été comprise par le service de carte.");
+  return tx("Recherche impossible pour l'instant.");
 }
 
 function placeEl(p){
@@ -216,16 +216,16 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span><span class="tot"><b>${fmtDur(total)} au total</b> · ${p.walk} min aller · ${fmtDur(p.stay)} sur place · ${p.walk} min retour</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{w} min aller · {s} sur place · {w} min retour", {w:p.walk, s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
     <div class="det">
-      <p class="legend">${TR().e} Aller ${p.walk} min · ⏱️ Sur place ${fmtDur(p.stay)} minimum · ${TR().e} Retour ${p.walk} min = <b>${fmtDur(total)}</b>${free?` · il te restera ${fmtDur(free)}`:""}</p>
+      <p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
-      ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat)}</span>`:""}${p.wheelchair?`<span>♿ accessible</span>`:""}</div>`:""}
+      ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat)}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} Je pars</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 À tester</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">Site web</a>`:""}</div>
+      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}</div>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
@@ -239,33 +239,33 @@ function placeEl(p){
 
 function renderResults(){
   // « J'ai 20 minutes. » / « J'ai 1 heure. » / « J'ai 1 h 30. » / « J'ai 2 heures. »
-  const [num, unit] = T < 60 ? [T, " minutes"] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? " heure" : " heures"];
+  const [num, unit] = T < 60 ? [T, tx(" minutes")] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? tx(" heure") : tx(" heures")];
   const h1 = document.querySelector(".hero2 .display, .hero .display");
-  if(h1 && !$("unitTxt")) h1.innerHTML = `J'ai <em id="numTxt"></em><span id="unitTxt"></span>.`;
+  if(h1 && !$("unitTxt")) h1.innerHTML = `${tx("J'ai")} <em id="numTxt"></em><span id="unitTxt"></span>.`;
   $("numTxt").textContent = num; $("unitTxt").textContent = unit;
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = "";
   const s = $("status");
   // Statut
-  if(geoState === "wait") s.textContent = "Localisation en cours…";
-  else if(geoState === "no") s.textContent = "Tape une adresse ou une ville ci-dessus pour voir les lieux autour.";
-  else s.textContent = `Lieux où aller, en profiter et revenir ${TR().way} tient dans tes ${fmtDur(T)}.`;
+  if(geoState === "wait") s.textContent = tx("Localisation en cours…");
+  else if(geoState === "no") s.textContent = tx("Tape une adresse ou une ville ci-dessus pour voir les lieux autour.");
+  else s.textContent = tx("Lieux où aller, en profiter et revenir {way} tient dans tes {d}.", {way:TR().way, d:fmtDur(T)});
 
   const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
   const renderLater = () => laterGroups().forEach(({g, t}) => {
     const sec = document.createElement("section"); sec.className = "group later";
-    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}</span></h3>
-      <p class="note">Il te faut au moins ${fmtDur(t)} : ${fmtDur(g.stay)} sur place, plus le trajet. <button class="link more-time">Passer à ${fmtDur(t)}</button></p>`;
+    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}</span></h3>
+      <p class="note">${tx("Il te faut au moins {t} : {s} sur place, plus le trajet.", {t:fmtDur(t), s:fmtDur(g.stay)})} <button class="link more-time">${tx("Passer à {t}", {t:fmtDur(t)})}</button></p>`;
     sec.querySelector(".more-time").onclick = () => $("dial").querySelector(`button[data-t="${t}"]`).click();
     R.appendChild(sec);
   });
-  if(!groups.length){ R.innerHTML = `<p class="status">${fmtDur(T)}, c'est court pour ça. Choisis un peu plus de temps.</p>`; renderLater(); $("idea").classList.remove("on"); return; }
+  if(!groups.length){ R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); return; }
   let total = 0;
   // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
   const known = allLoaded().some(p => HOURS.parse(p.oh));
   if(known){
     const f = document.createElement("div"); f.className = "sortrow openrow";
-    f.innerHTML = `<button class="chip" aria-pressed="${!!SET.openOnly}">🕐 Ouverts seulement</button><span>à ton arrivée</span>`;
+    f.innerHTML = `<button class="chip" aria-pressed="${!!SET.openOnly}">🕐 ${tx("Ouverts seulement")}</button><span>${tx("à ton arrivée")}</span>`;
     f.querySelector("button").onclick = () => { SET.openOnly = !SET.openOnly; saveSet(); renderResults(); };
     R.appendChild(f);
   }
@@ -279,22 +279,22 @@ function renderResults(){
       .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
-    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}${isPreferred(g) ? `<span class="pref" title="Dans tes préférences">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
+    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
     if(!st){
-      sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Chercher « ${esc(g.q)} » sur la carte</a></p>`;
+      sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(tx(g.q))}">${tx("Chercher « {q} » sur la carte", {q:esc(tx(g.q))})}</a></p>`;
     } else if(st.state === "loading"){
-      sec.innerHTML += `<p class="note">${st.slow ? "Le service de carte est chargé, je réessaie…" : "Recherche…"}</p>`;
+      sec.innerHTML += `<p class="note">${st.slow ? tx("Le service de carte est chargé, je réessaie…") : tx("Recherche…")}</p>`;
     } else if(st.state === "err"){
-      sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">Réessayer</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Google Maps</a></p>`;
+      sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">${tx("Réessayer")}</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(tx(g.q))}">Google Maps</a></p>`;
       sec.querySelector(".retry").onclick = () => search();
     } else if(!n){
-      sec.innerHTML += `<p class="note">${all.length ? "Tout est fermé à cette heure-ci." : `Rien d'assez proche pour ${fmtDur(T)}.`}</p>`;
+      sec.innerHTML += `<p class="note">${all.length ? tx("Tout est fermé à cette heure-ci.") : tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)})}</p>`;
     } else {
       const SHOW = 6, all = EXPANDED.has(g.l);
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
       if(items.length > SHOW){
         const more = document.createElement("button"); more.className = "more-btn";
-        more.textContent = all ? "Voir moins" : `Voir plus (${items.length - SHOW}), jusqu'à ${items[items.length - 1].walk} min ${TR().way}`;
+        more.textContent = all ? tx("Voir moins") : tx("Voir plus ({n}), jusqu'à {m} min {way}", {n:items.length - SHOW, m:items[items.length - 1].walk, way:TR().way});
         more.onclick = () => { all ? EXPANDED.delete(g.l) : EXPANDED.add(g.l); renderResults(); };
         sec.appendChild(more);
       }
@@ -307,7 +307,8 @@ function renderResults(){
     const bn = document.createElement("div"); bn.className = "banner";
     bn.style.backgroundImage = `url('${moodImg(M, true)}'), url('${moodImg(M)}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
-    bn.innerHTML = `<span class="k">${fmtDur(T)} ${esc(TR().way)}, retour compris</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : `Rien à portée${T < 120 ? " : essaie plus de temps" : ""}${(SET.travel || "walk") !== "car" ? (T < 120 ? " ou " : " : essaie ") + ((SET.travel || "walk") === "walk" ? "le vélo" : "la voiture") : ""}`}</p>`;
+    const mode = SET.travel || "walk", tries = [T < 120 && tx("plus de temps"), mode !== "car" && tx(mode === "walk" ? "le vélo" : "la voiture")].filter(Boolean);
+    bn.innerHTML = `<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
     R.insertBefore(bn, R.firstChild);
   }
@@ -324,7 +325,7 @@ function moodImg(k, large){
   const v = MOODS[k], list = v.imgs || (v.img ? [v.img] : []);
   if(!list.length) return "";
   const img = list[photoSlot() % list.length];
-  return large ? img.replace(".jpg", "-large.jpg") : img;
+  return large ? img.replace(".svg", "-large.svg") : img;
 }
 let lastSlot = photoSlot();
 setInterval(() => {
@@ -380,14 +381,14 @@ $("moods").addEventListener("click", e => {
 
 function locate(manual){
   if(!pos){ geoState = "wait"; renderResults(); }
-  if(manual) $("whereMsg").textContent = "Localisation…";
+  if(manual) $("whereMsg").textContent = tx("Localisation…");
   try{
     if(!navigator.geolocation) throw 0;
     navigator.geolocation.getCurrentPosition(g => {
       $("whereMsg").textContent = "";
-      setPlace(g.coords.latitude, g.coords.longitude, "ma position", false);
+      setPlace(g.coords.latitude, g.coords.longitude, tx("ma position"), false);
     }, () => {
-      if(manual) $("whereMsg").textContent = "Position GPS indisponible ici : tape une adresse ou une ville.";
+      if(manual) $("whereMsg").textContent = tx("Position GPS indisponible ici : tape une adresse ou une ville.");
       if(!pos){ geoState = "no"; renderResults(); }
     }, {enableHighAccuracy:false, timeout:7000, maximumAge:600000}); // position réseau/Wi-Fi : rapide et assez précise pour marcher
   }catch(e){ if(!pos){ geoState = "no"; renderResults(); } }
@@ -409,12 +410,12 @@ function setPlace(lat, lng, label, remember){
   renderWhere(); renderHistory(); renderSaved(); search();
 }
 function renderWhere(choices){
-  $("here").innerHTML = pos ? `📍 Autour de <b></b>` : "📍 Où es-tu ?";
-  if(pos) $("here").querySelector("b").textContent = posLabel || "ma position";
+  $("here").innerHTML = pos ? `📍 ${tx("Autour de")} <b></b>` : tx("📍 Où es-tu ?");
+  if(pos) $("here").querySelector("b").textContent = posLabel || tx("ma position");
   const row = $("whereRow"); row.innerHTML = "";
   const list = choices || RECENTS.filter(r => r.label !== posLabel);
   if(!choices && navigator.geolocation){
-    const g = document.createElement("button"); g.className = "chip gps"; g.textContent = "🛰️ Ma position";
+    const g = document.createElement("button"); g.className = "chip gps"; g.textContent = tx("🛰️ Ma position");
     g.onclick = () => locate(true); row.appendChild(g);
   }
   list.forEach(r => {
@@ -428,14 +429,14 @@ $("whereForm").addEventListener("submit", async e => {
   e.preventDefault();
   const q = $("whereInput").value.trim(); if(!q) return;
   const msg = $("whereMsg");
-  msg.textContent = "Je cherche…"; renderWhere();   // efface les choix d'une recherche précédente
+  msg.textContent = tx("Je cherche…"); renderWhere();   // efface les choix d'une recherche précédente
   try{
     const found = await PLACES.geocode(q);
-    if(!found.length){ msg.textContent = /\b\d{5}\b/.test(q) ? `Code postal ${q.trim()} introuvable. Vérifie les 5 chiffres, ou ajoute la ville.` : "Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon » ou un code postal."; return; }
+    if(!found.length){ msg.textContent = /\b\d{5}\b/.test(q) ? tx("Code postal {q} introuvable. Vérifie les 5 chiffres, ou ajoute la ville.", {q:q.trim()}) : tx("Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon » ou un code postal."); return; }
     $("whereInput").value = ""; $("whereInput").blur();
     if(found.length === 1){ msg.textContent = ""; setPlace(found[0].lat, found[0].lng, found[0].label, true); }
-    else { msg.textContent = "Lequel ?"; renderWhere(found); }
-  }catch(err){ msg.textContent = err && err.code === "offline" ? "Pas de connexion internet." : "La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute, ou touche « Ma position »."; }
+    else { msg.textContent = tx("Lequel ?"); renderWhere(found); }
+  }catch(err){ msg.textContent = err && err.code === "offline" ? tx("Pas de connexion internet.") : tx("La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute, ou touche « Ma position »."); }
 });
 
 
@@ -471,15 +472,16 @@ function renderSettings(){
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   $("swatches").innerHTML = Object.entries(THEMES).map(([k,t]) => {
     const v = t[dark ? "D" : "L"];
-    return `<button class="sw" data-k="${k}" aria-pressed="${k===SET.theme}"><i style="background:linear-gradient(135deg, ${v[6]} 0 50%, ${v[1]} 50% 100%)"></i>${t.n}</button>`;
+    return `<button class="sw" data-k="${k}" aria-pressed="${k===SET.theme}"><i style="background:linear-gradient(135deg, ${v[6]} 0 50%, ${v[1]} 50% 100%)"></i>${tx(t.n)}</button>`;
   }).join("");
   document.querySelectorAll("#modeSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.mode)));
   document.querySelectorAll("#layoutSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.layout || "auto"))));
-  const L = {phone:"Mobile", tablet:"Tablette", wide:"Ordi (grand écran)"};
+  const L = {phone:tx("Mobile"), tablet:tx("Tablette"), wide:tx("Ordi (grand écran)")};
   $("layoutNote").textContent = (SET.layout || "auto") === "auto"
-    ? `Choisi selon la taille de l'écran : ${L[layoutNow()].toLowerCase()} en ce moment.`
-    : innerWidth < 600 && SET.layout !== "phone" ? "Cet écran est trop petit : l'affichage reste en format mobile." : "";
+    ? tx("Choisi selon la taille de l'écran : {l} en ce moment.", {l:L[layoutNow()].toLowerCase()})
+    : innerWidth < 600 && SET.layout !== "phone" ? tx("Cet écran est trop petit : l'affichage reste en format mobile.") : "";
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
+  document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
 }
 function openSheet(on){
   $("sheet").classList.toggle("on", on); $("sheetBg").classList.toggle("on", on);
@@ -505,6 +507,10 @@ function applyLayout(){
 addEventListener("resize", () => { applyLayout(); if($("sheet").classList.contains("on")) renderSettings(); });
 $("layoutSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.layout = b.dataset.v; saveSet(); applyLayout(); renderSettings(); });
 applyLayout();
+$("langSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.lang || "auto")) return;
+  SET.lang = b.dataset.v; saveSet(); location.reload();     // la page se recharge dans la nouvelle langue
+});
 $("motionSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.motion = b.dataset.v; saveSet(); applyTheme(); renderSettings(); });
 if(mq){ const f = () => { if(SET.mode === "auto"){ applyTheme(); if($("sheet").classList.contains("on")) renderSettings(); } }; mq.addEventListener ? mq.addEventListener("change", f) : mq.addListener(f); }
 applyTheme();
@@ -1058,13 +1064,13 @@ function renderSaved(){
   document.querySelectorAll("#savedSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === savedTab)));
   const items = Object.values(LISTS[savedTab]).sort((a,b) => b.at - a.at);
   L.innerHTML = "";
-  if(!items.length){ L.innerHTML = `<p class="hist empty" style="margin:0;color:var(--soft);font-size:15px">${savedTab === "fav" ? "Touche ⭐ sur un lieu pour le garder ici." : "Touche 📌 sur un lieu repéré pour le tester plus tard."}</p>`; return; }
+  if(!items.length){ L.innerHTML = `<p class="hist empty" style="margin:0;color:var(--soft);font-size:15px">${savedTab === "fav" ? tx("Touche ⭐ sur un lieu pour le garder ici.") : tx("Touche 📌 sur un lieu repéré pour le tester plus tard.")}</p>`; return; }
   items.forEach(x => {
     const r = document.createElement("div"); r.className = "srow";
     const km = pos ? kmBetween(pos, x) : null, walk = km != null ? travelOf(km*1000) : null;
-    r.innerHTML = `<span class="e">${ICONS.ico(x.em, 28)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">${TR().e} Je pars</a><button class="x" aria-label="Retirer">✕</button>`;
+    r.innerHTML = `<span class="e">${ICONS.ico(x.em, 28)}</span><div class="t"><b></b><small></small></div><a class="go" target="_blank" rel="noopener" href="${dirUrl(x)}">${TR().e} ${tx("Je pars")}</a><button class="x" aria-label="${tx("Retirer")}">✕</button>`;
     r.querySelector("b").textContent = x.name;
-    r.querySelector("small").textContent = walk != null ? (km < 30 ? `${walk} min ${TR().way}` : "loin d'ici") + " · " + (x.addr||"").split(",")[0] : (x.addr||"").split(",")[0];
+    r.querySelector("small").textContent = walk != null ? (km < 30 ? `${walk} min ${TR().way}` : tx("loin d'ici")) + " · " + (x.addr||"").split(",")[0] : (x.addr||"").split(",")[0];
     r.querySelector(".go").onclick = () => { const w = walk || 5; const h = logVisit({...x, g:x.g}); startTimer({...x, walk:w, stay:x.stay||10}, h, Math.max(T, 2*w + (x.stay||10))); };
     r.querySelector(".x").onclick = () => { delete LISTS[savedTab][x.id]; saveLists(); renderResults(); };
     L.appendChild(r);
@@ -1081,7 +1087,7 @@ function radarEl(){
   const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
   const maxD = Math.max(150, rOf(leg), ...items.map(p => p.dist)) * 1.06, k = 146 / maxD;
   const cosL = Math.cos(pos.lat * Math.PI / 180);
-  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de toi, en couleur selon la distance">`;
+  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="${tx("Plan des lieux autour de toi, en couleur selon la distance")}">`;
   // zones colorées, de la plus lointaine à la plus proche
   [...BANDS].reverse().forEach(b => {
     const r = rOf(Math.min(b.max, 1) * leg) * k;
@@ -1094,15 +1100,15 @@ function radarEl(){
   svg += `<text class="rl" x="0" y="-152" text-anchor="middle">N</text>`;
   items.forEach(p => {
     const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k, b = bandOf(p.walk);
-    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${p.walk} min aller · ${fmtDur(2*p.walk + p.stay)} au total</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
+    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${tx("{w} min aller · {d} au total", {w:p.walk, d:fmtDur(2*p.walk + p.stay)})}</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
   });
   svg += `<circle class="me" r="7"/><circle r="12" fill="none" stroke="var(--acc)" stroke-opacity=".35" stroke-width="3"/></svg>`;
   const d = document.createElement("div"); d.className = "radar";
   const legend = BANDS.map((b, i) => {
     const lo = i ? Math.round(BANDS[i-1].max * leg) : 0, hi = Math.round(Math.min(b.max, 1) * leg);
-    return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : `+ de ${lo} min`}</small></span>`;
+    return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : tx("+ de {m} min", {m:lo})}</small></span>`;
   }).join("");
-  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de toi <small>touche un point</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">Temps de trajet aller ${esc(tm.way)}. Le retour est compté aussi.</p>`;
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">${tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
   d.querySelector("svg").addEventListener("click", e => {
     const g = e.target.closest(".pt"); if(!g) return;
     const el = document.getElementById("p-" + g.dataset.id.replace(/[^\w-]/g,""));
@@ -1132,15 +1138,15 @@ function renderTimer(){
   const el = (Date.now() - TIMER.start)/1000, total = TIMER.T*60, remain = total - el, walkS = TIMER.walk*60;
   let phase, sub, cls = "";
   const tv = TRAVEL[TIMER.mode] || TRAVEL.walk;
-  if(el < walkS){ phase = tv.e + " En route"; sub = `Arrivée dans ~${Math.ceil((walkS-el)/60)} min`; }
-  else if(remain > walkS){ phase = "⏱️ Sur place"; sub = `Repars dans ${Math.ceil((remain-walkS)/60)} min`; }
-  else if(remain > 0){ phase = "🏃 C'est l'heure de repartir !"; sub = `${TIMER.walk} min ${tv.of} pour rentrer`; cls = "back";
+  if(el < walkS){ phase = tv.e + " " + tx("En route"); sub = tx("Arrivée dans ~{m} min", {m:Math.ceil((walkS-el)/60)}); }
+  else if(remain > walkS){ phase = tx("⏱️ Sur place"); sub = tx("Repars dans {m} min", {m:Math.ceil((remain-walkS)/60)}); }
+  else if(remain > 0){ phase = tx("🏃 C'est l'heure de repartir !"); sub = tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
-  else { phase = "⏰ Temps écoulé"; sub = `Tu dépasses de ${Math.ceil(-remain/60)} min`; cls = "late"; }
+  else { phase = tx("⏰ Temps écoulé"); sub = tx("Tu dépasses de {m} min", {m:Math.ceil(-remain/60)}); cls = "late"; }
   box.className = "timer " + cls;
   box.innerHTML = `<div class="tin"><div class="top"><span class="e">${ICONS.ico(TIMER.em, 28)}</span><div class="mid"><b></b><span></span></div><div class="clock">${remain < 0 ? "+" : ""}${mmss(remain)}</div></div>
     <div class="bar"><i style="width:${Math.min(100, el/total*100).toFixed(1)}%"></i></div>
-    <div class="acts"><button class="ok" id="tDone">✓ Je suis rentré·e</button><button id="tStop">Arrêter</button></div></div>`;
+    <div class="acts"><button class="ok" id="tDone">${tx("✓ Je suis rentré·e")}</button><button id="tStop">${tx("Arrêter")}</button></div></div>`;
   box.querySelector(".mid b").textContent = phase + " · " + TIMER.name;
   box.querySelector(".mid span").textContent = sub;
   $("tDone").onclick = () => stopTimer(true);
@@ -1339,7 +1345,7 @@ function renderReviews(){
         B.appendChild(d);
       });
       const acts = document.createElement("div"); acts.className = "btns"; acts.style.marginTop = "10px";
-      if(g.lat != null) acts.innerHTML += `<a class="go" target="_blank" rel="noopener" href="${dirUrl(g)}">${TR().e} Je pars</a>`;
+      if(g.lat != null) acts.innerHTML += `<a class="go" target="_blank" rel="noopener" href="${dirUrl(g)}">${TR().e} ${tx("Je pars")}</a>`;
       if(me && me.code) acts.innerHTML += `<button class="ghost give">✍️ Donner mon avis</button>`;
       B.appendChild(acts);
       const go = acts.querySelector(".go");
@@ -1369,7 +1375,7 @@ function hourBoost(g, hr){
   const f = HOUR_FIT.find(x => x.re.test(g)); if(!f) return 1;
   const m = f.h.find(([a,b]) => hr >= a && hr < b); return m ? m[2] : .7;
 }
-const MOMENT = hr => hr < 11 ? "ce matin" : hr < 14.5 ? "à cette heure-ci" : hr < 18 ? "cet après-midi" : "ce soir";
+const MOMENT = hr => tx(hr < 11 ? "ce matin" : hr < 14.5 ? "à cette heure-ci" : hr < 18 ? "cet après-midi" : "ce soir");
 function pickForMe(list){
   const d = new Date(), hr = d.getHours() + d.getMinutes()/60;
   const recent = new Set(HIST.slice(0,12).map(h => h.pid));
@@ -1386,11 +1392,11 @@ function pickForMe(list){
   let r = Math.random() * scored.reduce((s,x) => s + x.w, 0);
   const hit = scored.find(x => (r -= x.w) <= 0) || scored[0];
   const p = hit.p, free = Math.max(0, T - 2*p.walk - p.stay);
-  const why = LISTS.todo[p.id] ? "tu l'avais noté à tester, c'est le moment" :
-    recent.has(p.id) ? "une valeur sûre" :
-    hourBoost(p.g, hr) > 1.5 ? `parfait ${MOMENT(hr)}` :
-    !HIST.some(h => h.pid === p.id) ? "tu n'y es encore jamais allé·e" : "ça change un peu";
-  return {p, txt:`${p.name} : ${why}. ${fmtDur(2*p.walk + p.stay)} en tout (${p.walk} min ${TR().way} à l'aller et au retour)${free ? `, il te restera ${fmtDur(free)}` : ""}.`};
+  const why = LISTS.todo[p.id] ? tx("tu l'avais noté à tester, c'est le moment") :
+    recent.has(p.id) ? tx("une valeur sûre") :
+    hourBoost(p.g, hr) > 1.5 ? tx("parfait {m}", {m:MOMENT(hr)}) :
+    !HIST.some(h => h.pid === p.id) ? tx("tu n'y es encore jamais allé·e") : tx("ça change un peu");
+  return {p, txt:`${p.name}${tx(" : ")}${why}. ${tx("{d} en tout ({w} min {way} à l'aller et au retour)", {d:fmtDur(2*p.walk + p.stay), w:p.walk, way:TR().way})}${free ? ", " + tx("il te restera {d}", {d:fmtDur(free)}) : ""}.`};
 }
 $("ideaBtn").addEventListener("click", () => {
   const list = allLoaded(); if(!list.length) return;
@@ -1458,15 +1464,16 @@ function patch(id, p){ const e = HIST.find(h => h.id === id); if(!e) return; Obj
 function removeEntry(id){ HIST = HIST.filter(h => h.id !== id); renderHistory(); renderResults(); write(id, () => store.remove(id)); }
 function whenTxt(t){
   const d = new Date(t), now = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const diff = Math.round((day(now) - day(d)) / 864e5), h = `${d.getHours()}h${String(d.getMinutes()).padStart(2,"0")}`;
-  if(diff === 0) return "Aujourd'hui " + h; if(diff === 1) return "Hier " + h;
-  return d.toLocaleDateString("fr-FR", {day:"numeric", month:"short"}) + " " + h;
+  const en = I18N.lang === "en", mm = String(d.getMinutes()).padStart(2,"0");
+  const diff = Math.round((day(now) - day(d)) / 864e5), h = en ? `${d.getHours()}:${mm}` : `${d.getHours()}h${mm}`;
+  if(diff === 0) return tx("Aujourd'hui") + " " + h; if(diff === 1) return tx("Hier") + " " + h;
+  return d.toLocaleDateString(en ? "en-GB" : "fr-FR", {day:"numeric", month:"short"}) + " " + h;
 }
 function renderHistory(){
   const L = $("histList"); L.innerHTML = "";
   const done = HIST.filter(h => h.done).length;
-  $("histCount").textContent = HIST.length ? `${done} pause${done>1?"s":""} faite${done>1?"s":""}` : "";
-  if(!HIST.length){ L.innerHTML = `<p class="empty">Rien pour l'instant. Quand tu touches « Je pars », le lieu s'ajoute ici et tu pourras le marquer comme fait.</p>`; return; }
+  $("histCount").textContent = HIST.length ? tx(done > 1 ? "{n} pauses faites" : "{n} pause faite", {n:done}) : "";
+  if(!HIST.length){ L.innerHTML = `<p class="empty">${tx("Rien pour l'instant. Quand tu touches « Je pars », le lieu s'ajoute ici et tu pourras le marquer comme fait.")}</p>`; return; }
   (showAll ? HIST : HIST.slice(0,8)).forEach(h => {
     const el = document.createElement("div");
     el.className = "entry" + (h.done ? " done" : "");
@@ -1475,12 +1482,12 @@ function renderHistory(){
     if(pos && h.lat != null){
       const R=6371, r=x=>x*Math.PI/180, dLa=r(h.lat-pos.lat), dLo=r(h.lng-pos.lng);
       const km = 2*R*Math.asin(Math.sqrt(Math.sin(dLa/2)**2+Math.cos(r(pos.lat))*Math.cos(r(h.lat))*Math.sin(dLo/2)**2));
-      near = km < 1.5 ? " · près d'ici" : km < 50 ? ` · à ${Math.round(km)} km d'ici` : " · ailleurs";
+      near = " · " + (km < 1.5 ? tx("près d'ici") : km < 50 ? tx("à {k} km d'ici", {k:Math.round(km)}) : tx("ailleurs"));
     }
     el.innerHTML = `<div class="row"><strong></strong><time>${whenTxt(h.at)}</time></div>
-      <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(h.q||"")} · ${fmtDur(h.T)}${near}</div>
-      <input type="text" placeholder="Un souvenir, une note… (facultatif)" maxlength="120">
-      <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? "Fait ✓" : "Marquer comme fait"}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">Site web</a>`:""}<button class="share">Raconter</button><button class="del">Supprimer</button></div>`;
+      <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(tx(h.q||""))} · ${fmtDur(h.T)}${near}</div>
+      <input type="text" placeholder="${tx("Un souvenir, une note… (facultatif)")}" maxlength="120">
+      <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? tx("Fait ✓") : tx("Marquer comme fait")}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">${tx("Site web")}</a>`:""}<button class="share">${tx("Raconter")}</button><button class="del">${tx("Supprimer")}</button></div>`;
     el.querySelector("strong").textContent = h.n;
     el.querySelector(".share").onclick = () => { composeFrom = h.id; composeOpen = true; showView("blog"); renderCompose(); $("blogCompose").scrollIntoView({behavior:"smooth"}); };
     const inp = el.querySelector("input"); inp.value = h.note || "";
@@ -1492,7 +1499,7 @@ function renderHistory(){
   });
   if(HIST.length > 8){
     const b = document.createElement("button"); b.className = "link"; b.style.fontSize = "15px";
-    b.textContent = showAll ? "Voir moins" : `Voir tout (${HIST.length})`;
+    b.textContent = showAll ? tx("Voir moins") : tx("Voir tout ({n})", {n:HIST.length});
     b.onclick = () => { showAll = !showAll; renderHistory(); };
     L.appendChild(b);
   }
@@ -1519,16 +1526,16 @@ addEventListener("appinstalled", () => { installEvt = null; renderInstall(); });
 function renderInstall(){
   const B = $("install"); if(!B) return;
   const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  if(standalone){ B.innerHTML = `<p style="margin:0">C'est installé ✓ Pas l'temps s'ouvre depuis votre écran d'accueil.</p>`; return; }
+  if(standalone){ B.innerHTML = `<p style="margin:0">${tx("C'est installé ✓ Pas l'temps s'ouvre depuis votre écran d'accueil.")}</p>`; return; }
   if(installEvt){
-    B.innerHTML = `<p>Ajoutez Pas l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.</p><div class="btns"><button class="go" id="installGo">📲 Installer</button></div>`;
+    B.innerHTML = `<p>${tx("Ajoutez Pas l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.")}</p><div class="btns"><button class="go" id="installGo">${tx("📲 Installer")}</button></div>`;
     $("installGo").onclick = async () => { installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt = null; renderInstall(); };
     return;
   }
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
   B.innerHTML = ios
-    ? `<ol class="install-steps"><li>Touchez le bouton <b>Partager</b> de Safari</li><li>Puis <b>Sur l'écran d'accueil</b></li></ol>`
-    : `<ol class="install-steps"><li>Ouvrez le menu du navigateur (⋮)</li><li>Puis <b>Installer l'application</b> ou <b>Ajouter à l'écran d'accueil</b></li></ol>`;
+    ? `<ol class="install-steps">${tx("<li>Touchez le bouton <b>Partager</b> de Safari</li><li>Puis <b>Sur l'écran d'accueil</b></li>")}</ol>`
+    : `<ol class="install-steps">${tx("<li>Ouvrez le menu du navigateur (⋮)</li><li>Puis <b>Installer l'application</b> ou <b>Ajouter à l'écran d'accueil</b></li>")}</ol>`;
 }
 renderInstall();
 if("serviceWorker" in navigator && location.protocol !== "file:"){

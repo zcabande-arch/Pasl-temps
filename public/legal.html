@@ -8,9 +8,8 @@
 <meta name="theme-color" content="#F4ECDF">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 <script>
 (function(){ // même mode clair / sombre que l'appli
@@ -43,6 +42,7 @@
   <a class="back" href="./">← Retour à l'appli</a>
   <h1>Le <em>petit</em> texte.</h1>
   <p class="lead">Tout ce qu'il faut savoir, écrit simplement. Dernière mise à jour : 25 septembre 2026.</p>
+  <p class="small" lang="en">🇬🇧 These terms are written in French, which is the reference language. In short: no account, no ads, no tracking; your data stays on your device.</p>
   <nav class="toc" aria-label="Sommaire">
     <a href="#mentions">Mentions légales</a><a href="#confidentialite">Confidentialité</a><a href="#cgu">Conditions d'utilisation</a><a href="#credits">Crédits &amp; licences</a>
   </nav>
@@ -82,9 +82,8 @@
     <p>Pour fonctionner, ton navigateur contacte directement quelques services. Comme pour tout site web, ils voient ton adresse IP :</p>
     <ul>
       <li><strong>GitHub</strong> (hébergement de l'appli et des fichiers de lieux, via raw.githubusercontent.com) et, en secours, <strong>jsDelivr</strong> : ils reçoivent la zone de carte demandée (une case d'environ 5 km), pas ta position exacte.</li>
-      <li><strong>Base Adresse Nationale</strong> (IGN / État français) et <strong>Nominatim</strong> (Fondation OpenStreetMap) : reçoivent l'adresse, la ville ou le code postal que tu tapes dans « Où es-tu ? ».</li>
+      <li><strong>Base Adresse Nationale</strong> (IGN / État français) : reçoit l'adresse, la ville ou le code postal que tu tapes dans « Où es-tu ? ». Si elle ne trouve pas (adresse à l'étranger, nom de lieu…), la recherche part à <strong>Nominatim</strong> (Fondation OpenStreetMap).</li>
       <li><strong>Overpass API</strong> (serveurs OpenStreetMap) : seulement si tu cherches hors de France, reçoit la zone autour de toi.</li>
-      <li><strong>Google Fonts</strong> (Google) : fournit les polices d'écriture.</li>
       <li><strong>Google Maps</strong> : seulement si tu touches « Je pars » ; tu quittes alors l'appli et les règles de Google s'appliquent.</li>
     </ul>
     <p>Certains de ces services sont situés hors de l'Union européenne (notamment aux États-Unis). Ils ont leurs propres politiques de confidentialité.</p>
@@ -129,9 +128,8 @@
     <ul>
       <li>Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a>, sous licence <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>. Extraits France fournis par <a href="https://www.geofabrik.de" target="_blank" rel="noopener">Geofabrik</a>. Tu peux corriger un lieu directement sur openstreetmap.org.</li>
       <li>Recherche d'adresses : <a href="https://adresse.data.gouv.fr" target="_blank" rel="noopener">Base Adresse Nationale</a> (Licence Ouverte Etalab 2.0) et <a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a>.</li>
-      <li>Polices : Fraunces et Bricolage Grotesque, via Google Fonts, sous licence SIL Open Font License 1.1.</li>
-      <li>Photos d'ambiance : droits réservés à leurs auteurs. Tu es l'auteur d'une photo et tu veux qu'elle soit créditée ou retirée ? <a href="https://github.com/zcabande-arch/Pasl-temps/issues" target="_blank" rel="noopener">Écris-nous</a>, c'est fait rapidement.</li>
-      <li>Icônes et dessins : créés pour « Pas l'temps ».</li>
+      <li>Polices : Fraunces (The Fraunces Project Authors) et Bricolage Grotesque (The Bricolage Grotesque Project Authors), sous licence SIL Open Font License 1.1, hébergées avec l'appli.</li>
+      <li>Illustrations, icônes et dessins : créés pour « Pas l'temps ».</li>
     </ul>
   </section>
   <p class="small" style="text-align:center">Pas l'temps · fait avec amour pour les pauses trop courtes.</p>

@@ -4,7 +4,10 @@
 // donne « inconnu » plutôt qu'une réponse fausse. Expose window.HOURS.
 (function(){
   const DAYS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
-  const DAY_FR = ["lun.","mar.","mer.","jeu.","ven.","sam.","dim."];
+  const DAY_FR = ["lun.","mar.","mer.","jeu.","ven.","sam.","dim."], DAY_EN = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+  // Traduction (i18n.js) si elle est chargée ; sinon français
+  const EN = () => typeof window !== "undefined" && window.I18N && window.I18N.lang === "en";
+  const tx = (s, v) => (typeof window !== "undefined" && window.tx ? window.tx(s, v) : s.replace(/\{(\w+)\}/g, (m, k) => v && k in v ? v[k] : m));
   const cache = new Map();
 
   // « Mo-Fr,Su » → [0,1,2,3,4,6]
@@ -65,7 +68,7 @@
     return week;
   }
 
-  const hm = min => { min = ((min % 1440) + 1440) % 1440; const h = Math.floor(min / 60), m = min % 60; return h + "h" + (m ? String(m).padStart(2, "0") : ""); };
+  const hm = min => { min = ((min % 1440) + 1440) % 1440; const h = Math.floor(min / 60), m = min % 60; return EN() ? h + ":" + String(m).padStart(2, "0") : h + "h" + (m ? String(m).padStart(2, "0") : ""); };
 
   // Intervalles absolus (minutes depuis le début du jour de `date`), de la veille à J+7, fusionnés s'ils se touchent
   function timeline(week, d){
@@ -102,15 +105,15 @@
     const s = at(oh, arrive), n = at(oh, now);
     if(s.state === "unknown") return {state:"unknown", level:"unknown", text:""};
     if(s.state === "open"){
-      if(s.allDay) return {state:"open", level:"ok", text:"Ouvert 24h/24"};
-      if(s.closesIn < stayMin) return {state:"open", level:"warn", text:`Ferme à ${hm(s.closesAt)}, juste après ton arrivée`};
-      if(n.state === "open" && n.closesIn <= 45) return {state:"open", level:"warn", text:`Ferme dans ${n.closesIn} min`};
-      return {state:"open", level:"ok", text:`Ouvert · jusqu'à ${hm(s.closesAt)}`};
+      if(s.allDay) return {state:"open", level:"ok", text:tx("Ouvert 24h/24")};
+      if(s.closesIn < stayMin) return {state:"open", level:"warn", text:tx("Ferme à {h}, juste après ton arrivée", {h:hm(s.closesAt)})};
+      if(n.state === "open" && n.closesIn <= 45) return {state:"open", level:"warn", text:tx("Ferme dans {m} min", {m:n.closesIn})};
+      return {state:"open", level:"ok", text:tx("Ouvert · jusqu'à {h}", {h:hm(s.closesAt)})};
     }
-    if(!s.opensAt) return {state:"closed", level:"closed", text:"Fermé"};
-    const o = s.opensAt, when = o.inDays === 0 ? `à ${hm(o.min)}` : o.inDays === 1 ? `demain à ${hm(o.min)}` : `${DAY_FR[o.day]} à ${hm(o.min)}`;
-    if(n.state === "open") return {state:"closed", level:"closed", text:`Fermé à ton arrivée · rouvre ${when}`};
-    return {state:"closed", level:"closed", text:`Fermé · ouvre ${when}`};
+    if(!s.opensAt) return {state:"closed", level:"closed", text:tx("Fermé")};
+    const o = s.opensAt, when = o.inDays === 0 ? tx("à {h}", {h:hm(o.min)}) : o.inDays === 1 ? tx("demain à {h}", {h:hm(o.min)}) : tx("{d} à {h}", {d:(EN() ? DAY_EN : DAY_FR)[o.day], h:hm(o.min)});
+    if(n.state === "open") return {state:"closed", level:"closed", text:tx("Fermé à ton arrivée · rouvre {w}", {w:when})};
+    return {state:"closed", level:"closed", text:tx("Fermé · ouvre {w}", {w:when})};
   }
 
   const api = {parse, at, forVisit};

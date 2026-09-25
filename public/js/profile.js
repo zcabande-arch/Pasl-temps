@@ -4,18 +4,18 @@
   let savedTimer = null;
   function saved(){
     const el = $("pSaved"); if(!el) return;
-    el.textContent = "Enregistré ✓";
+    el.textContent = tx("Enregistré ✓");
     clearTimeout(savedTimer); savedTimer = setTimeout(() => { el.textContent = ""; }, 1600);
   }
   function hello(){
     const n = (PROFILE.name || "").trim();
-    $("pHello").innerHTML = n ? `Bonjour <em></em>` : "Bonjour";
+    $("pHello").innerHTML = n ? `${tx("Bonjour")} <em></em>` : tx("Bonjour");
     if(n) $("pHello").querySelector("em").textContent = n;
     renderBrand();
   }
   function photo(){
     const ph = PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(PROFILE.photo) ? PROFILE.photo : "";
-    $("pPhoto").innerHTML = ph ? `<img src="${ph}" alt="Ta photo de profil">` : ICONS.ico("user", 44);
+    $("pPhoto").innerHTML = ph ? `<img src="${ph}" alt="${tx("Ta photo de profil")}">` : ICONS.ico("user", 44);
   }
 
   window.renderProfile = function(){
@@ -48,7 +48,7 @@
   $("pPhotoIn").addEventListener("change", async e => {
     const f = e.target.files && e.target.files[0]; e.target.value = ""; if(!f) return;
     try{ PROFILE.photo = await resizeImage(f, 256, 60000, true); saveProfile(); photo(); saved(); }
-    catch(err){ $("pSaved").textContent = "Cette image ne peut pas être lue. Essaie une autre photo."; }
+    catch(err){ $("pSaved").textContent = tx("Cette image ne peut pas être lue. Essaie une autre photo."); }
   });
 
   // ---------- Code de récupération sans serveur ----------
@@ -85,22 +85,22 @@
   let pView = "main", lastCode = "";
   window.renderPortable = async function(R, msg, warn){
     if(pView === "enter"){
-      R.innerHTML = `<p>Colle ici ton code (ou le lien) de récupération :</p>
+      R.innerHTML = `<p>${tx("Colle ici ton code (ou le lien) de récupération :")}</p>
         <textarea class="field codebox" id="pcIn" rows="4" placeholder="PLT1.…" autocomplete="off" spellcheck="false"></textarea>
-        <div class="btns"><button class="go" id="pcGo">Récupérer</button><button class="ghost" id="pcBack">Annuler</button></div>
+        <div class="btns"><button class="go" id="pcGo">${tx("Récupérer")}</button><button class="ghost" id="pcBack">${tx("Annuler")}</button></div>
         <p class="msg${warn ? " warn" : ""}"></p>`;
       R.querySelector(".msg").textContent = msg || "";
       $("pcBack").onclick = () => { pView = "main"; renderRec(); };
       $("pcGo").onclick = async () => {
         try{ const n = await applyBackupData(await readCode($("pcIn").value)); pView = "main"; renderProfile();
-          renderRec(`C'est récupéré ✓ ${n} sortie${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""} à ton historique.`); }
-        catch(e){ renderRec("Ce code n'est pas reconnu. Vérifie qu'il est complet.", true); }
+          renderRec(tx(n > 1 ? "C'est récupéré ✓ {n} sorties ajoutées à ton historique." : "C'est récupéré ✓ {n} sortie ajoutée à ton historique.", {n})); }
+        catch(e){ renderRec(tx("Ce code n'est pas reconnu. Vérifie qu'il est complet."), true); }
       };
       return;
     }
-    R.innerHTML = `<p>Ton code contient ton profil, tes réglages, tes favoris et ton historique. Garde-le (ou envoie-le toi) pour tout retrouver sur un autre appareil. Ta photo n'y est pas.</p>
-      <textarea class="field codebox" id="pcOut" rows="3" readonly>Création…</textarea>
-      <div class="btns"><button class="go" id="pcShare">Envoyer le lien</button><button class="ghost" id="pcCopy">Copier le code</button><button class="ghost" id="pcHave">J'ai un code</button></div>
+    R.innerHTML = `<p>${tx("Ton code contient ton profil, tes réglages, tes favoris et ton historique. Garde-le (ou envoie-le toi) pour tout retrouver sur un autre appareil. Ta photo n'y est pas.")}</p>
+      <textarea class="field codebox" id="pcOut" rows="3" readonly>${tx("Création…")}</textarea>
+      <div class="btns"><button class="go" id="pcShare">${tx("Envoyer le lien")}</button><button class="ghost" id="pcCopy">${tx("Copier le code")}</button><button class="ghost" id="pcHave">${tx("J'ai un code")}</button></div>
       <p class="msg${warn ? " warn" : ""}"></p>`;
     R.querySelector(".msg").textContent = msg || "";
     $("pcHave").onclick = () => { pView = "enter"; renderRec(); };
@@ -108,15 +108,15 @@
     if(!$("pcOut")) return;
     $("pcOut").value = lastCode;
     $("pcCopy").onclick = async () => {
-      try{ await navigator.clipboard.writeText(lastCode); R.querySelector(".msg").textContent = "Code copié ✓ Garde-le dans tes notes."; }
-      catch(e){ $("pcOut").select(); R.querySelector(".msg").textContent = "Le code est sélectionné : copie-le à la main."; }
+      try{ await navigator.clipboard.writeText(lastCode); R.querySelector(".msg").textContent = tx("Code copié ✓ Garde-le dans tes notes."); }
+      catch(e){ $("pcOut").select(); R.querySelector(".msg").textContent = tx("Le code est sélectionné : copie-le à la main."); }
     };
     $("pcShare").onclick = async () => {
       const url = linkFor(lastCode);
-      try{ if(navigator.share){ await navigator.share({title:"Pas l'temps : mon code de récupération", text:"Ouvre ce lien pour retrouver mon profil Pas l'temps :", url}); return; } }
+      try{ if(navigator.share){ await navigator.share({title:tx("Pas l'temps : mon code de récupération"), text:tx("Ouvre ce lien pour retrouver mon profil Pas l'temps :"), url}); return; } }
       catch(e){ if(e && e.name === "AbortError") return; }
-      try{ await navigator.clipboard.writeText(url); R.querySelector(".msg").textContent = "Lien copié ✓ Envoie-le toi par message ou par mail."; }
-      catch(e){ $("pcOut").value = url; $("pcOut").select(); R.querySelector(".msg").textContent = "Le lien est sélectionné : copie-le à la main."; }
+      try{ await navigator.clipboard.writeText(url); R.querySelector(".msg").textContent = tx("Lien copié ✓ Envoie-le toi par message ou par mail."); }
+      catch(e){ $("pcOut").value = url; $("pcOut").select(); R.querySelector(".msg").textContent = tx("Le lien est sélectionné : copie-le à la main."); }
     };
   };
 
@@ -125,10 +125,10 @@
   if(m){
     history.replaceState(null, "", location.pathname + location.search);
     setTimeout(async () => {
-      if(!confirm("Récupérer le profil, les favoris et l'historique contenus dans ce lien ?")) return;
+      if(!confirm(tx("Récupérer le profil, les favoris et l'historique contenus dans ce lien ?"))) return;
       try{ const n = await applyBackupData(await readCode(m[1])); showView("profile");
-        renderRec(`C'est récupéré ✓ ${n} sortie${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""} à ton historique.`); }
-      catch(e){ alert("Ce lien de récupération n'est pas reconnu."); }
+        renderRec(tx(n > 1 ? "C'est récupéré ✓ {n} sorties ajoutées à ton historique." : "C'est récupéré ✓ {n} sortie ajoutée à ton historique.", {n})); }
+      catch(e){ alert(tx("Ce lien de récupération n'est pas reconnu.")); }
     }, 2300);
   }
 })();

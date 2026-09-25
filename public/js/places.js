@@ -266,6 +266,26 @@
     return list.filter(x => !seen.has(x.label) && seen.add(x.label));
   }
 
+  function banLabel(p){
+    if(p.type === "municipality") return `${p.name}${p.postcode ? " (" + p.postcode + ")" : ""}`;
+    return [p.name, [p.postcode, p.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
+  }
+  async function geocodeBAN(query){
+    for(const base of BAN){
+      const j = await getJSON(`${base}?q=${encodeURIComponent(query)}&limit=5&autocomplete=0`, 6000);
+      if(!j) continue;                                  // service injoignable : on essaie le suivant
+      // Sans numéro ni mot de rue (« Lyon », « Tour Eiffel », « Bruxelles »), on ne garde que des communes / lieux-dits :
+      // sinon « Bruxelles » donnerait « Rue de Bruxelles » à Lille. Le reste part à Nominatim.
+      const streety = /\d|\b(rue|av|avenue|bd|boulevard|place|pl|chemin|all[ée]e|quai|impasse|route|cours|square|passage|faubourg|esplanade|promenade|voie)\b/i.test(query);
+      const feats = (j.features || []).filter(f => f.geometry && f.properties && f.properties.score >= 0.6 &&
+        (streety || f.properties.type === "municipality" || f.properties.type === "locality"));
+      const seen = new Set();
+      return feats.map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: banLabel(f.properties)}))
+        .filter(x => isFinite(x.lat) && isFinite(x.lng) && !seen.has(x.label) && seen.add(x.label)).slice(0, 4);
+    }
+    return [];
+  }
+
   async function geocode(query){
     // « 75011 », « 75011 Paris » ou « Paris 75011 » : recherche par code postal
     const pcm = /^\s*(?:(.*?)[\s,]+)?(\d{5})(?:[\s,]+(.*?))?\s*$/.exec(query || "");
@@ -274,6 +294,10 @@
       if(found.length) return found;
       if(!pcm[1] && !pcm[3]) return [];
     }
+    // En France : Base Adresse Nationale (service public, libre, sans limite commerciale).
+    // Nominatim seulement si la BAN ne trouve rien de convaincant (adresse à l'étranger, lieu-dit…)
+    const ban = await geocodeBAN(query);
+    if(ban.length) return ban;
     const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=fr&q=${encodeURIComponent(query)}`;
     let res;
     try{ res = await fetch(u, {headers:{"Accept":"application/json"}}); }

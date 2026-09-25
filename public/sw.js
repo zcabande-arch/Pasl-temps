@@ -1,11 +1,15 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v33";
+const VERSION = "pasltemps-v34";
 const CORE = [
   "./",
   "./index.html",
   "./legal.html",
   "./config.js",
   "./css/app.css",
+  "./fonts/fraunces.woff2",
+  "./fonts/fraunces-italic.woff2",
+  "./fonts/bricolage.woff2",
+  "./js/i18n.js",
   "./js/api.js",
   "./js/places.js",
   "./js/hours.js",
@@ -13,15 +17,15 @@ const CORE = [
   "./js/profile.js",
   "./js/app.js",
   "./manifest.webmanifest",
-  "./img/moods/manger.jpg",
-  "./img/moods/air.jpg",
-  "./img/moods/shopping.jpg",
-  "./img/moods/poser.jpg",
-  "./img/moods/bouger.jpg",
-  "./img/moods/culture.jpg",
-  "./img/moods/manger-2.jpg",
-  "./img/moods/manger-3.jpg",
-  "./img/moods/manger-4.jpg",
+  "./img/moods/manger.svg",
+  "./img/moods/air.svg",
+  "./img/moods/shopping.svg",
+  "./img/moods/poser.svg",
+  "./img/moods/bouger.svg",
+  "./img/moods/culture.svg",
+  "./img/moods/manger-2.svg",
+  "./img/moods/manger-3.svg",
+  "./img/moods/manger-4.svg",
   "./icons/icon.svg",
   "./icons/mark.svg",
   "./icons/icon-192.png",
@@ -42,6 +46,12 @@ self.addEventListener("activate", e => {
   );
 });
 
+// Clé de cache d'une page : « …/ » et « …/index.html » → ./index.html ; les autres pages → ./nom.html
+function pageKey(url){
+  const name = url.pathname.split("/").pop();
+  return "./" + (name && name.endsWith(".html") ? name : "index.html");
+}
+
 self.addEventListener("fetch", e => {
   const req = e.request;
   if (req.method !== "GET") return;
@@ -55,9 +65,10 @@ self.addEventListener("fetch", e => {
   if (req.mode === "navigate") {
     e.respondWith(
       // toujours une page fraîche (le cache du navigateur garderait sinon l'ancienne ~10 min)
+      // chaque page garde sa propre copie (l'accueil sous ./index.html, les mentions légales sous leur nom…)
       fetch(req.url, {cache: "no-cache", credentials: "same-origin"})
-        .then(res => { if (res.ok) { const copy = res.clone(); caches.open(VERSION).then(c => c.put("./index.html", copy)); } return res; })
-        .catch(() => caches.match("./index.html"))
+        .then(res => { if (res.ok && sameOrigin) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(pageKey(url), copy)); } return res; })
+        .catch(() => caches.match(pageKey(url)).then(hit => hit || caches.match("./index.html")))
     );
     return;
   }
@@ -83,14 +94,4 @@ self.addEventListener("fetch", e => {
     );
     return;
   }
-
-  // Polices Google : cache d'abord
-  const fonts = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
-  if (!fonts) return;
-  e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(res => {
-      if (res && (res.ok || res.type === "opaque")) { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); }
-      return res;
-    }))
-  );
 });

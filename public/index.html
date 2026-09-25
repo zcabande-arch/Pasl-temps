@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="33">
+<meta name="app-version" content="34">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pas l'temps</title>
 <meta name="description" content="10 minutes ou 2 heures devant toi ? Pas l'temps trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -15,9 +15,8 @@
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,600&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -154,6 +153,8 @@
   <h4>Format d'affichage</h4>
   <div class="seg" id="layoutSeg"><button data-v="auto">Auto</button><button data-v="phone">Mobile</button><button data-v="tablet">Tablette</button><button data-v="wide">Ordi</button></div>
   <p class="setnote" id="layoutNote"></p>
+  <h4>Langue</h4>
+  <div class="seg" id="langSeg"><button data-v="auto">Auto</button><button data-v="fr">Français</button><button data-v="en">English</button></div>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
   <h4>Installer l'appli</h4>
@@ -163,6 +164,7 @@
 </div>
 
 <script src="config.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/places.js"></script>
 <script src="js/hours.js"></script>

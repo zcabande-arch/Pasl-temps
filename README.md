@@ -18,6 +18,9 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 🔑 **Code de récupération sans serveur** : un code (ou un lien) qui contient le profil, les réglages, les favoris et l'historique
 - 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
   **installable** sur le téléphone et utilisable **hors connexion**
+- 🇬🇧 **Français et anglais** (réglage « Langue », auto = langue de l'appareil)
+- ⚖️ **Mentions légales**, confidentialité, conditions d'utilisation et crédits (`public/legal.html`), avec un bouton « Tout effacer »
+- 🖼️ Illustrations maison (aucune image sous droits) et polices hébergées avec l'appli (aucune requête vers Google)
 
 Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
 
@@ -25,7 +28,8 @@ Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
 OpenStreetMap France, garde les ~450 000 lieux utiles (avec horaires, site, téléphone) et les découpe
 en tuiles d'environ 5 km, publiées sur la branche `places`. L'appli ne charge que les 1 à 4 tuiles
 autour de soi (≈ 0,2 à 0,8 s), puis les garde sur l'appareil. Le service Overpass ne sert qu'en dehors
-de la France. Les adresses tapées sont cherchées avec Nominatim.
+de la France. Les adresses tapées sont cherchées dans la Base Adresse Nationale (service public libre),
+Nominatim ne sert qu'en secours (étranger, noms de lieux).
 
 ## Lancer l'appli
 
@@ -103,7 +107,10 @@ Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 | `public/index.html` | La page de l'appli |
 | `public/css/app.css` | Styles et thèmes |
 | `public/js/app.js` | L'appli (explorer, chrono, blog, avis, réglages…) |
-| `public/js/places.js` | Recherche de lieux (tuiles, Overpass en secours) et d'adresses (Nominatim) |
+| `public/js/places.js` | Recherche de lieux (tuiles, Overpass en secours) et d'adresses (BAN, Nominatim en secours) |
+| `public/js/i18n.js` | Traductions (français → anglais) et réglage de langue |
+| `public/legal.html` | Mentions légales, confidentialité, conditions, crédits |
+| `scripts/build-covers.js` | Fabrique les illustrations des envies (`public/img/moods/*.svg`) |
 | `scripts/build-places.js` | Fabrique les tuiles de lieux (workflow hebdomadaire) |
 | `public/js/hours.js` | Horaires d'ouverture : ouvert ou fermé à l'arrivée |
 | `public/js/icons.js` | Petits dessins au trait (à la place des emojis) |
