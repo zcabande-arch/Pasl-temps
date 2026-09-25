@@ -13,7 +13,7 @@ const MOODS = {
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
-  culture: {e:"📚", l:"Culture", sl:"Culture", groups:[
+  culture: {img:"img/moods/culture.jpg", e:"📚", l:"Culture", sl:"Culture", groups:[
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
