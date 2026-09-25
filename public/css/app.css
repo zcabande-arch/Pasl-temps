@@ -1,6 +1,6 @@
 :root{
-  --bg:#F4ECDF; --glow:#F4ECDF; --ink:#141210; --soft:#6E655A; --card:#FBF7F0; --line:#DDD2C1;
-  --acc:#E60A00; --accink:#FFFFFF; --accsoft:#EFE4D3; --sun:#FFC53D; --leaf:#23895D; --leafbg:#E1F4EA; --warn:#C2412D;
+  --bg:#F5EEE6; --glow:#F5EEE6; --ink:#1C1512; --soft:#7A6E63; --card:#FFFCF8; --line:#E8DFD3;
+  --acc:#E1140A; --accink:#FFFFFF; --accsoft:#F8DCD8; --sun:#FFC53D; --leaf:#23895D; --leafbg:#E1F4EA; --warn:#C2412D;
   --tl:93%; --ts:80%; --td:36%;
   --sh:0 1px 2px rgba(30,24,70,.05), 0 10px 28px -14px rgba(30,24,70,.22);
   box-sizing:border-box;
@@ -357,48 +357,6 @@ body.timing main{padding-top:118px}
 .install-steps{margin:0;padding-left:18px;font-size:14px;color:var(--soft)}
 .install-steps li{margin:2px 0}
 
-/* Style « Crème » : à plat, graphique, cadres noirs fins (comme l'icône) */
-body.flat{--sh:none;--fr:1.5px solid var(--ink);background:var(--bg)}
-.flat .dial,.flat .moods button,.flat .where form,.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .srow,
-.flat .rvp,.flat .rvsearch,.flat .gear,.flat .offline,.flat .idea p{border:var(--fr);box-shadow:none}
-.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .rvp{border-radius:16px}
-.flat .moods button{border-radius:14px}
-.flat .moods button[aria-pressed="true"],.flat .dial button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
-.flat .moods button[aria-pressed="true"]{border-color:var(--acc)}
-.flat .where form:focus-within{box-shadow:0 0 0 3px var(--accsoft)}
-.flat .place.picked{box-shadow:0 0 0 3px var(--acc)}
-.flat .place{--bgT:var(--accsoft)}
-.flat .place .emo,.flat .rvp .emo{border-radius:12px}
-.flat .group h3 .gi{background:var(--accsoft);border-radius:8px}
-.flat .group h3 small{box-shadow:none;border:var(--fr);background:transparent}
-.flat .chip{background:transparent;border:var(--fr)}
-.flat .chip.gps{border-color:var(--leaf)}
-.flat .ghost{background:transparent;box-shadow:inset 0 0 0 1.5px var(--ink)}
-.flat .tabs{background:var(--bg);box-shadow:none;border-top:var(--fr)}
-.flat .tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
-.flat .idea > button{background:var(--acc);color:var(--accink);box-shadow:none}
-.flat .ring .trk{stroke:var(--line)}
-.flat .ring .arc{stroke-width:14}
-.flat .hero .pre{font-weight:800}
-.flat .brand{color:var(--ink)}
-.flat h2{color:var(--ink);text-transform:uppercase;letter-spacing:.08em;font-size:12px;font-weight:800}
-.flat .hist h2,.flat .saved h2{font-size:13px}
-.flat .timer .tin{border-radius:16px}
-.flat .timer .bar i,.flat .timer .acts .ok{background:var(--acc);color:var(--accink)}
-.flat .sheet{border-top:var(--fr)}
-.flat .seg{background:transparent;border:var(--fr)}
-.flat .sw{border:var(--fr)}
-.flat .entry::before{display:none}
-.flat .entry.done{border-color:var(--leaf)}
-.flat .stats div,.flat .bdg{background:transparent;border:1px solid var(--line)}
-.flat .place{--inkT:var(--ink)}
-.flat .sticker{background:var(--ink);color:var(--bg);transform:none}
-.flat .radar .pt circle{fill:var(--card);stroke:var(--ink);stroke-width:1.5}
-.flat .radar .me{fill:var(--acc)}
-.flat .tog2[aria-pressed="true"]{background:var(--acc)!important;color:var(--accink)!important;box-shadow:none}
-.brand::before{box-shadow:0 0 0 1px rgba(0,0,0,.14)}
-.flat .brand::before{box-shadow:0 0 0 1.5px var(--ink)}
-
 /* ---------- Format d'affichage : tablette et grand écran ---------- */
 .setnote{font-size:13px;color:var(--soft);margin:8px 2px 0}
 .setnote:empty{display:none}
@@ -472,14 +430,110 @@ body:not(.social-on) .idea{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 .travel button[aria-pressed="true"] .ico{--ico-a:var(--accink);--ico-k:var(--accink)}
 .ticket .ico{vertical-align:-2px}
 
-/* Envies en photo */
-.moods button.photo{position:relative;overflow:hidden;justify-content:flex-end;align-items:stretch;padding:0;min-height:112px;
-  aspect-ratio:1/1;background-size:cover;background-position:center;color:#fff;text-align:left}
-.moods button.photo::before{content:"";position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,.62), rgba(0,0,0,.08) 55%, transparent)}
-.moods button.photo b{position:relative;display:block;padding:0 10px 9px;font-size:15px;font-weight:800;line-height:1.1;text-shadow:0 1px 3px rgba(0,0,0,.45)}
-.moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc), 0 0 0 5px var(--bg);color:#fff}
-.moods button.photo[aria-pressed="true"] b::before{content:"✓ ";color:var(--accink);background:var(--acc);border-radius:99px;padding:0 5px;margin-right:4px;text-shadow:none;font-size:12px}
-.flat .moods button.photo{border:0}
-.flat .moods button.photo[aria-pressed="true"]{background-color:transparent}
-.moods button:not(.photo){aspect-ratio:1/1;justify-content:center;min-height:112px}
-.lay-wide .moods button.photo,.lay-wide .moods button:not(.photo){min-height:0}
+/* Envies en photo (base) */
+.moods button.photo{position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;padding:0;
+  background-size:cover;background-position:center;color:#fff;text-align:left}
+.moods button.photo::before{content:"";position:absolute;inset:0}
+.moods button.photo b{position:relative;display:block;line-height:1.05;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.moods button:not(.photo){justify-content:center}
+
+/* ---------- Style « Crème » : éditorial, doux et aéré (inspiré magazine / appli de voyage) ---------- */
+body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30);--fr:0 solid transparent;background:var(--bg)}
+.flat main{padding-left:20px;padding-right:20px}
+.flat .serif,.flat h1,.flat h2,.flat .group h3,.flat .brand,.flat .bloghead{font-family:"Fraunces",Georgia,"Times New Roman",serif}
+/* En-tête */
+.flat .brand{font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.brand::before{box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+.flat .gear{background:var(--card);box-shadow:var(--sh);border:0;width:46px;height:46px}
+.hero2{padding:22px 0 6px}
+.hero2 .kicker{margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+.hero2 .display{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(46px,13.5vw,68px);line-height:.95;letter-spacing:-.035em;color:var(--ink)}
+.hero2 .display em{font-style:italic;color:var(--acc);display:inline-block}
+.hero2 .display em.bump{animation:pop .35s ease}
+.hero2 .post{margin:12px 0 0;font-size:18px;color:var(--soft)}
+/* Temps et moyen de transport : pastilles séparées */
+.dial{display:flex;gap:8px;background:none;box-shadow:none;border:0;padding:0;margin:24px 0 10px;max-width:none;border-radius:0}
+.dial button{flex:1;min-width:0;padding:12px 0;border-radius:999px;background:var(--card);box-shadow:var(--sh);color:var(--ink);font-size:17px;font-weight:700}
+.dial button::after{content:" min";font-size:11px;font-weight:600;color:var(--soft)}
+.dial button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.dial button[aria-pressed="true"]::after{color:inherit;opacity:.65}
+.travel{display:flex;gap:8px;background:none!important;border:0!important;padding:0;margin:0 0 34px;max-width:none}
+.travel button{flex:1;padding:10px 8px;border-radius:999px;background:var(--card);box-shadow:var(--sh);color:var(--ink);font-weight:700}
+.travel button[aria-pressed="true"]{background:var(--accsoft);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.travel button[aria-pressed="true"] .ico{--ico-a:var(--acc);--ico-k:var(--ink)}
+/* Titres de section */
+.flat h2{font-weight:600;font-size:28px;letter-spacing:-.025em;text-transform:none;color:var(--ink);margin:0 0 16px;line-height:1.1}
+.flat h2::before{content:"✦";color:var(--acc);font-size:.55em;margin-right:8px;vertical-align:.3em}
+.flat .hist h2,.flat .saved h2{font-size:28px}
+.flat .hist h2 span{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.flat .sheet h2::before{content:none}
+/* Envies : grandes cartes photo */
+.moods{grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:34px}
+.moods button,.flat .moods button{border-radius:26px;box-shadow:var(--sh);border:0}
+.moods button.photo{aspect-ratio:4/5;min-height:0}
+.moods button.photo::before{background:linear-gradient(to top,rgba(0,0,0,.66),rgba(0,0,0,.12) 50%,transparent 70%)}
+.moods button.photo b{font-family:"Fraunces",Georgia,serif;font-size:24px;font-weight:600;letter-spacing:-.02em;padding:0 16px 2px}
+.moods button.photo small{position:relative;display:block;padding:0 16px 16px;font-size:12.5px;font-weight:600;opacity:.88}
+.moods button.photo .ok{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:800;
+  background:rgba(255,255,255,.26);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
+.moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc),0 18px 36px -20px rgba(225,20,10,.55)}
+.moods button.photo[aria-pressed="true"] .ok{background:var(--acc);box-shadow:none}
+.moods button.photo[aria-pressed="true"] b::before{content:none}
+.moods button:not(.photo){aspect-ratio:4/5}
+.lay-tablet .moods{grid-template-columns:repeat(3,1fr)}
+.lay-tablet .moods button.photo,.lay-tablet .moods button:not(.photo){aspect-ratio:4/3}
+.lay-wide .moods{grid-template-columns:repeat(2,1fr)}
+/* Adresse */
+.flat .where form{border:0;box-shadow:var(--sh);padding:6px 6px 6px 18px}
+.flat .where form:focus-within{box-shadow:var(--sh),0 0 0 3px var(--accsoft)}
+.flat .chip{background:var(--card);border:0;box-shadow:var(--sh)}
+.flat .chip.gps{background:var(--leafbg);color:var(--leaf);box-shadow:none}
+/* Bandeau photo des résultats */
+.banner{position:relative;display:flex;flex-direction:column;justify-content:flex-end;min-height:190px;margin:4px 0 24px;padding:20px 22px;border-radius:30px;overflow:hidden;
+  background-size:cover;background-position:center;color:#fff;box-shadow:var(--sh)}
+.banner::before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1) 60%,transparent)}
+.banner > *{position:relative}
+.banner .k{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.9}
+.banner h3{margin:6px 0 4px;font-family:"Fraunces",Georgia,serif;font-size:36px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.banner p{margin:0;font-size:14.5px;opacity:.92}
+.lay-tablet .banner,.lay-wide .banner{min-height:240px}
+/* Rubriques et lieux */
+.flat .group{margin-bottom:34px}
+.flat .group h3{font-size:24px;font-weight:600;letter-spacing:-.02em}
+.flat .group h3 .gi{width:38px;height:38px;border-radius:14px;background:var(--accsoft);margin-right:12px}
+.flat .group h3 small{border:0;background:var(--card);box-shadow:var(--sh);font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .srow,.flat .rvp,.flat .rvsearch,.flat .offline,.flat .idea p{border:0;box-shadow:var(--sh)}
+.flat .place,.flat .entry,.flat .card,.flat .radar,.flat .rvp{border-radius:26px}
+.flat .srow{border-radius:22px}
+.flat .place{--bgT:var(--accsoft);--inkT:var(--ink)}
+.flat .place > button{padding:14px 0 14px 14px}
+.flat .place .emo{width:60px;height:60px;border-radius:20px}
+.flat .place .emo,.flat .rvp .emo{transform:none}
+.flat .place.picked{box-shadow:0 0 0 3px var(--acc),var(--sh)}
+.flat .det{border-top:1px dashed var(--line)}
+.flat .sticker{background:var(--ink);color:var(--bg);transform:none}
+/* Boutons : rouge plein, contour rouge */
+.go{border-radius:999px}
+.det .acts .go::after,.srow .go::after,.rvp .go::after{content:" →"}
+.flat .ghost{background:transparent;color:var(--acc);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.flat .tog2[aria-pressed="true"]{background:var(--acc)!important;color:var(--accink)!important;box-shadow:none}
+.flat .idea > button{background:var(--acc);color:var(--accink);box-shadow:0 18px 34px -14px rgba(225,20,10,.6);padding:15px 26px}
+/* Divers */
+.flat .radar .pt circle{fill:var(--card);stroke:var(--line);stroke-width:1.5}
+.flat .radar .me{fill:var(--acc)}
+.flat .entry::before{display:none}
+.flat .entry.done{box-shadow:inset 4px 0 0 var(--leaf),var(--sh)}
+.flat .seg{background:var(--bg);border:0}
+.flat .sw{border:0}
+.flat .sheet{border-radius:32px 32px 0 0}
+.flat .tabs{background:color-mix(in srgb,var(--bg) 90%,transparent);box-shadow:0 -1px 0 var(--line)}
+.flat .tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+.flat .timer .tin{border-radius:24px}
+.flat .timer .bar i,.flat .timer .acts .ok{background:var(--acc);color:var(--accink)}
+.flat .stats div,.flat .bdg{background:var(--bg);border:0}
+.flat .saved{margin-top:44px}
+.flat .hist{margin-top:44px}
+
+.radar h3{justify-content:flex-start;align-items:center;gap:8px;font-family:"Fraunces",Georgia,serif;font-size:20px;font-weight:600}
+.radar h3 small{margin-left:auto;font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.radar h3 .ico{margin-right:0}

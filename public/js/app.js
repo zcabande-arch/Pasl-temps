@@ -1,28 +1,28 @@
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
-  manger: {img:"img/moods/manger.jpg", e:"🥐", l:"Manger", sl:"Manger", groups:[
+  manger: {img:"img/moods/manger.jpg", d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:12, q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:8, q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:35, q:"restaurant", minT:45}]},
-  air: {img:"img/moods/air.jpg", e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
+  air: {img:"img/moods/air.jpg", d:"Parcs, jardins, points de vue", e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
-  shopping: {img:"img/moods/shopping.jpg", e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
+  shopping: {img:"img/moods/shopping.jpg", d:"Galeries, marchés, cadeaux", e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
-  culture: {img:"img/moods/culture.jpg", e:"📚", l:"Culture", sl:"Culture", groups:[
+  culture: {img:"img/moods/culture.jpg", d:"Musées, librairies, monuments", e:"📚", l:"Culture", sl:"Culture", groups:[
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
     {l:"Musées, galeries", em:"🖼️", h:260, osm:["tourism=museum","tourism=gallery"], stay:25, q:"musée"}]},
-  poser: {img:"img/moods/poser.jpg", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
+  poser: {img:"img/moods/poser.jpg", d:"Salons de thé, parcs", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
-  bouger: {img:"img/moods/bouger.jpg", e:"🏃", l:"Bouger", sl:"Bouger", groups:[
+  bouger: {img:"img/moods/bouger.jpg", d:"Parcs, salles de sport", e:"🏃", l:"Bouger", sl:"Bouger", groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
     {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]}
 };
@@ -169,7 +169,7 @@ function placeEl(p){
 
 function renderResults(){
   $("numTxt").textContent = T;
-  $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
+  if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = "";
   const s = $("status");
   // Statut
@@ -213,6 +213,15 @@ function renderResults(){
     }
     R.appendChild(sec);
   });
+  // Bandeau photo de l'envie choisie, en tête des résultats
+  if(pos && MOODS[M].img){
+    const bn = document.createElement("div"); bn.className = "banner";
+    bn.style.backgroundImage = `url('${MOODS[M].img.replace(".jpg", "-large.jpg")}'), url('${MOODS[M].img}')`;
+    const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
+    bn.innerHTML = `<span class="k">${T} min ${esc(TR().way)}</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : "Rien à portée pour l'instant"}</p>`;
+    bn.querySelector("h3").textContent = MOODS[M].l;
+    R.insertBefore(bn, R.firstChild);
+  }
   $("idea").classList.toggle("on", total > 0);
 }
 
@@ -221,7 +230,7 @@ function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); 
 function renderMoods(){
   $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
     v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><b>${v.sl||v.l}</b></button>`
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 $("dial").addEventListener("click", e => {
@@ -308,7 +317,7 @@ $("whereForm").addEventListener("submit", async e => {
 // ---------- Réglages : thèmes ----------
 const K = ["bg","glow","ink","soft","card","line","acc","accink","accsoft"];
 const THEMES = {
-  creme:{n:"Crème", flat:true, L:["#F4ECDF","#F4ECDF","#141210","#6E655A","#FBF7F0","#DDD2C1","#E60A00","#FFFFFF","#EFE4D3"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
+  creme:{n:"Crème", flat:true, L:["#F5EEE6","#F5EEE6","#1C1512","#7A6E63","#FFFCF8","#E8DFD3","#E1140A","#FFFFFF","#F8DCD8"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
   lavande:{n:"Lavande", L:["#F4F2FF","#E0D9FF","#1E1846","#6B6790","#FFFFFF","#E4E0F5","#5B4BDB","#FFFFFF","#ECE9FF"], D:["#13112A","#2B2366","#F1EEFF","#A9A4CC","#1F1B3D","#302A58","#8F82FF","#13112A","#2A2459"]},
   menthe:{n:"Menthe", L:["#EEF7F3","#CDEEDD","#143D33","#5E7F75","#FFFFFF","#D6EAE1","#1F9D74","#FFFFFF","#DDF3EA"], D:["#0F1F1B","#17493B","#E8F7F1","#9DBDB2","#182D28","#24423A","#4FD1A5","#0F1F1B","#1D3E35"]},
   peche:{n:"Pêche", L:["#FFF3EE","#FFD9C9","#3A1F1A","#86655C","#FFFFFF","#F4DDD4","#E8603C","#FFFFFF","#FFE4DA"], D:["#1F1412","#4A2419","#FFEFEA","#C9A69C","#2C1D1A","#43302B","#FF8A66","#1F1412","#43261F"]},
