@@ -1,15 +1,15 @@
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
-  manger: {e:"🥐", l:"Manger", sl:"Manger", groups:[
+  manger: {img:"img/moods/manger.jpg", e:"🥐", l:"Manger", sl:"Manger", groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:12, q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:8, q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:35, q:"restaurant", minT:45}]},
-  air: {e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
+  air: {img:"img/moods/air.jpg", e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
-  shopping: {e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
+  shopping: {img:"img/moods/shopping.jpg", e:"🛍️", l:"Galerie marchande", sl:"Shopping", groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
@@ -18,11 +18,11 @@ const MOODS = {
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
     {l:"Musées, galeries", em:"🖼️", h:260, osm:["tourism=museum","tourism=gallery"], stay:25, q:"musée"}]},
-  poser: {e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
+  poser: {img:"img/moods/poser.jpg", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
-  bouger: {e:"🏃", l:"Bouger", sl:"Bouger", groups:[
+  bouger: {img:"img/moods/bouger.jpg", e:"🏃", l:"Bouger", sl:"Bouger", groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
     {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]}
 };
@@ -220,7 +220,9 @@ function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); 
 
 function renderMoods(){
   $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
-    `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
+    v.img
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><b>${v.sl||v.l}</b></button>`
+      : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
