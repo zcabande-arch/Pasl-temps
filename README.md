@@ -14,6 +14,8 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 🌟 **Avis** : tous les lieux notés par la communauté
 - 🔑 **Code de récupération** : sauvegarde chiffrée (AES-GCM) pour tout retrouver sur un autre appareil
 - 🛡️ **Modération** : signaler un post, un commentaire ou un avis, bloquer quelqu'un ; masquage automatique après 3 signalements, page de modération
+- 👤 **Profil** : photo, prénom, âge, genre, endroits préférés (mis en avant dans les résultats) ; écran d'accueil « Bonjour, t'as pas l'temps *Prénom* »
+- 🔑 **Code de récupération sans serveur** : un code (ou un lien) qui contient le profil, les réglages, les favoris et l'historique
 - 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
   **installable** sur le téléphone et utilisable **hors connexion**
 

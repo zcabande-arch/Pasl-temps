@@ -418,11 +418,9 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .radar .pt .ico{overflow:visible}
 
 /* Sans serveur : pas de blog, d'avis ni de code de récupération (réapparaissent quand le serveur répond) */
-body:not(.social-on) .tabs,
+body:not(.social-on) .tabs button[data-v="reviews"],body:not(.social-on) .tabs button[data-v="blog"],
 body:not(.social-on) .sheet .social,
 body:not(.social-on) .entry .share{display:none!important}
-body:not(.social-on) main{padding-bottom:110px}
-body:not(.social-on) .idea{bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 
 /* À pied / vélo / voiture */
 .travel{max-width:360px;margin:-16px auto 26px}
@@ -573,3 +571,41 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .travel button[aria-pressed="true"] .ico{--ico-a:var(--accink);--ico-k:var(--accink)}
 .no-motion .travel .thumb{transition:none}
 @media (prefers-reduced-motion:reduce){.travel .thumb{transition:none}}
+
+/* ---------- Écran d'accueil (2 s) ---------- */
+#splash{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;justify-content:center;padding:0 32px calc(8vh + env(safe-area-inset-bottom,0px));
+  background:var(--bg);color:var(--ink);transition:opacity .5s ease, transform .5s ease;cursor:pointer}
+#splash.out{opacity:0;transform:scale(1.02);pointer-events:none}
+#splash .hello{margin:0 0 6px;font-size:20px;font-weight:600;color:var(--soft);opacity:0;animation:splashIn .6s .1s ease forwards}
+#splash .line{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(40px,11.5vw,72px);line-height:1;letter-spacing:-.035em;opacity:0;animation:splashIn .7s .35s ease forwards}
+#splash .line em{font-style:italic;color:var(--acc)}
+@keyframes splashIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){#splash .hello,#splash .line{animation:none;opacity:1}}
+
+/* ---------- Profil ---------- */
+.phead{padding:10px 0 8px}
+.pphoto{position:relative;display:inline-block;width:104px;height:104px;margin:6px 0 18px;cursor:pointer}
+.pphoto > span:first-child{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;overflow:hidden;background:var(--accsoft);box-shadow:var(--sh)}
+.pphoto img{width:100%;height:100%;object-fit:cover;display:block}
+.pphoto .pcam{position:absolute;right:0;bottom:2px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--accink);font-weight:800;font-size:18px;box-shadow:0 0 0 3px var(--bg)}
+.phead .kicker{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
+.phead .display{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(40px,11vw,56px);line-height:1;letter-spacing:-.03em}
+.phead .display em{font-style:italic;color:var(--acc)}
+.phead .post{margin:10px 0 0;color:var(--soft)}
+.pcard{background:var(--card);border-radius:26px;box-shadow:var(--sh);padding:20px 18px;margin:22px 0}
+.pcard h2{margin-bottom:12px}
+.plabel{display:block;margin:12px 0 6px;font-size:13px;font-weight:700;color:var(--soft)}
+.pcard .field{margin-bottom:4px;background:var(--bg)}
+.pchips{display:flex;gap:8px;flex-wrap:wrap}
+.pchips button{flex:1 1 auto;min-width:0;white-space:nowrap;padding:11px 14px;border:0;border-radius:999px;background:var(--bg);font-weight:700;color:var(--ink)}
+.pchips button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.psaved{margin:10px 0 0;min-height:18px;font-size:13px;font-weight:700;color:var(--leaf)}
+.phelp{margin:-4px 0 14px;font-size:14px;color:var(--soft)}
+.pprefs{display:flex;flex-wrap:wrap;gap:8px}
+.pprefs button{display:inline-flex;align-items:center;gap:7px;padding:8px 14px 8px 10px;border:0;border-radius:999px;background:var(--bg);font-weight:700;font-size:14px;color:var(--ink)}
+.pprefs button[aria-pressed="true"]{background:var(--accsoft);box-shadow:inset 0 0 0 1.5px var(--acc)}
+.pprefs button[aria-pressed="true"]::after{content:"♥";color:var(--acc);margin-left:2px}
+.codebox{font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;resize:none;background:var(--bg)}
+#viewProfile .rec{background:transparent;padding:0}
+.group h3 .pref{color:var(--acc);font-size:.75em;margin-left:8px}
+.moods button.photo .ok{font-size:16px}

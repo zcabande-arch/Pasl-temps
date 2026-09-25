@@ -20,6 +20,21 @@
 <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
+<div id="splash" role="status" aria-live="polite">
+  <p class="hello">Bonjour,</p>
+  <p class="line">t'as pas l'temps<span id="splashName"></span></p>
+</div>
+<script>
+(function(){
+  var s = document.getElementById("splash"), n = "";
+  try{ n = (JSON.parse(localStorage.getItem("pasltemps.profile") || "{}").name || "").trim(); }catch(e){}
+  var em = document.createElement("em"); em.textContent = n ? " " + n : " ?";
+  document.getElementById("splashName").appendChild(em);
+  function hide(){ if(!s || s.classList.contains("out")) return; s.classList.add("out"); setTimeout(function(){ s.remove(); }, 600); }
+  s.addEventListener("click", hide);
+  setTimeout(hide, 2000);
+})();
+</script>
 <div class="timer" id="timer" hidden></div>
 <main>
   <p class="brand">Pas l'temps</p>
@@ -71,6 +86,40 @@
   </div>
   </div>
 
+  <div id="viewProfile" hidden>
+    <header class="phead">
+      <label class="pphoto" id="pPhotoBox" title="Changer la photo">
+        <span id="pPhoto"></span>
+        <span class="pcam" aria-hidden="true">＋</span>
+        <input type="file" id="pPhotoIn" accept="image/*" hidden>
+      </label>
+      <p class="kicker">✦ Ton profil</p>
+      <h1 class="display" id="pHello">Bonjour</h1>
+      <p class="post">Tout reste sur ton appareil.</p>
+    </header>
+    <section class="pcard">
+      <h2>Toi</h2>
+      <label class="plabel" for="pName">Prénom</label>
+      <input class="field" id="pName" maxlength="30" autocomplete="given-name" placeholder="Ton prénom">
+      <label class="plabel" for="pAge">Âge</label>
+      <input class="field" id="pAge" type="number" inputmode="numeric" min="10" max="110" placeholder="Ton âge">
+      <p class="plabel">Genre</p>
+      <div class="pchips" id="pGender" role="group" aria-label="Genre">
+        <button data-v="femme">Femme</button><button data-v="homme">Homme</button><button data-v="nonbinaire">Non binaire</button>
+      </div>
+      <p class="psaved" id="pSaved"></p>
+    </section>
+    <section class="pcard">
+      <h2>Tes endroits préférés</h2>
+      <p class="phelp">Ils passent en premier dans les résultats et « Choisis pour moi » les favorise.</p>
+      <div class="pprefs" id="pPrefs" role="group" aria-label="Endroits préférés"></div>
+    </section>
+    <section class="pcard">
+      <h2>Code de récupération</h2>
+      <div class="rec" id="rec"></div>
+    </section>
+  </div>
+
   <div id="viewBlog" hidden>
     <h1 class="bloghead">Le blog</h1>
     <p class="bloglead">Raconte tes pauses, tague tes potes et suis leurs sorties.</p>
@@ -92,6 +141,7 @@
   <button role="tab" data-v="explore" aria-selected="true"><i class="tabico" data-i="compass"></i><span>Explorer</span></button>
   <button role="tab" data-v="reviews" aria-selected="false"><i class="tabico" data-i="star"></i><span>Avis</span></button>
   <button role="tab" data-v="blog" aria-selected="false"><i class="tabico" data-i="pencil"></i><span>Blog</span></button>
+  <button role="tab" data-v="profile" aria-selected="false"><i class="tabico" data-i="user"></i><span>Profil</span></button>
 </nav>
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
@@ -106,10 +156,6 @@
   <p class="setnote" id="layoutNote"></p>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
-  <div class="social">
-  <h4>Code de récupération</h4>
-  <div class="rec" id="rec"></div>
-  </div>
   <h4>Installer l'appli</h4>
   <div class="rec" id="install"></div>
   <p class="credits">Pas l'temps · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a></p>
@@ -122,5 +168,6 @@
 <script src="js/hours.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/app.js"></script>
+<script src="js/profile.js"></script>
 </body>
 </html>

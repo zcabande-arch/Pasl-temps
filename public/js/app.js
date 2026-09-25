@@ -34,6 +34,39 @@ const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 
 // Marche : 80 m/min, +30 % de détours
+// ---------- Profil (gardé sur l'appareil) ----------
+const PROFILE_KEY = "pasltemps.profile";
+let PROFILE = {name:"", age:"", gender:"", prefs:[], photo:""};
+try{ PROFILE = {...PROFILE, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}")}; }catch(e){}
+if(!Array.isArray(PROFILE.prefs)) PROFILE.prefs = [];
+function saveProfile(){
+  try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(PROFILE)); }
+  catch(e){ try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({...PROFILE, photo:""})); }catch(_){} }
+  scheduleBackup();
+}
+// Types d'endroits qu'on peut préférer (étiquettes OpenStreetMap correspondantes)
+const PREF_TYPES = [
+  {k:"bakery",  l:"Boulangeries",        ico:"baguette", sels:["shop=bakery","shop=pastry"]},
+  {k:"cafe",    l:"Cafés, salons de thé", ico:"cup",      sels:["amenity=cafe"]},
+  {k:"fast",    l:"Sur le pouce",        ico:"sandwich", sels:["amenity=fast_food","amenity=food_court"]},
+  {k:"ice",     l:"Glaciers",            ico:"icecream", sels:["amenity=ice_cream","shop=ice_cream"]},
+  {k:"resto",   l:"Restaurants",         ico:"plate",    sels:["amenity=restaurant"]},
+  {k:"park",    l:"Parcs, jardins",      ico:"tree",     sels:["leisure=park","leisure=garden","tourism=picnic_site"]},
+  {k:"nature",  l:"Nature, points de vue", ico:"forest", sels:["leisure=nature_reserve","tourism=viewpoint","leisure=common"]},
+  {k:"shop",    l:"Shopping",            ico:"bag",      sels:["shop=mall","shop=department_store","shop=gift","shop=souvenir"]},
+  {k:"market",  l:"Marchés",             ico:"market",   sels:["amenity=marketplace","shop=farm"]},
+  {k:"books",   l:"Librairies",          ico:"openbook", sels:["shop=books"]},
+  {k:"museum",  l:"Musées, galeries",    ico:"frame",    sels:["tourism=museum","tourism=gallery"]},
+  {k:"monument",l:"Monuments",           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
+  {k:"library", l:"Bibliothèques",       ico:"books",    sels:["amenity=library"]},
+  {k:"sport",   l:"Sport",               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
+];
+function isPreferred(g){
+  if(!PROFILE.prefs.length || !g) return false;
+  const want = new Set(PREF_TYPES.filter(t => PROFILE.prefs.includes(t.k)).flatMap(t => t.sels));
+  return g.osm.some(x => want.has(x));
+}
+
 // Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
 const TRAVEL = {
   walk: {l:"À pied",  ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:"de marche", way:"à pied",     rings:[2,5,10,15,20]},
@@ -193,7 +226,7 @@ function renderResults(){
   else if(geoState === "no") s.textContent = "Tapez une adresse ou une ville ci-dessus pour voir les lieux autour.";
   else s.textContent = `Lieux où aller, en profiter et revenir ${TR().way} tient dans tes ${fmtDur(T)}.`;
 
-  const groups = groupsNow();
+  const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
   if(!groups.length){ R.innerHTML = `<p class="status">${fmtDur(T)}, c'est court pour ça. Choisis un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
   let total = 0;
   // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
@@ -214,7 +247,7 @@ function renderResults(){
       .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
-    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}</span> ${n?`<small>${n}</small>`:""}</h3>`;
+    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}${isPreferred(g) ? `<span class="pref" title="Dans tes préférences">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
     if(!st){
       sec.innerHTML += `<p class="note"><a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Chercher « ${esc(g.q)} » sur la carte</a></p>`;
     } else if(st.state === "loading"){
@@ -254,7 +287,7 @@ function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); 
 function renderMoods(){
   $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
     v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${v.img}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 $("dial").addEventListener("click", e => {
@@ -441,7 +474,7 @@ async function keyFor(code){
     base, {name:"AES-GCM", length:256}, false, ["encrypt","decrypt"]);
 }
 function snapshot(){
-  return {v:1, settings:SET, lists:LISTS, recents:RECENTS.slice(0,5), blocked:BLOCKED, profile: myWall() ? {code:myWall().code, pseudo:myWall().pseudo, avatar:myWall().avatar, photo:myWall().photo||"", posts:myWall().posts||[]} : null, friends:FRIENDS,
+  return {v:1, me:{name:PROFILE.name, age:PROFILE.age, gender:PROFILE.gender, prefs:PROFILE.prefs}, settings:SET, lists:LISTS, recents:RECENTS.slice(0,5), blocked:BLOCKED, profile: myWall() ? {code:myWall().code, pseudo:myWall().pseudo, avatar:myWall().avatar, photo:myWall().photo||"", posts:myWall().posts||[]} : null, friends:FRIENDS,
     history:HIST.slice(0,200).map(({id,at,n,q,pid,addr,url,mood,T,done,note,lat,lng}) => ({id,at,n,q,pid,addr,url,mood,T,done,note,lat,lng}))};
 }
 async function saveBackup(code){
@@ -466,6 +499,15 @@ async function restore(code){
     const plain = await crypto.subtle.decrypt({name:"AES-GCM", iv:unb64(d.iv)}, await keyFor(code), unb64(d.ct));
     data = JSON.parse(new TextDecoder().decode(plain));
   }catch(e){ throw {code:"not_found"}; }
+  return applyBackupData(data);
+}
+// Remet en place les données d'une sauvegarde (serveur ou code autonome), sans rien effacer
+async function applyBackupData(data){
+  if(data.me && typeof data.me === "object"){
+    ["name","age","gender"].forEach(k => { if(data.me[k] != null && data.me[k] !== "") PROFILE[k] = String(data.me[k]).slice(0, 40); });
+    if(Array.isArray(data.me.prefs)) PROFILE.prefs = [...new Set([...PROFILE.prefs, ...data.me.prefs.filter(x => PREF_TYPES.some(t => t.k === x))])];
+    saveProfile(); renderMoods();
+  }
   // Réglages et lieux récents
   if(data.settings){ SET = {...SET, ...data.settings}; if(!THEMES[SET.theme]) SET.theme = "creme"; try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} applyTheme(); }
   if(Array.isArray(data.recents) && data.recents.length){
@@ -498,7 +540,8 @@ let recView = "main";
 function renderRec(msg, warn){
   const R = $("rec"); if(!R) return;
   if(!DB){
-    R.innerHTML = dbState === "wait" ? `<p>Connexion au serveur…</p>` : `<p>Le code de récupération a besoin du serveur de Pas l'temps, injoignable pour l'instant.</p>`; return;
+    if(typeof renderPortable === "function") return renderPortable(R, msg, warn);
+    R.innerHTML = `<p>Chargement…</p>`; return;
   }
   if(recView === "enter"){
     R.innerHTML = `<p>Tapez votre code pour récupérer votre historique, vos lieux récents et vos réglages.</p>
@@ -554,7 +597,8 @@ function renderRec(msg, warn){
 
 // ---------- Onglets ----------
 function showView(v){
-  $("viewExplore").hidden = v !== "explore"; $("viewBlog").hidden = v !== "blog"; $("viewReviews").hidden = v !== "reviews";
+  $("viewExplore").hidden = v !== "explore"; $("viewBlog").hidden = v !== "blog"; $("viewReviews").hidden = v !== "reviews"; $("viewProfile").hidden = v !== "profile";
+  if(v === "profile" && typeof renderProfile === "function") renderProfile();
   document.querySelectorAll(".tabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.v === v)));
   $("idea").style.visibility = v === "explore" ? "" : "hidden";
   if(v === "blog") renderBlog();
@@ -685,7 +729,7 @@ function renderBlog(){
       <input class="field" id="pseudoIn" maxlength="24" placeholder="Ton pseudo">
       <div class="btns"><button class="go" id="profSave">${me && me.code ? "Enregistrer" : "Créer mon profil"}</button>${me && me.code ? `<button class="ghost" id="profCancel">Annuler</button>` : ""}</div>
       <p class="small"></p></div>`;
-    $("pseudoIn").value = cur.pseudo || "";
+    $("pseudoIn").value = cur.pseudo || PROFILE.name || "";
     M.querySelector(".small:last-child").textContent = blogMsg; 
     let ava = cur.avatar || AVAS[0], photo = safePhoto(cur.photo);
     const prev = () => { $("avaPrev").innerHTML = avaInner({avatar:ava, photo}); $("photoDel").hidden = !photo; };
@@ -1272,6 +1316,7 @@ function pickForMe(list){
     const o = HOURS.forVisit(p.oh, p.walk, p.stay);
     if(o.level === "closed") w *= .01; else if(o.level === "warn") w *= .4; else if(o.level === "ok") w *= 1.2;
     if(LISTS.todo[p.id]) w *= 2.2; else if(LISTS.fav[p.id]) w *= 1.5;
+    if(isPreferred(MOODS[M].groups.find(g => g.l === p.g))) w *= 1.8;
     if(recent.has(p.id)) w *= .25;
     if(p.id === pickedId) w *= .05;
     return {p, w};
