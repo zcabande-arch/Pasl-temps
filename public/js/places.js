@@ -221,7 +221,49 @@
     return label || String(r.display_name || "").split(",").slice(0, 3).join(",");
   }
 
+  // ---------- Codes postaux ----------
+  // 1) notre liste (calculée chaque semaine à partir des lieux, servie avec les tuiles) ;
+  // 2) la Base Adresse Nationale (service officiel français) ; 3) OpenStreetMap, en précisant « code postal, France ».
+  const BAN = CFG.ban || ["https://data.geopf.fr/geocodage/search", "https://api-adresse.data.gouv.fr/search/"];
+  let pcIndexP = null;
+  function postcodeIndex(){
+    if(!pcIndexP) pcIndexP = getTileFile("postcodes.json").catch(() => { pcIndexP = null; return null; });
+    return pcIndexP;
+  }
+  const normTxt = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  async function getJSON(url, ms){
+    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms || 8000);
+    try{ const r = await fetch(url, {signal: ctl.signal, headers: {"Accept": "application/json"}}); return r.ok ? await r.json() : null; }
+    catch(e){ return null; } finally{ clearTimeout(t); }
+  }
+  async function geocodePostcode(pc, hint){
+    let list = [];
+    const idx = await postcodeIndex();
+    if(idx && idx[pc]) list = idx[pc].map(([lat, lng, city]) => ({lat, lng, label: (pc + " " + (city || "")).trim()}));
+    if(!list.length) for(const base of BAN){
+      const j = await getJSON(`${base}?q=${pc}&type=municipality&limit=10`);
+      const feats = (j && j.features || []).filter(f => f.properties && String(f.properties.postcode) === pc && f.geometry);
+      list = feats.map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: `${pc} ${f.properties.city || f.properties.name || ""}`.trim()}));
+      if(list.length) break;
+    }
+    if(!list.length){
+      const j = await getJSON(`${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=5&accept-language=fr&countrycodes=fr&postalcode=${pc}`);
+      list = (j || []).map(r => { const a = r.address || {}; return {lat: +r.lat, lng: +r.lon, label: `${pc} ${a.city || a.town || a.village || a.municipality || ""}`.trim()}; });
+    }
+    list = list.filter(x => isFinite(x.lat) && isFinite(x.lng));
+    if(hint){ const h = normTxt(hint), m = list.filter(x => normTxt(x.label).includes(h)); if(m.length) list = m; }
+    const seen = new Set();
+    return list.filter(x => !seen.has(x.label) && seen.add(x.label));
+  }
+
   async function geocode(query){
+    // « 75011 », « 75011 Paris » ou « Paris 75011 » : recherche par code postal
+    const pcm = /^\s*(?:(.*?)[\s,]+)?(\d{5})(?:[\s,]+(.*?))?\s*$/.exec(query || "");
+    if(pcm && !/\d/.test((pcm[1] || "") + (pcm[3] || ""))){
+      const found = await geocodePostcode(pcm[2], [pcm[1], pcm[3]].filter(Boolean).join(" "));
+      if(found.length) return found;
+      if(!pcm[1] && !pcm[3]) return [];
+    }
     const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=fr&q=${encodeURIComponent(query)}`;
     let res;
     try{ res = await fetch(u, {headers:{"Accept":"application/json"}}); }
@@ -234,5 +276,5 @@
       .filter(x => isFinite(x.lat) && isFinite(x.lng) && !seen.has(x.label) && seen.add(x.label));
   }
 
-  window.PLACES = {nearby, geocode, meters};
+  window.PLACES = {nearby, geocode, meters, isPostcode: q => /^\s*\d{5}\s*$/.test(q || "")};
 })();
