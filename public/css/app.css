@@ -619,3 +619,6 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .brand::before,.flat .brand::before{content:none;display:none}
 .brand{display:block;height:auto;min-height:46px;padding-top:8px;max-width:calc(100% - 60px);line-height:1.1}
 .brand em{font-style:italic;color:var(--acc)}
+.group.later h3{opacity:.55}
+.group.later .note{font-size:14px}
+.group.later .more-time{font-size:14px;font-weight:700;color:var(--acc)}

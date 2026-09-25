@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "31";
+const APP_VERSION = "32";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -29,7 +29,8 @@ const MOODS = {
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
-    {l:"Musées, galeries", em:"🖼️", h:260, osm:["tourism=museum","tourism=gallery"], stay:60, q:"musée"}]},
+    {l:"Musées", em:"🖼️", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
+    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stay:30, q:"galerie d'art"}]},
   poser: {img:"img/moods/poser.jpg", d:"Salons de thé, parcs", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
@@ -76,7 +77,8 @@ const PREF_TYPES = [
   {k:"shop",    l:"Shopping",            ico:"bag",      sels:["shop=mall","shop=department_store","shop=gift","shop=souvenir"]},
   {k:"market",  l:"Marchés",             ico:"market",   sels:["amenity=marketplace","shop=farm"]},
   {k:"books",   l:"Librairies",          ico:"openbook", sels:["shop=books"]},
-  {k:"museum",  l:"Musées, galeries",    ico:"frame",    sels:["tourism=museum","tourism=gallery"]},
+  {k:"museum",  l:"Musées",              ico:"frame",    sels:["tourism=museum"]},
+  {k:"gallery", l:"Galeries d'art",      ico:"frame",    sels:["tourism=gallery"]},
   {k:"monument",l:"Monuments",           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
   {k:"library", l:"Bibliothèques",       ico:"books",    sels:["amenity=library"]},
   {k:"sport",   l:"Sport",               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
@@ -250,7 +252,14 @@ function renderResults(){
   else s.textContent = `Lieux où aller, en profiter et revenir ${TR().way} tient dans tes ${fmtDur(T)}.`;
 
   const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
-  if(!groups.length){ R.innerHTML = `<p class="status">${fmtDur(T)}, c'est court pour ça. Choisis un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
+  const renderLater = () => laterGroups().forEach(({g, t}) => {
+    const sec = document.createElement("section"); sec.className = "group later";
+    sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(g.l)}</span></h3>
+      <p class="note">Il te faut au moins ${fmtDur(t)} : ${fmtDur(g.stay)} sur place, plus le trajet. <button class="link more-time">Passer à ${fmtDur(t)}</button></p>`;
+    sec.querySelector(".more-time").onclick = () => $("dial").querySelector(`button[data-t="${t}"]`).click();
+    R.appendChild(sec);
+  });
+  if(!groups.length){ R.innerHTML = `<p class="status">${fmtDur(T)}, c'est court pour ça. Choisis un peu plus de temps.</p>`; renderLater(); $("idea").classList.remove("on"); return; }
   let total = 0;
   // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
   const known = allLoaded().some(p => HOURS.parse(p.oh));
@@ -292,6 +301,7 @@ function renderResults(){
     }
     R.appendChild(sec);
   });
+  renderLater();
   // Bandeau photo de l'envie choisie, en tête des résultats
   if(pos && MOODS[M].img){
     const bn = document.createElement("div"); bn.className = "banner";
@@ -334,6 +344,10 @@ function renderMoods(){
     v.img
       ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
+}
+// Rubriques de l'envie qui ne tiennent pas dans le temps choisi, avec la durée qu'il faudrait (parmi les choix proposés)
+function laterGroups(){
+  return MOODS[M].groups.filter(g => !fits(g, T)).map(g => ({g, t: TIMES.find(t => t > T && fits(g, t))})).filter(x => x.t);
 }
 // Choix du temps : jusqu'à 2 h
 const TIMES = [10, 20, 30, 45, 60, 90, 120];
