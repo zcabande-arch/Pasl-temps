@@ -237,11 +237,20 @@
     catch(e){ return null; } finally{ clearTimeout(t); }
   }
   async function geocodePostcode(pc, hint){
-    let list = [];
+    let list = [], ours = [];
     const idx = await postcodeIndex();
-    if(idx && idx[pc]) list = idx[pc].map(([lat, lng, city]) => ({lat, lng, label: (pc + " " + (city || "")).trim()}));
+    if(idx && idx[pc]){
+      // on écarte le bruit (erreurs de saisie dans OpenStreetMap) : une autre commune doit compter au moins 2 lieux,
+      // et « Paris 11eme Arrondissement » est une variante de « Paris »
+      const raw = idx[pc], first = normTxt(raw[0][2]);
+      const pretty = c => c && c === c.toUpperCase() ? c.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : c;
+      list = raw.filter((x, i) => i === 0 || (x[3] >= 2 && !(first && normTxt(x[2]).startsWith(first))))
+        .map(([lat, lng, city]) => ({lat, lng, label: (pc + " " + (pretty(city) || "")).trim()}));
+      // ville tapée avec le code mais absente de notre liste : on demande aux autres sources
+      if(hint && !list.some(x => normTxt(x.label).includes(normTxt(hint)))){ ours = list; list = []; }
+    }
     if(!list.length) for(const base of BAN){
-      const j = await getJSON(`${base}?q=${pc}&type=municipality&limit=10`);
+      const j = await getJSON(`${base}?q=${encodeURIComponent((pc + " " + (hint || "")).trim())}&type=municipality&limit=10`);
       const feats = (j && j.features || []).filter(f => f.properties && String(f.properties.postcode) === pc && f.geometry);
       list = feats.map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: `${pc} ${f.properties.city || f.properties.name || ""}`.trim()}));
       if(list.length) break;
@@ -251,6 +260,7 @@
       list = (j || []).map(r => { const a = r.address || {}; return {lat: +r.lat, lng: +r.lon, label: `${pc} ${a.city || a.town || a.village || a.municipality || ""}`.trim()}; });
     }
     list = list.filter(x => isFinite(x.lat) && isFinite(x.lng));
+    if(!list.length) return ours;    // la ville tapée n'a été trouvée nulle part : communes connues pour ce code
     if(hint){ const h = normTxt(hint), m = list.filter(x => normTxt(x.label).includes(h)); if(m.length) list = m; }
     const seen = new Set();
     return list.filter(x => !seen.has(x.label) && seen.add(x.label));
