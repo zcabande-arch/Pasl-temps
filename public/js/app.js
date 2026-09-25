@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "36";
+const APP_VERSION = "37";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -18,6 +18,10 @@ const MOODS = {
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:20, q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:60, q:"restaurant"}]},
+  boire: {img:"img/moods/boire.svg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
+    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stay:30, q:"bar"},
+    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stay:30, q:"pub"},
+    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stay:15, q:"café"}]},
   air: {img:"img/moods/air.svg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
@@ -81,6 +85,7 @@ const PREF_TYPES = [
   {k:"gallery", l:tx("Galeries d'art"),      ico:"frame",    sels:["tourism=gallery"]},
   {k:"monument",l:tx("Monuments"),           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
   {k:"library", l:tx("Bibliothèques"),       ico:"books",    sels:["amenity=library"]},
+  {k:"bar",     l:tx("Bars, pubs"),          ico:"cocktail", sels:["amenity=bar","amenity=pub","amenity=biergarten"]},
   {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
 ];
 function isPreferred(g){
@@ -389,6 +394,7 @@ function renderResults(){
     const wl = wxLine();
     bn.innerHTML = `${wl ? `<span class="wx">${esc(wl)}</span>` : ""}<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
+    if(MOODS[M].adult) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
     $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
@@ -419,10 +425,15 @@ setInterval(() => {
   }, 1500);
 }, 20e3);
 
+// (--lg : illustration large, en adresse complète car une url() dans une variable CSS se lit depuis la feuille de style)
+// « Boire un verre » n'est pas proposé aux moins de 18 ans (âge du profil)
+const isMinor = () => { const a = parseInt(PROFILE.age, 10); return a > 0 && a < 18; };
+const moodShown = k => !(MOODS[k].adult && isMinor());
 function renderMoods(){
-  $("moods").innerHTML = Object.entries(MOODS).map(([k,v]) =>
+  if(!moodShown(M)) M = "manger";
+  $("moods").innerHTML = Object.entries(MOODS).filter(([k]) => moodShown(k)).map(([k,v]) =>
     v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
 }
 // Rubriques de l'envie qui ne tiennent pas dans le temps choisi, avec la durée qu'il faudrait (parmi les choix proposés)
@@ -1516,7 +1527,8 @@ const HOUR_FIT = [
   {re:/Glacier/, h:[[13,19,2.5]]},
   {re:/Parc|vert|marcher/, h:[[7,20,1.6]]},
   {re:/Musée|Biblioth|Librair/, h:[[10,18,1.6]]},
-  {re:/sport/, h:[[6,9.5,2],[17,21,2]]}
+  {re:/sport/, h:[[6,9.5,2],[17,21,2]]},
+  {re:/^Bars|^Pubs/, h:[[17.5,24,3],[12,14,1.2]]}
 ];
 function hourBoost(g, hr){
   const f = HOUR_FIT.find(x => x.re.test(g)); if(!f) return 1;

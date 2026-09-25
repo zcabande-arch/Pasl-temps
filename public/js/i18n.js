@@ -161,6 +161,9 @@
     "Et toi, c'est quoi ton prénom ?": "And what's your first name?",
     "Il reste sur ton appareil. Tu peux aussi le laisser vide.": "It stays on your device. You can also leave it empty.",
     "Passer": "Skip", "C'est parti": "Let's go", "Suivant": "Next",
+    "Boire un verre": "Grab a drink", "Bars, pubs, cafés": "Bars, pubs, cafés", "Bars": "Bars", "Pubs, brasseries": "Pubs & beer gardens",
+    "Cafés": "Cafés", "Bars, pubs": "Bars & pubs", "bar": "bar", "pub": "pub",
+    "L'abus d'alcool est dangereux pour la santé. À consommer avec modération.": "Excessive drinking is dangerous for your health. Drink responsibly.",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",

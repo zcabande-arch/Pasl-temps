@@ -31,7 +31,7 @@
   $("pName").addEventListener("input", () => { PROFILE.name = $("pName").value.trim().slice(0, 30); saveProfile(); hello(); saved(); });
   $("pAge").addEventListener("input", () => {
     const a = parseInt($("pAge").value, 10);
-    PROFILE.age = a >= 10 && a <= 110 ? String(a) : ""; saveProfile(); saved();
+    PROFILE.age = a >= 10 && a <= 110 ? String(a) : ""; saveProfile(); saved(); renderMoods();
   });
   $("pGender").addEventListener("click", e => {
     const b = e.target.closest("button"); if(!b) return;

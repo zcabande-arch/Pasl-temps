@@ -15,7 +15,8 @@ const SELS = [
   "amenity=restaurant","leisure=park","leisure=garden","tourism=picnic_site","leisure=nature_reserve","tourism=viewpoint",
   "leisure=common","shop=mall","shop=department_store","amenity=marketplace","shop=farm","shop=gift","shop=souvenir",
   "shop=books","historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship","amenity=library",
-  "tourism=museum","tourism=gallery","leisure=track","leisure=fitness_centre","leisure=sports_centre"
+  "tourism=museum","tourism=gallery","leisure=track","leisure=fitness_centre","leisure=sports_centre",
+  "amenity=bar","amenity=pub","amenity=biergarten"
 ];
 const SEL_INDEX = new Map(SELS.map((s, i) => [s, i]));
 const KEYS = [...new Set(SELS.map(s => s.split("=")[0]))];

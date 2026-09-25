@@ -20,6 +20,7 @@ const COVERS = {
   "manger-2": {bg: C.red,   deco: [["circle", 200, 210, 150, C.cream], ["half", 200, 60, 90, C.sun]], icon: "cup", a: C.red, k: C.ink},
   "manger-3": {bg: C.pink,  deco: [["circle", 130, 140, 110, C.cream], ["circle", 290, 290, 80, C.sun]], icon: "icecream", a: C.red, k: C.ink},
   "manger-4": {bg: C.ink,   deco: [["circle", 200, 200, 155, C.cream], ["rect", 0, 360, 400, 40, C.red]], icon: "plate", a: C.red, k: C.ink},
+  "boire":    {bg: "#2B3A67", deco: [["circle", 200, 205, 150, C.cream], ["circle", 330, 80, 40, C.sun]], icon: "cocktail", a: C.red, k: C.ink},
   "air":      {bg: C.green, deco: [["circle", 290, 120, 80, C.sun], ["half", 200, 400, 190, C.cream]], icon: "tree", a: C.red, k: C.ink},
   "shopping": {bg: C.blue,  deco: [["rect", 70, 70, 260, 260, C.cream], ["circle", 330, 90, 50, C.red]], icon: "bag", a: C.red, k: C.ink},
   "culture":  {bg: C.cream, deco: [["circle", 200, 180, 150, C.sun], ["rect", 0, 330, 400, 70, C.ink]], icon: "monument", a: C.red, k: C.ink},

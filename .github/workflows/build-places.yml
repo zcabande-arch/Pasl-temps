@@ -38,7 +38,7 @@ jobs:
           garder() {
             osmium tags-filter "$1" \
               nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books \
-              nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library \
+              nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library,bar,pub,biergarten \
               nwr/leisure=park,garden,nature_reserve,common,track,fitness_centre,sports_centre \
               nwr/tourism=picnic_site,viewpoint,attraction,museum,gallery \
               nwr/historic=monument,castle \

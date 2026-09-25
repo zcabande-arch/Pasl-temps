@@ -670,3 +670,9 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 #onb .dots i.on{background:var(--acc);width:22px;border-radius:99px}
 #onb .next{min-width:220px;font-size:17px;padding:14px 24px}
 .backby .atbox{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+/* Nombre impair d'envies : la dernière prend toute la largeur (illustration large) */
+.moods button.photo:last-child:nth-child(odd){grid-column:1 / -1;aspect-ratio:2/1;background-image:var(--lg)!important}
+.lay-tablet .moods button.photo:last-child:nth-child(odd){grid-column:auto;aspect-ratio:4/3;background-image:none}
+.lay-tablet .moods button.photo:last-child:nth-child(3n+1){grid-column:1 / -1;aspect-ratio:4/1;background-image:var(--lg)!important}
+.banner .evin{display:block;margin-top:6px;font-size:11px;opacity:.85}
+.lay-tablet .moods button.photo:not(:last-child:nth-child(3n+1)){background-position:center top!important}

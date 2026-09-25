@@ -22,6 +22,8 @@
     openbook:  {a:"M24 13 C19 9 12 9 8 11 V36 C12 34 19 34 24 38 C29 34 36 34 40 36 V11 C36 9 29 9 24 13", k:"M24 13 V38 M12 17 H19 M12 22 H19 M29 17 H36 M29 22 H36"},
     monument:  {f:"M24 7 L41 17 H7 Z", k:"M11 21 V36 M19 21 V36 M29 21 V36 M37 21 V36 M8 21 H40 M7 36 H41 M5 41 H43"},
     vase:      {f:"M18 20 C11 24 12 35 18 39 H30 C36 35 37 24 30 20 Z", k:"M20 20 V13 H28 V20 M17.5 10 H30.5 M20 15 C14 15 13 22 16.5 25 M28 15 C34 15 35 22 31.5 25 M16 43 H32"},
+    cocktail:  {f:"M11 10 H37 L24 25 Z", k:"M24 25 V39 M16 41 H32 M31 4 L27.5 14 M33 16 A3 3 0 1 1 32.99 16"},
+    beer:      {f:"M11 16 H29 V40 H11 Z", k:"M29 21 H34 A3 3 0 0 1 37 24 V31 A3 3 0 0 1 34 34 H29 M9 17 C8 11 14 9 17 12 C19 7 26 8 27 12 C30 10 34 13 31 17 M16 23 V34 M22 23 V34"},
     frame:     {a:"M14 32 L21 23 L26 29 L29 25 L34 32", k:"M9 11 H39 V38 H9 Z M13 15 H35 V34 H13 Z M30 20 A2 2 0 1 1 29.99 20"},
     dumbbell:  {a:"M11 15 V33 M37 15 V33", k:"M15 24 H33 M6 20 V28 M42 20 V28 M15 18 V30 M33 18 V30"},
     compass:   {f:"M24 11 L28 24 L24 27 L20 24 Z", k:"M24 5 A19 19 0 1 1 23.99 5 M24 27 L28 24 L24 37 L20 24 Z"},
@@ -38,7 +40,7 @@
   const FROM_EMOJI = {
     "🥐":"plate", "🌳":"tree", "🛍️":"bag", "📚":"books", "🛋️":"chair", "🏃":"shoe",
     "🥖":"baguette", "☕":"cup", "🫖":"cup", "🌯":"sandwich", "🍦":"icecream", "🍝":"plate",
-    "🌲":"forest", "🧺":"market", "🎁":"gift", "📖":"openbook", "🏛️":"monument", "🖼️":"frame", "🏺":"vase",
+    "🌲":"forest", "🧺":"market", "🎁":"gift", "📖":"openbook", "🏛️":"monument", "🖼️":"frame", "🏺":"vase", "🍸":"cocktail", "🍺":"beer",
     "👟":"shoe", "🏋️":"dumbbell", "🧭":"compass", "⭐":"star", "📝":"pencil", "📍":"pin"
   };
   function ico(name, size){
