@@ -147,20 +147,28 @@
     return out;
   }
 
+  // Garde les plus proches, puis une sélection répartie jusqu'au bout du rayon (pour proposer aussi plus loin)
+  function spread(list, limit){
+    if(list.length <= limit) return list;
+    const near = Math.ceil(limit / 2), rest = list.slice(near), n = limit - near, picked = list.slice(0, near);
+    for(let i = 1; i <= n; i++) picked.push(rest[Math.min(rest.length - 1, Math.round(i * rest.length / n) - 1)]);
+    return [...new Set(picked)];
+  }
+
   // groups : [{l, osm:["shop=bakery", …], radius}] → {nomDuGroupe: [lieux triés par distance]}
   // Tuiles d'abord (quasi instantané) ; service Overpass seulement hors zone couverte ou si les tuiles ne répondent pas.
   async function nearby(pos, groups, opts){
     opts = opts || {};
     let out = null;
-    try{ out = await nearbyFromTiles(pos, groups, (opts.limit || 12) + 8); }
+    try{ out = await nearbyFromTiles(pos, groups, 6000); }
     catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
-    if(!out) out = await nearbyOverpass(pos, groups, {...opts, limit: (opts.limit || 12) + 8});
+    if(!out) out = await nearbyOverpass(pos, groups, {...opts, limit: 600});
     // Un même lieu est parfois saisi deux fois dans OpenStreetMap (point + contour) : on n'en garde qu'un
     const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
     Object.keys(out).forEach(k => {
       const kept = [];
       for(const p of out[k]) if(!kept.some(q => norm(q.name) === norm(p.name) && meters(q, p) < 150)) kept.push(p);
-      out[k] = kept.slice(0, opts.limit || 12);
+      out[k] = spread(kept, opts.limit || 12);
     });
     return out;
   }

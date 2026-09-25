@@ -3,9 +3,9 @@ const MOODS = {
   manger: {img:"img/moods/manger.jpg", d:"Boulangeries, cafés, snacks", e:"🥐", l:"Manger", sl:"Manger", groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
-    {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:12, q:"snack"},
-    {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:8, q:"glacier"},
-    {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:35, q:"restaurant", minT:45}]},
+    {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
+    {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:20, q:"glacier"},
+    {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:60, q:"restaurant"}]},
   air: {img:"img/moods/air.jpg", d:"Parcs, jardins, points de vue", e:"🌳", l:"Prendre l'air", sl:"Prendre l'air", groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
@@ -17,7 +17,7 @@ const MOODS = {
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
-    {l:"Musées, galeries", em:"🖼️", h:260, osm:["tourism=museum","tourism=gallery"], stay:25, q:"musée"}]},
+    {l:"Musées, galeries", em:"🖼️", h:260, osm:["tourism=museum","tourism=gallery"], stay:60, q:"musée"}]},
   poser: {img:"img/moods/poser.jpg", d:"Salons de thé, parcs", e:"🛋️", l:"Se poser au calme", sl:"Au calme", groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
@@ -41,6 +41,20 @@ const TRAVEL = {
   car:  {l:"Voiture", ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:"de route",  way:"en voiture", rings:[5,8,12,16,20]}
 };
 const TR = () => TRAVEL[SET.travel] || TRAVEL.walk;
+// Durées lisibles : 45 → « 45 min », 60 → « 1 h », 90 → « 1 h 30 »
+const fmtDur = m => { m = Math.round(m); if(m < 60) return m + " min"; const h = Math.floor(m / 60), r = m % 60; return h + " h" + (r ? " " + String(r).padStart(2, "0") : ""); };
+// Code couleur selon l'éloignement : part du trajet aller maximal possible pour le temps choisi
+const BANDS = [
+  {max:.25, c:"#2E9E5B", l:"Tout près"},
+  {max:.5,  c:"#D39A00", l:"Proche"},
+  {max:.75, c:"#EA6A1B", l:"Un peu loin"},
+  {max:9,   c:"#D7261E", l:"Juste à temps"}
+];
+function maxLeg(){
+  const gs = groupsNow(); if(!gs.length) return 1;
+  return Math.max(1, (T - Math.min(...gs.map(g => g.stay))) / 2);
+}
+const bandOf = walk => BANDS.find(b => walk / maxLeg() <= b.max);
 // Minutes de trajet pour une distance à vol d'oiseau (m)
 const travelOf = d => { const t = TR(); return Math.max(1, Math.round(d * t.detour / t.speed + t.over)); };
 // Distance maximale pour que aller + retour + temps sur place tiennent dans t minutes
@@ -54,7 +68,7 @@ function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encod
 // Les résultats sont gardés sur l'appareil (12 h) : même endroit + même envie = affichage immédiat,
 // puis mise à jour discrète s'ils ont plus de 20 min. On cherche d'emblée assez loin pour 30 min,
 // pour que passer de 10 à 20 ou 30 min ne relance pas de recherche.
-const PC_KEY = "pasltemps.placecache", PC_FRESH = 20 * 60e3, PC_KEEP = 12 * 3600e3;
+const PC_KEY = "pasltemps.placecache2", PC_FRESH = 20 * 60e3, PC_KEEP = 12 * 3600e3;
 let PCACHE = [];
 try{ PCACHE = JSON.parse(localStorage.getItem(PC_KEY) || "[]").filter(e => Date.now() - e.at < PC_KEEP); }catch(e){ PCACHE = []; }
 function pcSave(){
@@ -101,13 +115,13 @@ async function search(){
     searchCtl = new AbortController();
     let radii = wide, found;
     try{
-      found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:20, quick:true});
+      found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:24, quick:true});
     }catch(err){
       if(!err || err.code === "aborted" || err.code === "bad_request" || err.code === "offline" || my !== runId) throw err;
       // Service surchargé : on réessaie une fois, plus petit (juste le temps choisi) et plus léger
       if(!hit){ groups.forEach(g => LOADED[g.l] = {state:"loading", slow:true}); renderResults(); }
       radii = need;
-      found = await PLACES.nearby(pos, groups.map(g => ({l:g.l, osm:g.osm, radius:need[g.l]})), {signal:searchCtl.signal, limit:20, lite:true});
+      found = await PLACES.nearby(pos, groups.map(g => ({l:g.l, osm:g.osm, radius:need[g.l]})), {signal:searchCtl.signal, limit:24, lite:true});
     }
     const wideUsed = radii;
     const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found};
@@ -141,14 +155,15 @@ function placeEl(p){
   el.className = "place" + (p.id === pickedId ? " picked open" : "") + (p.open && p.open.level === "closed" ? " closed" : "");
   el.style.setProperty("--h", p.h);
   el.id = "p-" + p.id.replace(/[^\w-]/g,"");
-  const wPct = Math.min(100, 2*p.walk/T*100), sPct = Math.min(100-wPct, p.stay/T*100);
-  const free = Math.max(0, T - 2*p.walk - p.stay);
+  const total = 2*p.walk + p.stay, band = bandOf(p.walk);
+  const wPct = Math.min(50, p.walk/T*100), sPct = Math.min(100-2*wPct, p.stay/T*100);
+  const free = Math.max(0, T - total);
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i></span></span><span class="ticket"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">fait ${n}×</span>`:""}</span><span class="tot"><b>${fmtDur(total)} au total</b> · ${p.walk} min aller · ${fmtDur(p.stay)} sur place · ${p.walk} min retour</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">⚡ le plus proche</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
     <div class="det">
-      <p class="legend">${TR().e} ${2*p.walk} min ${TR().of} aller-retour · ⏱️ ~${p.stay} min sur place${free?` · ${free} min de rab`:""}</p>
+      <p class="legend">${TR().e} Aller ${p.walk} min · ⏱️ Sur place ${fmtDur(p.stay)} minimum · ${TR().e} Retour ${p.walk} min = <b>${fmtDur(total)}</b>${free?` · il te restera ${fmtDur(free)}`:""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
@@ -168,17 +183,18 @@ function placeEl(p){
 }
 
 function renderResults(){
-  $("numTxt").textContent = T;
+  const [num, unit] = T < 60 ? [T, " minutes"] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? " heure" : " heures"];
+  $("numTxt").textContent = num; if($("unitTxt")) $("unitTxt").textContent = unit;
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = "";
   const s = $("status");
   // Statut
   if(geoState === "wait") s.textContent = "Localisation en cours…";
   else if(geoState === "no") s.textContent = "Tapez une adresse ou une ville ci-dessus pour voir les lieux autour.";
-  else s.textContent = `Lieux où l'aller-retour ${TR().way} tient dans vos ${T} min.`;
+  else s.textContent = `Lieux où aller, en profiter et revenir ${TR().way} tient dans tes ${fmtDur(T)}.`;
 
   const groups = groupsNow();
-  if(!groups.length){ R.innerHTML = `<p class="status">${T} min, c'est court pour ça. Choisissez un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
+  if(!groups.length){ R.innerHTML = `<p class="status">${fmtDur(T)}, c'est court pour ça. Choisis un peu plus de temps.</p>`; $("idea").classList.remove("on"); return; }
   let total = 0;
   // Filtre « ouverts seulement », affiché dès qu'on connaît des horaires
   const known = allLoaded().some(p => HOURS.parse(p.oh));
@@ -207,9 +223,16 @@ function renderResults(){
       sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">Réessayer</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(g.q)}">Google Maps</a></p>`;
       sec.querySelector(".retry").onclick = () => search();
     } else if(!n){
-      sec.innerHTML += `<p class="note">${all.length ? "Tout est fermé à cette heure-ci." : `Rien d'assez proche pour ${T} min.`}</p>`;
+      sec.innerHTML += `<p class="note">${all.length ? "Tout est fermé à cette heure-ci." : `Rien d'assez proche pour ${fmtDur(T)}.`}</p>`;
     } else {
-      items.forEach(p => sec.appendChild(placeEl(p)));
+      const SHOW = 6, all = EXPANDED.has(g.l);
+      (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
+      if(items.length > SHOW){
+        const more = document.createElement("button"); more.className = "more-btn";
+        more.textContent = all ? "Voir moins" : `Voir plus (${items.length - SHOW}), jusqu'à ${items[items.length - 1].walk} min ${TR().way}`;
+        more.onclick = () => { all ? EXPANDED.delete(g.l) : EXPANDED.add(g.l); renderResults(); };
+        sec.appendChild(more);
+      }
     }
     R.appendChild(sec);
   });
@@ -218,13 +241,14 @@ function renderResults(){
     const bn = document.createElement("div"); bn.className = "banner";
     bn.style.backgroundImage = `url('${MOODS[M].img.replace(".jpg", "-large.jpg")}'), url('${MOODS[M].img}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
-    bn.innerHTML = `<span class="k">${T} min ${esc(TR().way)}</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : "Rien à portée pour l'instant"}</p>`;
+    bn.innerHTML = `<span class="k">${fmtDur(T)} ${esc(TR().way)}, retour compris</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : "Rien à portée pour l'instant"}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
     R.insertBefore(bn, R.firstChild);
   }
   $("idea").classList.toggle("on", total > 0);
 }
 
+const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); }
 
 function renderMoods(){
@@ -941,18 +965,32 @@ function radarEl(){
   if(!pos) return null;
   const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id)) uniq.set(p.id, p); });
   const items = [...uniq.values()]; if(!items.length) return null;
-  const maxD = Math.max(150, ...items.map(p => p.dist)) * 1.08, k = 138 / maxD;
+  const tm = TR(), leg = maxLeg();
+  const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
+  const maxD = Math.max(150, rOf(leg), ...items.map(p => p.dist)) * 1.06, k = 146 / maxD;
   const cosL = Math.cos(pos.lat * Math.PI / 180);
-  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de vous">`;
-  const tm = TR(); tm.rings.forEach(m => { const r = Math.max(0, m - tm.over) * tm.speed / tm.detour * k; if(r <= 150 && r > 14) svg += `<circle class="ring" r="${r.toFixed(1)}"/><text class="rl" x="3" y="${(-r+11).toFixed(1)}">${m} min</text>`; });
-  svg += `<text class="rl" x="0" y="-150" text-anchor="middle">N</text>`;
+  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de vous, en couleur selon la distance">`;
+  // zones colorées, de la plus lointaine à la plus proche
+  [...BANDS].reverse().forEach(b => {
+    const r = rOf(Math.min(b.max, 1) * leg) * k;
+    if(r > 4) svg += `<circle r="${r.toFixed(1)}" fill="${b.c}" fill-opacity=".07" stroke="${b.c}" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 5"/>`;
+  });
+  BANDS.forEach(b => {
+    const m = Math.min(b.max, 1) * leg, r = rOf(m) * k;
+    if(r > 16 && r <= 152) svg += `<text class="rl" x="4" y="${(-r + 11).toFixed(1)}" fill="${b.c}">${Math.round(m)} min</text>`;
+  });
+  svg += `<text class="rl" x="0" y="-152" text-anchor="middle">N</text>`;
   items.forEach(p => {
-    const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k;
-    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${p.walk} min</title><circle r="13" fill="hsl(${p.h} 75% 72%)"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
+    const x = (p.lng - pos.lng) * 111320 * cosL * k, y = -(p.lat - pos.lat) * 110540 * k, b = bandOf(p.walk);
+    svg += `<g class="pt" data-id="${esc(p.id)}" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><title>${esc(p.name)} · ${p.walk} min aller · ${fmtDur(2*p.walk + p.stay)} au total</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
   });
   svg += `<circle class="me" r="7"/><circle r="12" fill="none" stroke="var(--acc)" stroke-opacity=".35" stroke-width="3"/></svg>`;
   const d = document.createElement("div"); d.className = "radar";
-  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de vous <small>touchez un point</small></h3>${svg}`;
+  const legend = BANDS.map((b, i) => {
+    const lo = i ? Math.round(BANDS[i-1].max * leg) : 0, hi = Math.round(Math.min(b.max, 1) * leg);
+    return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : `+ de ${lo} min`}</small></span>`;
+  }).join("");
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de vous <small>touchez un point</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">Temps de trajet aller ${esc(tm.way)}. Le retour est compté aussi.</p>`;
   d.querySelector("svg").addEventListener("click", e => {
     const g = e.target.closest(".pt"); if(!g) return;
     const el = document.getElementById("p-" + g.dataset.id.replace(/[^\w-]/g,""));
@@ -1239,7 +1277,7 @@ function pickForMe(list){
     recent.has(p.id) ? "une valeur sûre" :
     hourBoost(p.g, hr) > 1.5 ? `parfait ${MOMENT(hr)}` :
     !HIST.some(h => h.pid === p.id) ? "tu n'y es encore jamais allé·e" : "ça change un peu";
-  return {p, txt:`${p.name} : ${why}. ${p.walk} min ${TR().way}${free ? `, et ${free} min de rab` : ""}.`};
+  return {p, txt:`${p.name} : ${why}. ${fmtDur(2*p.walk + p.stay)} en tout (${p.walk} min ${TR().way} à l'aller et au retour)${free ? `, il te restera ${fmtDur(free)}` : ""}.`};
 }
 $("ideaBtn").addEventListener("click", () => {
   const list = allLoaded(); if(!list.length) return;
@@ -1326,7 +1364,7 @@ function renderHistory(){
       near = km < 1.5 ? " · près d'ici" : km < 50 ? ` · à ${Math.round(km)} km d'ici` : " · ailleurs";
     }
     el.innerHTML = `<div class="row"><strong></strong><time>${whenTxt(h.at)}</time></div>
-      <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(h.q||"")} · ${h.T} min${near}</div>
+      <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(h.q||"")} · ${fmtDur(h.T)}${near}</div>
       <input type="text" placeholder="Un souvenir, une note… (facultatif)" maxlength="120">
       <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? "Fait ✓" : "Marquer comme fait"}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">Site web</a>`:""}<button class="share">Raconter</button><button class="del">Supprimer</button></div>`;
     el.querySelector("strong").textContent = h.n;

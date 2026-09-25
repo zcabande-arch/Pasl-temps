@@ -29,13 +29,14 @@
   <div class="col-a">
   <header class="hero2">
     <p class="kicker">✦ Ta pause, tout près</p>
-    <h1 class="display">J'ai <em id="numTxt">20</em> minutes.</h1>
+    <h1 class="display">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
     <p class="post">On fait quoi ?</p>
   </header>
 
   <div class="dial" id="dial" role="group" aria-label="Temps disponible">
-    <button data-t="10">10</button><button data-t="20" aria-pressed="true">20</button>
-    <button data-t="30">30</button><button data-t="45">45</button><button data-t="60">60</button>
+    <button class="m" data-t="10">10</button><button class="m" data-t="20" aria-pressed="true">20</button>
+    <button class="m" data-t="30">30</button><button class="m" data-t="45">45</button><button data-t="60">1 h</button>
+    <button data-t="90">1 h 30</button><button data-t="120">2 h</button>
   </div>
   <div class="seg travel" id="travelSeg" role="group" aria-label="Moyen de transport"></div>
 
