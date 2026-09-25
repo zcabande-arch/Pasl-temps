@@ -113,7 +113,7 @@
   }
   const tileCache = new Map();
   function tile(key){
-    if(!tileCache.has(key)) tileCache.set(key, getTileFile("t/" + key + ".json").then(r => r || [], e => { tileCache.delete(key); throw e; }));
+    if(!tileCache.has(key)) tileCache.set(key, getTileFile("t/" + key + ".json").then(r => r, e => { tileCache.delete(key); throw e; }));
     return tileCache.get(key);
   }
   // → mêmes résultats que la recherche Overpass, ou null si on est hors de la zone couverte par les tuiles
@@ -127,7 +127,11 @@
     const keys = [];
     for(let i = Math.floor((pos.lat - dLat) / c); i <= Math.floor((pos.lat + dLat) / c); i++)
       for(let j = Math.floor((pos.lng - dLng) / c); j <= Math.floor((pos.lng + dLng) / c); j++) keys.push(i + "_" + j);
-    const rows = (await Promise.all(keys.map(tile))).flat();
+    const files = await Promise.all(keys.map(tile));
+    const rows = files.flatMap(f => f || []);
+    // Aucune donnée ni sur la case où l'on est, ni autour : zone non couverte (ex. juste après la frontière)
+    const here = Math.floor(pos.lat / c) + "_" + Math.floor(pos.lng / c);
+    if(!rows.length && !files[keys.indexOf(here)]) return null;
     const out = {};
     groups.forEach(g => out[g.l] = []);
     const want = groups.map(g => new Set(g.osm));

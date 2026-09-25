@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "26";
+const APP_VERSION = "27";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -188,8 +188,8 @@ async function search(){
 function errText(err){
   const c = err && err.code;
   if(c === "offline") return "Pas de connexion internet.";
-  if(c === "rate_limited") return "Trop de recherches d'un coup, réessayez dans une minute.";
-  if(c === "server_unavailable") return "Le service de carte (OpenStreetMap, gratuit) est surchargé en ce moment. Réessayez dans une minute.";
+  if(c === "rate_limited") return "Trop de recherches d'un coup, réessaie dans une minute.";
+  if(c === "server_unavailable") return "Le service de carte (OpenStreetMap, gratuit) est surchargé en ce moment. Réessaie dans une minute.";
   if(c === "bad_request") return "La recherche n'a pas été comprise par le service de carte.";
   return "Recherche impossible pour l'instant.";
 }
@@ -238,7 +238,7 @@ function renderResults(){
   const s = $("status");
   // Statut
   if(geoState === "wait") s.textContent = "Localisation en cours…";
-  else if(geoState === "no") s.textContent = "Tapez une adresse ou une ville ci-dessus pour voir les lieux autour.";
+  else if(geoState === "no") s.textContent = "Tape une adresse ou une ville ci-dessus pour voir les lieux autour.";
   else s.textContent = `Lieux où aller, en profiter et revenir ${TR().way} tient dans tes ${fmtDur(T)}.`;
 
   const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
@@ -289,7 +289,7 @@ function renderResults(){
     const bn = document.createElement("div"); bn.className = "banner";
     bn.style.backgroundImage = `url('${MOODS[M].img.replace(".jpg", "-large.jpg")}'), url('${MOODS[M].img}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
-    bn.innerHTML = `<span class="k">${fmtDur(T)} ${esc(TR().way)}, retour compris</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : "Rien à portée pour l'instant"}</p>`;
+    bn.innerHTML = `<span class="k">${fmtDur(T)} ${esc(TR().way)}, retour compris</span><h3></h3><p>${loading ? "Je cherche autour de toi…" : total ? `${total} lieu${total>1?"x":""} à portée` : `Rien à portée${T < 120 ? " : essaie plus de temps" : ""}${(SET.travel || "walk") !== "car" ? (T < 120 ? " ou " : " : essaie ") + ((SET.travel || "walk") === "walk" ? "le vélo" : "la voiture") : ""}`}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
     R.insertBefore(bn, R.firstChild);
   }
@@ -343,7 +343,7 @@ function locate(manual){
       $("whereMsg").textContent = "";
       setPlace(g.coords.latitude, g.coords.longitude, "ma position", false);
     }, () => {
-      if(manual) $("whereMsg").textContent = "Position GPS indisponible ici : tapez une adresse ou une ville.";
+      if(manual) $("whereMsg").textContent = "Position GPS indisponible ici : tape une adresse ou une ville.";
       if(!pos){ geoState = "no"; renderResults(); }
     }, {enableHighAccuracy:false, timeout:7000, maximumAge:600000}); // position réseau/Wi-Fi : rapide et assez précise pour marcher
   }catch(e){ if(!pos){ geoState = "no"; renderResults(); } }
@@ -365,7 +365,7 @@ function setPlace(lat, lng, label, remember){
   renderWhere(); renderHistory(); renderSaved(); search();
 }
 function renderWhere(choices){
-  $("here").innerHTML = pos ? `📍 Autour de <b></b>` : "📍 Où êtes-vous ?";
+  $("here").innerHTML = pos ? `📍 Autour de <b></b>` : "📍 Où es-tu ?";
   if(pos) $("here").querySelector("b").textContent = posLabel || "ma position";
   const row = $("whereRow"); row.innerHTML = "";
   const list = choices || RECENTS.filter(r => r.label !== posLabel);
@@ -387,11 +387,11 @@ $("whereForm").addEventListener("submit", async e => {
   msg.textContent = "Je cherche…";
   try{
     const found = await PLACES.geocode(q);
-    if(!found.length){ msg.textContent = "Adresse introuvable. Essayez avec la ville, par exemple « rue X, Lyon »."; return; }
+    if(!found.length){ msg.textContent = "Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon »."; return; }
     $("whereInput").value = ""; $("whereInput").blur();
     if(found.length === 1){ msg.textContent = ""; setPlace(found[0].lat, found[0].lng, found[0].label, true); }
     else { msg.textContent = "Lequel ?"; renderWhere(found); }
-  }catch(err){ msg.textContent = errText(err); }
+  }catch(err){ msg.textContent = err && err.code === "offline" ? "Pas de connexion internet." : "La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute, ou touche « Ma position »."; }
 });
 
 
@@ -562,7 +562,7 @@ function renderRec(msg, warn){
     R.innerHTML = `<p>Chargement…</p>`; return;
   }
   if(recView === "enter"){
-    R.innerHTML = `<p>Tapez votre code pour récupérer votre historique, vos lieux récents et vos réglages.</p>
+    R.innerHTML = `<p>Tape ton code pour récupérer ton historique, tes lieux récents et tes réglages.</p>
       <input id="recIn" placeholder="XXXX-XXXX-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false">
       <div class="btns"><button class="go" id="recGo">Récupérer</button><button class="ghost" id="recBack">Annuler</button></div>
       <p class="msg${warn?" warn":""}"></p>`;
@@ -599,7 +599,7 @@ function renderRec(msg, warn){
     $("recHave").onclick = () => { recView = "enter"; renderRec(); };
     $("recForget").onclick = () => { setCode(""); renderRec("Code oublié sur cet appareil. La sauvegarde reste récupérable avec le code."); };
   } else {
-    R.innerHTML = `<p>Créez un code secret pour pouvoir récupérer votre historique, vos lieux et vos réglages si vous changez d'appareil ou perdez vos données.</p>
+    R.innerHTML = `<p>Crée un code secret pour récupérer ton historique, tes lieux et tes réglages si tu changes d'appareil ou perds tes données.</p>
       <div class="btns"><button class="go" id="recNew">Créer mon code</button><button class="ghost" id="recHave">J'ai déjà un code</button></div>
       <p class="msg${warn?" warn":""}"></p>`;
     R.querySelector(".msg").textContent = msg || "";
@@ -1037,7 +1037,7 @@ function radarEl(){
   const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
   const maxD = Math.max(150, rOf(leg), ...items.map(p => p.dist)) * 1.06, k = 146 / maxD;
   const cosL = Math.cos(pos.lat * Math.PI / 180);
-  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de vous, en couleur selon la distance">`;
+  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="Plan des lieux autour de toi, en couleur selon la distance">`;
   // zones colorées, de la plus lointaine à la plus proche
   [...BANDS].reverse().forEach(b => {
     const r = rOf(Math.min(b.max, 1) * leg) * k;
@@ -1058,7 +1058,7 @@ function radarEl(){
     const lo = i ? Math.round(BANDS[i-1].max * leg) : 0, hi = Math.round(Math.min(b.max, 1) * leg);
     return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : `+ de ${lo} min`}</small></span>`;
   }).join("");
-  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de vous <small>touchez un point</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">Temps de trajet aller ${esc(tm.way)}. Le retour est compté aussi.</p>`;
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} Autour de toi <small>touche un point</small></h3>${svg}<div class="bands">${legend}</div><p class="bnote">Temps de trajet aller ${esc(tm.way)}. Le retour est compté aussi.</p>`;
   d.querySelector("svg").addEventListener("click", e => {
     const g = e.target.closest(".pt"); if(!g) return;
     const el = document.getElementById("p-" + g.dataset.id.replace(/[^\w-]/g,""));
@@ -1352,6 +1352,7 @@ $("ideaBtn").addEventListener("click", () => {
   const list = allLoaded(); if(!list.length) return;
   const {p, txt} = pickForMe(list);
   pickedId = p.id; $("ideaTxt").textContent = txt;
+  EXPANDED.add(p.g);            // le lieu choisi peut être derrière « Voir plus »
   renderResults();
   const el = document.getElementById("p-" + p.id.replace(/[^\w-]/g,""));
   if(el) el.scrollIntoView({behavior:"smooth", block:"center"});
@@ -1421,7 +1422,7 @@ function renderHistory(){
   const L = $("histList"); L.innerHTML = "";
   const done = HIST.filter(h => h.done).length;
   $("histCount").textContent = HIST.length ? `${done} pause${done>1?"s":""} faite${done>1?"s":""}` : "";
-  if(!HIST.length){ L.innerHTML = `<p class="empty">Rien pour l'instant. Quand vous touchez « Je pars », le lieu s'ajoute ici et vous pourrez le marquer comme fait.</p>`; return; }
+  if(!HIST.length){ L.innerHTML = `<p class="empty">Rien pour l'instant. Quand tu touches « Je pars », le lieu s'ajoute ici et tu pourras le marquer comme fait.</p>`; return; }
   (showAll ? HIST : HIST.slice(0,8)).forEach(h => {
     const el = document.createElement("div");
     el.className = "entry" + (h.done ? " done" : "");
