@@ -560,3 +560,16 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .bnote{margin:6px 0 0;text-align:center;font-size:12px;color:var(--soft)}
 .det .legend b{color:var(--ink)}
 .more-btn{grid-column:1/-1;display:block;width:100%;margin-top:4px;padding:12px;border:0;border-radius:999px;background:transparent;color:var(--acc);font-weight:700;font-size:15px;box-shadow:inset 0 0 0 1.5px var(--acc)}
+
+/* À pied / Vélo / Voiture : une ligne, une bulle qui glisse */
+.travel,.flat .travel{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:5px;margin:0 0 34px;max-width:none;
+  background:var(--card)!important;border:0!important;border-radius:999px;box-shadow:var(--sh)}
+.travel .thumb{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / 3);border-radius:999px;background:var(--acc);
+  box-shadow:0 8px 18px -10px rgba(225,20,10,.7);transform:translateX(calc(var(--i, 0) * 100%));transition:transform .38s cubic-bezier(.3,1.25,.45,1)}
+.travel button,.flat .travel button,.travel button[aria-pressed="true"]{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;
+  padding:11px 4px;border:0;border-radius:999px;background:transparent!important;box-shadow:none!important;color:var(--ink);font-weight:700;font-size:15px;white-space:nowrap;transition:color .25s}
+.travel button[aria-pressed="true"]{color:var(--accink)}
+.travel button .ico{--ico-a:var(--acc);--ico-k:var(--ink);transition:none}
+.travel button[aria-pressed="true"] .ico{--ico-a:var(--accink);--ico-k:var(--accink)}
+.no-motion .travel .thumb{transition:none}
+@media (prefers-reduced-motion:reduce){.travel .thumb{transition:none}}

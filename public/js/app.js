@@ -264,9 +264,15 @@ $("dial").addEventListener("click", e => {
   const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
   search();
 });
+// Une seule ligne, une bulle qui glisse sous le mode choisi
 function renderTravel(){
-  $("travelSeg").innerHTML = Object.entries(TRAVEL).map(([k, t]) =>
-    `<button data-v="${k}" aria-pressed="${k === (SET.travel || "walk")}">${ICONS.ico(t.ico, 22)}<span>${t.l}</span></button>`).join("");
+  const box = $("travelSeg"), keys = Object.keys(TRAVEL), cur = SET.travel || "walk";
+  if(!box.querySelector(".thumb")){
+    box.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + keys.map(k =>
+      `<button data-v="${k}">${ICONS.ico(TRAVEL[k].ico, 22)}<span>${TRAVEL[k].l}</span></button>`).join("");
+  }
+  box.style.setProperty("--i", Math.max(0, keys.indexOf(cur)));
+  box.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === cur)));
 }
 $("travelSeg").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.travel || "walk")) return;
