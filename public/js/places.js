@@ -271,7 +271,7 @@
       // ville tapée avec le code mais absente de notre liste : on demande aux autres sources
       if(hint && !list.some(x => normTxt(x.label).includes(normTxt(hint)))){ ours = list; list = []; }
     }
-    if(!list.length) for(const base of BAN){
+    if(!list.length && (!near || inFrance(near))) for(const base of BAN){
       const j = await getJSON(`${base}?q=${encodeURIComponent((pc + " " + (hint || "")).trim())}&type=municipality&limit=10`);
       const feats = (j && j.features || []).filter(f => f.properties && String(f.properties.postcode) === pc && f.geometry);
       list = feats.map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: `${pc} ${f.properties.city || f.properties.name || ""}`.trim()}));
@@ -289,6 +289,17 @@
     return list.filter(x => !seen.has(x.label) && seen.add(x.label));
   }
 
+  const STOP = new Set("rue av ave avenue bd boulevard place pl chemin allee quai impasse route cours square passage faubourg esplanade promenade voie lieu dit des del les une sur sous aux the france".split(" "));
+  const words = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").split(/[^a-z0-9]+/).filter(Boolean);
+  function covers(query, label){
+    const have = words(label);
+    return words(query).filter(w => w.length >= 3 && !/\d/.test(w) && !STOP.has(w))
+      .every(w => have.some(h => h.startsWith(w.slice(0, 4)) || w.startsWith(h.slice(0, 4)) && h.length >= 4));
+  }
+  // Là où la BAN (adresses françaises) a du sens : métropole, Corse et Outre-mer
+  const FR_BOX = [[41.3, -5.3, 51.2, 9.7], [15.8, -61.9, 16.6, -60.9], [14.3, -61.3, 14.9, -60.8], [2.1, -54.7, 5.8, -51.6],
+    [-21.4, 55.2, -20.8, 55.9], [-13.1, 44.9, -12.6, 45.3], [46.7, -56.5, 47.2, -56.1]];
+  const inFrance = p => FR_BOX.some(([a, b, c, d]) => p.lat >= a && p.lat <= c && p.lng >= b && p.lng <= d);
   function banLabel(p){
     if(p.type === "municipality") return `${p.name}${p.postcode ? " (" + p.postcode + ")" : ""}`;
     return [p.name, [p.postcode, p.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
@@ -302,8 +313,11 @@
       const streety = /\d|\b(rue|av|avenue|bd|boulevard|place|pl|chemin|all[ée]e|quai|impasse|route|cours|square|passage|faubourg|esplanade|promenade|voie)\b/i.test(query);
       const feats = (j.features || []).filter(f => f.geometry && f.properties && f.properties.score >= 0.6 &&
         (streety || f.properties.type === "municipality" || f.properties.type === "locality"));
+      // Chaque mot important tapé doit se retrouver dans la réponse : sinon « Damrak 1, Amsterdam »
+      // donnerait « 1 Rue d'Amsterdam, Paris » (la BAN ne connaît que la France)
       const seen = new Set();
-      return feats.map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: banLabel(f.properties)}))
+      return feats.filter(f => covers(query, banLabel(f.properties) + " " + (f.properties.city || "") + " " + (f.properties.context || "")))
+        .map(f => ({lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: banLabel(f.properties)}))
         .filter(x => isFinite(x.lat) && isFinite(x.lng) && !seen.has(x.label) && seen.add(x.label)).slice(0, 4);
     }
     return [];
@@ -329,11 +343,25 @@
       if(found.length) return found;
       if(!pcm[1] && !pcm[3]) return [];
     }
-    // En France : Base Adresse Nationale (service public, libre, sans limite commerciale).
-    // Nominatim seulement si la BAN ne trouve rien de convaincant (adresse à l'étranger, lieu-dit…)
-    const ban = await geocodeBAN(query);
-    if(ban.length) return ban;
-    const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=${LANG()}&q=${encodeURIComponent(query)}`;
+    // En France : Base Adresse Nationale (service public, libre, sans limite commerciale), Nominatim en secours.
+    // Ailleurs (ou téléphone réglé dans une autre langue sans position connue) : Nominatim d'abord.
+    const frHere = near ? inFrance(near) : (LANG() === "fr" || localeCc() === "fr");
+    if(frHere){
+      const ban = await geocodeBAN(query);
+      if(ban.length) return ban;
+      return nominatim(query, near);
+    }
+    let err = null, found = [];
+    try{ found = await nominatim(query, near); }catch(e){ err = e; }
+    if(found.length) return found;
+    if(!near || inFrance(near)){ const ban = await geocodeBAN(query); if(ban.length) return ban; }
+    if(err) throw err;
+    return found;
+  }
+  // Nominatim (OpenStreetMap, monde entier), avec préférence pour les résultats proches d'où l'on est ; Photon en secours
+  async function nominatim(query, near){
+    const box = near ? `&viewbox=${(near.lng - 1).toFixed(3)},${(near.lat + 1).toFixed(3)},${(near.lng + 1).toFixed(3)},${(near.lat - 1).toFixed(3)}` : "";
+    const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=${LANG()}${box}&q=${encodeURIComponent(query)}`;
     let res;
     try{ res = await fetch(u, {headers:{"Accept":"application/json"}}); }
     catch(e){ if(navigator.onLine === false) throw {code:"offline"}; res = null; }

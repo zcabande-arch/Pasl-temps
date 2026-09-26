@@ -60,3 +60,27 @@ test("hors de France : le pays est indiqué, et Photon prend le relais si Nomina
   const r = await P.geocode("Berlin");
   assert.equal(r[0].label, "Berlin, DE");
 });
+
+test("« Damrak 1, Amsterdam » ne devient pas « 1 Rue d'Amsterdam, Paris »", async () => {
+  const {P, calls} = load([
+    [/geocodage|api-adresse/, {features: [feat("housenumber", "1 Rue d'Amsterdam", {postcode: "75008"})]}],
+    [/nominatim/, [{lat: "52.37", lon: "4.89", address: {road: "Damrak", house_number: "1", city: "Amsterdam", country_code: "nl"}}]]]);
+  const r = await P.geocode("Damrak 1, Amsterdam");
+  assert.equal(r[0].label, "1 Damrak, Amsterdam (NL)");
+  assert.ok(calls.some(u => u.includes("nominatim")));
+});
+
+test("à l'étranger : Nominatim d'abord, près d'où l'on est, sans la BAN", async () => {
+  const {P, calls} = load([[/nominatim/, [{lat: "40.75", lon: "-73.99", address: {road: "Broadway", city: "New York", country_code: "us"}}]]]);
+  const r = await P.geocode("Broadway", {lat: 40.75, lng: -73.99});
+  assert.equal(r[0].label, "Broadway, New York (US)");
+  assert.ok(calls[0].includes("nominatim") && calls[0].includes("viewbox=-74.990,41.750,-72.990,39.750"));
+  assert.ok(!calls.some(u => /geocodage|api-adresse/.test(u)));
+});
+
+test("à l'étranger, code postal à 5 chiffres inconnu : pas de BAN, Nominatim", async () => {
+  const {P, calls} = load([[/nominatim.*postalcode=10001/, [{lat: "40.75", lon: "-73.99", address: {city: "New York", country_code: "us"}}]]]);
+  const r = await P.geocode("10001", {lat: 40.7, lng: -74});
+  assert.equal(r[0].label, "10001 New York (US)");
+  assert.ok(!calls.some(u => /geocodage|api-adresse/.test(u)));
+});
