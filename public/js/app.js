@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "46";
+const APP_VERSION = "47";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -64,6 +64,7 @@ let PROFILE = {name:"", age:"", gender:"", prefs:[], photo:""};
 try{ PROFILE = {...PROFILE, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}")}; }catch(e){}
 if(!Array.isArray(PROFILE.prefs)) PROFILE.prefs = [];
 function saveProfile(){
+  if(typeof syncWallSoon === "function") syncWallSoon();
   try{ localStorage.setItem(PROFILE_KEY, JSON.stringify(PROFILE)); }
   catch(e){ try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({...PROFILE, photo:""})); }catch(_){} }
   scheduleBackup();
@@ -981,7 +982,7 @@ async function initBlog(){
     // garder notre version locale si une écriture est en cours
     if(WALLS[UID] && next[UID] && (WALLS[UID].updatedAt||0) > (next[UID].updatedAt||0)) next[UID] = WALLS[UID];
     if(MOD){ const h = await MOD.hidden(); h.forEach(t => HIDDEN.add(t)); }
-    RAW_WALLS = next; WALLS = moderate(next); blogReady = true; groupCache = null; renderBlog(); renderReviews(); if(!$("viewExplore").hidden) renderResults();
+    RAW_WALLS = next; WALLS = moderate(next); blogReady = true; groupCache = null; if(myWall()) ensureWall(); renderBlog(); renderReviews(); if(!$("viewExplore").hidden) renderResults();
   }, () => { blogReady = true; blogMsg = "Le blog n'est pas disponible pour l'instant."; renderBlog(); });
 }
 
@@ -1021,6 +1022,19 @@ function resizeImage(file, S, maxLen, square){
 }
 function nameOf(code){ const w = byCode(code); return w ? w.pseudo || "Quelqu'un" : "Quelqu'un"; }
 
+// Crée ou met à jour le mur du blog à partir du profil de l'appli (prénom, photo)
+var wallSyncTimer = null;   // var : saveProfile peut l'appeler avant cette ligne
+function ensureWall(){
+  if(!DB || !UID || !blogReady) return;
+  const me = myWall(), name = (PROFILE.name || "").trim().slice(0, 24);
+  if(!name) return;
+  const photo = safePhoto(PROFILE.photo);
+  if(me && me.code && me.pseudo === name && (me.photo || "") === photo) return;
+  saveWall({...(me || {}), code:(me && me.code) || newFriendCode(), pseudo:name, avatar:(me && me.avatar) || AVAS[0], photo,
+    posts:(me && me.posts) || [], reacts:(me && me.reacts) || {}});
+}
+function syncWallSoon(){ clearTimeout(wallSyncTimer); wallSyncTimer = setTimeout(() => { if(myWall()) ensureWall(); }, 1500); }
+
 function renderBlog(){
   if($("viewBlog").hidden) return;
   const me = myWall();
@@ -1028,48 +1042,30 @@ function renderBlog(){
   const M = $("blogMe");
   if(!DB || !UID){ M.innerHTML = `<div class="card"><p class="small" style="margin:0">${dbState === "wait" ? "Connexion au serveur…" : "Le blog a besoin du serveur de Pas l'temps, injoignable pour l'instant. Réessayez plus tard."}</p></div>`; ["blogFriends","blogCompose","blogFeed"].forEach(i => $(i).innerHTML = ""); return; }
   if(!blogReady){ M.innerHTML = `<div class="card"><p class="small" style="margin:0">Chargement…</p></div>`; return; }
-  if(!me || !me.code || editingProfile){
-    const cur = me || {};
-    M.innerHTML = `<div class="card"><b style="font-size:18px">${me && me.code ? "Modifier mon profil" : "Crée ton profil"}</b>
-      <p class="small" style="margin:4px 0 12px">Choisis un pseudo et un avatar. Ils seront visibles par tes potes.</p>
-      <div class="photorow"><span class="ava" id="avaPrev"></span>
-        <div class="btns"><label class="go" style="cursor:pointer">📷 Choisir une photo<input type="file" id="photoIn" accept="image/*" hidden></label><button class="ghost" id="photoDel" hidden>Retirer</button></div></div>
-      <p class="small" style="margin:0 0 8px">Ou un avatar :</p>
-      <div class="avapick" id="avaPick">${AVAS.map(a => `<button data-a="${a}" aria-pressed="${a===(cur.avatar||AVAS[0])}">${a}</button>`).join("")}</div>
-      <input class="field" id="pseudoIn" maxlength="24" placeholder="Ton pseudo">
-      <div class="btns"><button class="go" id="profSave">${me && me.code ? "Enregistrer" : "Créer mon profil"}</button>${me && me.code ? `<button class="ghost" id="profCancel">Annuler</button>` : ""}</div>
-      <p class="small"></p></div>`;
-    $("pseudoIn").value = cur.pseudo || PROFILE.name || "";
-    M.querySelector(".small:last-child").textContent = blogMsg; 
-    let ava = cur.avatar || AVAS[0], photo = safePhoto(cur.photo);
-    const prev = () => { $("avaPrev").innerHTML = avaInner({avatar:ava, photo}); $("photoDel").hidden = !photo; };
-    prev();
-    $("avaPick").onclick = e => { const b = e.target.closest("button"); if(!b) return; ava = b.dataset.a; photo = ""; $("avaPick").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x===b))); prev(); };
-    $("photoIn").onchange = async e => {
-      const f = e.target.files && e.target.files[0]; if(!f) return;
-      const msg = M.querySelector(".small:last-child"); msg.textContent = "Préparation de la photo…";
-      try{ photo = await resizePhoto(f); msg.textContent = ""; prev(); }
-      catch(err){ msg.textContent = "Cette image ne peut pas être lue. Essaie une autre photo (JPEG ou PNG)."; }
-      e.target.value = "";
-    };
-    $("photoDel").onclick = () => { photo = ""; prev(); };
-    $("profSave").onclick = () => {
-      const p = $("pseudoIn").value.trim().slice(0,24);
-      if(!p){ blogMsg = "Il faut un pseudo."; renderBlog(); return; }
-      blogMsg = ""; editingProfile = false;
-      saveWall({...(me||{}), code:(me && me.code) || newFriendCode(), pseudo:p, avatar:ava, photo, posts:(me && me.posts)||[], reacts:(me && me.reacts)||{}});
-    };
-    if($("profCancel")) $("profCancel").onclick = () => { editingProfile = false; renderBlog(); };
+  // Le profil du blog, c'est le profil de l'appli : prénom et photo repris, code ami créé tout seul
+  if(!me || !me.code){
+    if((PROFILE.name || "").trim()){ ensureWall(); M.innerHTML = `<div class="card"><p class="small" style="margin:0">${tx("Préparation de ton profil…")}</p></div>`; }
+    else {
+      M.innerHTML = `<div class="card"><b style="font-size:18px">${tx("Ton prénom pour le blog")}</b>
+        <p class="small" style="margin:4px 0 12px">${tx("C'est celui de ton profil : tes potes le verront. Tu pourras ajouter une photo dans Profil.")}</p>
+        <form id="blogNameForm" class="accform"><input class="field" id="pseudoIn" maxlength="24" autocomplete="given-name" placeholder="${tx("Ton prénom")}" required>
+        <button class="go" type="submit">${tx("C'est parti")}</button></form></div>`;
+      $("blogNameForm").onsubmit = e => {
+        e.preventDefault();
+        const n = $("pseudoIn").value.trim().slice(0, 24); if(!n) return;
+        PROFILE.name = n; saveProfile(); renderBrand(); ensureWall();
+      };
+    }
     $("blogFriends").innerHTML = $("blogCompose").innerHTML = $("blogFeed").innerHTML = "";
     return;
   }
   M.innerHTML = `<div class="card"><div class="me"><button class="ava" id="meAva" aria-label="Modifier mon profil">${avaInner(me)}</button>
     <div class="who"><b></b><span>Mon code ami : <span class="fcode">${esc(me.code)}</span></span></div></div>
-    <div class="btns" style="margin-top:12px"><button class="go" id="shareProf">Partager mon profil</button><button class="ghost" id="editProf">Modifier</button></div>
+    <div class="btns" style="margin-top:12px"><button class="go" id="shareProf">Partager mon profil</button><button class="ghost" id="editProf">${tx("Modifier dans Profil")}</button></div>
     <p class="small" id="meMsg"></p></div>`;
   M.querySelector(".who b").textContent = me.pseudo;
   $("meMsg").textContent = blogMsg;
-  $("meAva").onclick = $("editProf").onclick = () => { editingProfile = true; renderBlog(); };
+  $("meAva").onclick = $("editProf").onclick = () => showView("profile");
   $("shareProf").onclick = async () => {
     const txt = `Ajoute-moi sur « Pas l'temps » ! Mon code ami : ${me.code}`;
     try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ if(e && e.name === "AbortError") return; }

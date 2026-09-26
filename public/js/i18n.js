@@ -199,6 +199,9 @@
     "Tape ici le code à 6 chiffres reçu par e-mail. Pas reçu ? Regarde dans les spams.": "Type the 6-digit code from the email here. Nothing? Check your spam folder.",
     "Valider": "Confirm", "Vérification…": "Checking…", "Code incorrect. Vérifie les 6 chiffres.": "Wrong code. Check the 6 digits.",
     "Code expiré ou trop d'essais : redemande un code.": "Code expired or too many tries: ask for a new one.",
+    "Préparation de ton profil…": "Setting up your profile…", "Ton prénom pour le blog": "Your first name for the blog",
+    "C'est celui de ton profil : tes potes le verront. Tu pourras ajouter une photo dans Profil.": "It's the one from your profile: your friends will see it. You can add a photo in Profile.",
+    "Modifier dans Profil": "Edit in Profile",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",
