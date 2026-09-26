@@ -2,7 +2,7 @@ name: Publier l'API (Cloudflare, gratuit)
 
 # Publie le serveur (blog, avis, modération, sauvegardes) sur Cloudflare Workers + D1.
 # Il faut une seule fois les secrets du dépôt : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
-# BREVO_API_KEY (e-mails de connexion) et, pour la page de modération, ADMIN_TOKEN (voir le README).
+# MAIL_WEBHOOK_URL + MAIL_WEBHOOK_KEY (e-mails de connexion par Gmail, voir scripts/gmail-envoi.gs) ou BREVO_API_KEY et, pour la page de modération, ADMIN_TOKEN (voir le README).
 on:
   push:
     branches: [main, claude/pas-ltemps-web-app-i23p2m]
@@ -25,6 +25,8 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
       BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+      MAIL_WEBHOOK_URL: ${{ secrets.MAIL_WEBHOOK_URL }}
+      MAIL_WEBHOOK_KEY: ${{ secrets.MAIL_WEBHOOK_KEY }}
       WRANGLER_SEND_METRICS: "false"
     steps:
       - uses: actions/checkout@v4
@@ -63,6 +65,12 @@ jobs:
       - name: Code de la page de modération
         if: steps.check.outputs.ok == 'true' && env.ADMIN_TOKEN != ''
         run: printf '%s' "$ADMIN_TOKEN" | wrangler secret put ADMIN_TOKEN
+
+      - name: Envoi des e-mails de connexion par Gmail (script Google)
+        if: steps.check.outputs.ok == 'true' && env.MAIL_WEBHOOK_URL != '' && env.MAIL_WEBHOOK_KEY != ''
+        run: |
+          printf '%s' "$MAIL_WEBHOOK_URL" | wrangler secret put MAIL_WEBHOOK_URL
+          printf '%s' "$MAIL_WEBHOOK_KEY" | wrangler secret put MAIL_WEBHOOK_KEY
 
       - name: Clé d'envoi des e-mails de connexion (Brevo)
         if: steps.check.outputs.ok == 'true' && env.BREVO_API_KEY != ''

@@ -18,7 +18,7 @@ export default {
     if(!url.pathname.startsWith("/api/")) return reply(200, {app: "pasltemps", info: "API de Pas l'temps. L'appli : https://zcabande-arch.github.io/Pasl-temps/"});
     if(!api) api = createApi(d1.d1Store(env.DB), {
       adminToken: env.ADMIN_TOKEN, reportThreshold: +env.REPORT_THRESHOLD || 3, rateLimit: env.RATE_LIMIT !== "off",
-      sendMail: env.BREVO_API_KEY ? mail.brevoMailer(env.BREVO_API_KEY, env.MAIL_FROM) : null,
+      sendMail: mail.mailerFrom(env),
       appOrigins: String(env.APP_ORIGINS || "https://zcabande-arch.github.io").split(",").map(s => s.trim())
     });
     try{

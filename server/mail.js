@@ -1,4 +1,6 @@
-// Pas l'temps — envoi des e-mails de connexion avec Brevo (offre gratuite : 300 e-mails par jour).
+// Pas l'temps — envoi des e-mails de connexion.
+// Au choix : la boîte Gmail de l'appli via un petit script Google (scripts/gmail-envoi.gs, ~100 e-mails/jour),
+// ou Brevo (300 e-mails/jour).
 // Utilisé par le serveur Node et par le Worker Cloudflare (fetch est disponible partout).
 "use strict";
 
@@ -14,6 +16,22 @@ function brevoMailer(apiKey, from){
     });
     if(!r.ok) throw new Error("brevo " + r.status + " " + (await r.text()).slice(0, 200));
   };
+}
+
+// Gmail via Google Apps Script : l'adresse du script déployé + la clé partagée
+function webhookMailer(url, key){
+  return async function sendMail({to, subject, html, text}){
+    const r = await fetch(url, {method: "POST", redirect: "follow", headers: {"Content-Type": "text/plain;charset=utf-8"},
+      body: JSON.stringify({key, to, subject, html, text})});
+    let d = null; try{ d = JSON.parse(await r.text()); }catch(e){}
+    if(!r.ok || !d || !d.ok) throw new Error("webhook " + r.status + " " + (d && d.error || ""));
+  };
+}
+// Le service d'envoi configuré (null si aucun)
+function mailerFrom(env){
+  if(env.MAIL_WEBHOOK_URL && env.MAIL_WEBHOOK_KEY) return webhookMailer(env.MAIL_WEBHOOK_URL, env.MAIL_WEBHOOK_KEY);
+  if(env.BREVO_API_KEY) return brevoMailer(env.BREVO_API_KEY, env.MAIL_FROM || "Pas l'temps <pasltempssav@gmail.com>");
+  return null;
 }
 
 // Contenu de l'e-mail de connexion (français ou anglais)
@@ -34,4 +52,4 @@ function loginMail(link, lang){
   return {subject, html, text: `${intro}\n\n${link}\n\n${ignore}`};
 }
 
-module.exports = { brevoMailer, loginMail };
+module.exports = { brevoMailer, webhookMailer, mailerFrom, loginMail };

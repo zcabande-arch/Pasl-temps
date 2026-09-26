@@ -91,3 +91,20 @@ test("la connexion par e-mail marche aussi avec la base Cloudflare D1", async ()
     assert.equal(acc.email, "d1@mail.fr");
   } finally { s3.close(); }
 });
+
+test("envoi par Gmail : appelle le script Google avec la clé et suit sa redirection", async () => {
+  const http = require("node:http");
+  const { webhookMailer } = require("../server/mail");
+  let got = null;
+  const g = http.createServer((req, res) => {
+    if(req.url === "/exec"){ let b = ""; req.on("data", c => b += c).on("end", () => { got = JSON.parse(b); res.writeHead(302, {Location: "/echo"}); res.end(); }); return; }
+    res.writeHead(200, {"Content-Type": "application/json"}); res.end(JSON.stringify({ok: got && got.key === "k1"}));
+  });
+  await new Promise(ok => g.listen(0, "127.0.0.1", ok));
+  try{
+    const u = `http://127.0.0.1:${g.address().port}/exec`;
+    await webhookMailer(u, "k1")({to:"a@b.fr", subject:"S", html:"<b>h</b>", text:"t"});
+    assert.deepEqual(got, {key:"k1", to:"a@b.fr", subject:"S", html:"<b>h</b>", text:"t"});
+    await assert.rejects(webhookMailer(u, "mauvaise")({to:"a@b.fr", subject:"S", html:"", text:""}));
+  } finally { g.close(); }
+});

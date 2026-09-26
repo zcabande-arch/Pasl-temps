@@ -83,16 +83,16 @@ L'appli est sur **https://zcabande-arch.github.io/Pasl-temps/** (la page d'accue
    - `CLOUDFLARE_API_TOKEN` : la clé de l'étape 2
    - `CLOUDFLARE_ACCOUNT_ID` : l'identifiant de l'étape 3
    - `ADMIN_TOKEN` : un code secret de votre choix, pour la page de modération `admin.html`
-   - `BREVO_API_KEY` : la clé Brevo (étape 3 bis), pour les e-mails de connexion
+   - `MAIL_WEBHOOK_URL` et `MAIL_WEBHOOK_KEY` : l'envoi des e-mails de connexion (étape 3 bis)
 5. **Actions → Publier l'API (Cloudflare, gratuit) → Run workflow.**
 
-**3 bis. Les e-mails de connexion : Brevo** (gratuit jusqu'à 300 e-mails par jour)
-- Créer un compte sur [brevo.com](https://www.brevo.com) avec l'adresse `pasltempssav@gmail.com`.
-- **Expéditeurs** (Senders, Domains & Dedicated IPs → Senders) : ajouter `pasltempssav@gmail.com`
-  et cliquer le lien de validation reçu dans cette boîte.
-- **SMTP & API → API Keys → Generate a new API key** : copier la clé dans le secret `BREVO_API_KEY`.
-- L'expéditeur se change dans `wrangler.toml` (`MAIL_FROM`). Avec un nom de domaine à vous,
-  validez-le dans Brevo : les e-mails arrivent encore mieux (moins de spams).
+**3 bis. Les e-mails de connexion : la boîte Gmail de l'appli** (gratuit, ~100 e-mails par jour)
+- Connecté·e avec `pasltempssav@gmail.com`, ouvrir [script.google.com](https://script.google.com) → **Nouveau projet**.
+- Coller le contenu de `scripts/gmail-envoi.gs` et remplacer `REMPLACER_PAR_LA_CLE` par une clé secrète de votre choix.
+- **Déployer → Nouveau déploiement** → type **Application Web** → Exécuter en tant que **moi**, Accès **Tout le monde**
+  → **Déployer** → autoriser l'accès à Gmail → copier l'**URL de l'application Web**.
+- Secrets GitHub : `MAIL_WEBHOOK_URL` (cette URL) et `MAIL_WEBHOOK_KEY` (la clé).
+- Autre possibilité : Brevo (`BREVO_API_KEY`, expéditeur `MAIL_FROM` dans `wrangler.toml`).
 
 Le workflow crée la base, publie le serveur, puis **branche l'appli dessus tout seul**
 (il écrit l'adresse dans `public/config.js`). Il se relance à chaque modification du serveur.

@@ -18,7 +18,7 @@ const TYPES = {
 };
 
 const { createApi, rule, parsePath, CORS, MAX_BODY } = require("./core");
-const { brevoMailer } = require("./mail");
+const { mailerFrom } = require("./mail");
 
 function send(res, code, body, headers){
   const data = body === undefined ? "" : typeof body === "string" ? body : JSON.stringify(body);
@@ -43,8 +43,8 @@ function createServer(store, opts = {}){
     adminToken: opts.adminToken ?? process.env.ADMIN_TOKEN,
     reportThreshold: +process.env.REPORT_THRESHOLD || 3,
     rateLimit: opts.rateLimit,
-    // E-mails de connexion : BREVO_API_KEY (+ MAIL_FROM) ; APP_ORIGINS = adresses de l'appli, séparées par des virgules
-    sendMail: opts.sendMail || (process.env.BREVO_API_KEY ? brevoMailer(process.env.BREVO_API_KEY, process.env.MAIL_FROM || "Pas l'temps <pasltempssav@gmail.com>") : null),
+    // E-mails de connexion : MAIL_WEBHOOK_URL + MAIL_WEBHOOK_KEY (Gmail) ou BREVO_API_KEY ; APP_ORIGINS = adresses de l'appli
+    sendMail: opts.sendMail || mailerFrom(process.env),
     appOrigins: opts.appOrigins || (process.env.APP_ORIGINS ? process.env.APP_ORIGINS.split(",").map(s => s.trim()) : [`http://localhost:${PORT}`, "https://zcabande-arch.github.io"])
   });
 
