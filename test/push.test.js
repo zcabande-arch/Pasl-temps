@@ -104,3 +104,16 @@ test("abonnement, rappel tous les 3 jours et chrono « Je pars »", async () => 
     assert.equal(store.pushDue(now + 8 * 864e5, 10).length, 1);
   } finally { srv.close(); }
 });
+
+test("administration : message à tous les abonnés", async () => {
+  const store = openStore(":memory:");
+  const srv = createServer(store, {rateLimit:false, adminToken:"adm"});
+  await new Promise(ok => srv.listen(0, "127.0.0.1", ok));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try{
+    const r0 = await fetch(base + "/api/admin/push", {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({body:"x"})});
+    assert.equal(r0.status, 403);
+    const r = await (await fetch(base + "/api/admin/push", {method:"POST", headers:{"Content-Type":"application/json", "X-Admin-Token":"adm"}, body:JSON.stringify({body:"teste zoé"})})).json();
+    assert.deepEqual(r, {subscribers:0, sent:0, removed:0, failed:0});
+  } finally { srv.close(); }
+});

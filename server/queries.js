@@ -40,6 +40,7 @@ module.exports = {
   timerDelUid: "DELETE FROM push_timers WHERE endpoint IN (SELECT endpoint FROM push_subs WHERE uid = ?)",
   pushDue: "SELECT endpoint, uid, sub, hour, tz, every, next_at FROM push_subs WHERE next_at <= ? ORDER BY next_at LIMIT ?",
   pushNext: "UPDATE push_subs SET next_at = ? WHERE endpoint = ?",
+  pushAll: "SELECT endpoint, sub FROM push_subs LIMIT ?",
   report: "INSERT OR IGNORE INTO reports (target, reporter, reason, at) VALUES (?, ?, ?, ?)",
   reportCount: "SELECT COUNT(*) AS n FROM reports WHERE target = ?",
   reportList: `SELECT target, COUNT(*) AS n, MAX(at) AS last, GROUP_CONCAT(reason, ' | ') AS reasons,

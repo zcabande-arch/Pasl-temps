@@ -105,4 +105,18 @@ async function runReminders(store, {fetchFn = fetch, now = Date.now(), contact =
   return {sent, removed};
 }
 
-module.exports = { vapidKeys, vapidAuth, nextAt, encrypt, send, runReminders, NUDGES };
+// Message à tous les appareils abonnés (administration : test, annonce)
+async function broadcast(store, msg, {fetchFn = fetch, contact = "mailto:pasltempssav@gmail.com"} = {}){
+  const keys = await vapidKeys(store), subs = await store.pushAll(1000);
+  let sent = 0, removed = 0, failed = 0;
+  for(const s of subs){
+    try{
+      const st = await send(keys, JSON.parse(s.sub), msg, {fetchFn, contact, ttl: 3600});
+      if(st === 404 || st === 410){ await store.pushDel(s.endpoint); removed++; }
+      else if(st >= 200 && st < 300) sent++; else failed++;
+    }catch(e){ failed++; }
+  }
+  return {subscribers: subs.length, sent, removed, failed};
+}
+
+module.exports = { vapidKeys, vapidAuth, nextAt, encrypt, send, runReminders, broadcast, NUDGES };

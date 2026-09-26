@@ -184,6 +184,11 @@ function createApi(store, opts = {}){
       }
       const b = await body(req); if(b.error) return b.error;
       const target = b.value && b.value.target;
+      if(path === "/api/admin/push"){
+        const title = String(b.value && b.value.title || "Pas l'temps").slice(0, 80), text = String(b.value && b.value.body || "").slice(0, 200);
+        if(!text) return fail(400, "bad_request");
+        return ok(await push.broadcast(store, {title, body: text, tag: "pasltemps-annonce", url: "./"}));
+      }
       if(path === "/api/admin/hide" && TARGET.test(target || "")){ await store.hide(target, "admin"); return ok({ok:true}); }
       if(path === "/api/admin/unhide" && TARGET.test(target || "")){ await store.unhide(target); await store.clearReports(target); return ok({ok:true}); }
       if(path === "/api/admin/ban" && /^[A-Za-z0-9_-]{1,80}$/.test(b.value && b.value.uid || "")){

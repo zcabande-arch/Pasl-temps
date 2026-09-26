@@ -36,6 +36,7 @@ function d1Store(db){
     async pushDel(endpoint){ await run("pushDel", endpoint); },
     async pushDue(now, limit){ return all("pushDue", now, limit); },
     async pushNext(endpoint, at){ await run("pushNext", at, endpoint); },
+    async pushAll(limit){ return all("pushAll", limit); },
     async pushOwner(endpoint){ const r = await first("pushOwner", endpoint); return r ? r.uid : null; },
     async timersSet(endpoint, list){ await run("timerDelEp", endpoint); for(const t of list) await run("timerAdd", endpoint, t.at, t.payload); },
     async timersDue(now, limit){ await run("timerStale", now - 3600e3); return all("timerDue", now, limit); },

@@ -43,6 +43,7 @@ function openStore(file){
     pushDel(endpoint){ q.pushDel.run(endpoint); },
     pushDue(now, limit){ return q.pushDue.all(now, limit); },
     pushNext(endpoint, at){ q.pushNext.run(at, endpoint); },
+    pushAll(limit){ return q.pushAll.all(limit); },
     pushOwner(endpoint){ const r = q.pushOwner.get(endpoint); return r ? r.uid : null; },
     timersSet(endpoint, list){ q.timerDelEp.run(endpoint); for(const t of list) q.timerAdd.run(endpoint, t.at, t.payload); },
     timersDue(now, limit){ q.timerStale.run(now - 3600e3); return q.timerDue.all(now, limit); },

@@ -1,0 +1,29 @@
+name: Envoyer une notification (test ou annonce)
+
+# Envoie un message à tous les appareils qui ont autorisé les notifications.
+# Actions → « Envoyer une notification » → Run workflow → écrire le message.
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: "Texte de la notification"
+        required: true
+        default: "Test de notification"
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+      MESSAGE: ${{ inputs.message }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Envoyer
+        run: |
+          URL=$(grep -oE 'https://[A-Za-z0-9.-]+\.workers\.dev' public/config.js | head -1)
+          if [ -z "$URL" ] || [ -z "$ADMIN_TOKEN" ]; then echo "::error::Serveur ou ADMIN_TOKEN manquant."; exit 1; fi
+          BODY=$(node -e 'console.log(JSON.stringify({title:"Pas l’temps", body:process.env.MESSAGE}))')
+          RES=$(curl -sS -X POST "$URL/api/admin/push" -H "Content-Type: application/json" -H "X-Admin-Token: $ADMIN_TOKEN" -d "$BODY")
+          echo "Résultat : $RES"
+          echo "Résultat : \`$RES\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "$RES" | grep -q '"sent"' || exit 1
