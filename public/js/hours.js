@@ -6,7 +6,10 @@
   const DAYS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
   const DAY_FR = ["lun.","mar.","mer.","jeu.","ven.","sam.","dim."], DAY_EN = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
   // Traduction (i18n.js) si elle est chargée ; sinon français
-  const EN = () => typeof window !== "undefined" && window.I18N && window.I18N.lang === "en";
+  // « 14:00 » et jours de la langue choisie partout sauf en français
+  const EN = () => typeof window !== "undefined" && window.I18N && window.I18N.lang !== "fr";
+  const dayName = i => { const L = window.I18N.lang; if(L === "en") return DAY_EN[i];
+    try{ return new Date(Date.UTC(2024, 0, 1 + i)).toLocaleDateString(window.I18N.locale, {weekday: "short", timeZone: "UTC"}); }catch(e){ return DAY_EN[i]; } };
   const tx = (s, v) => (typeof window !== "undefined" && window.tx ? window.tx(s, v) : s.replace(/\{(\w+)\}/g, (m, k) => v && k in v ? v[k] : m));
   const cache = new Map();
 
@@ -113,7 +116,7 @@
       return {state:"open", level:"ok", late, text:tx("Ouvert · jusqu'à {h}", {h:hm(s.closesAt)})};
     }
     if(!s.opensAt) return {state:"closed", level:"closed", text:tx("Fermé")};
-    const o = s.opensAt, when = o.inDays === 0 ? tx("à {h}", {h:hm(o.min)}) : o.inDays === 1 ? tx("demain à {h}", {h:hm(o.min)}) : tx("{d} à {h}", {d:(EN() ? DAY_EN : DAY_FR)[o.day], h:hm(o.min)});
+    const o = s.opensAt, when = o.inDays === 0 ? tx("à {h}", {h:hm(o.min)}) : o.inDays === 1 ? tx("demain à {h}", {h:hm(o.min)}) : tx("{d} à {h}", {d:(EN() ? dayName(o.day) : DAY_FR[o.day]), h:hm(o.min)});
     if(n.state === "open") return {state:"closed", level:"closed", text:tx("Fermé à ton arrivée · rouvre {w}", {w:when})};
     return {state:"closed", level:"closed", text:tx("Fermé · ouvre {w}", {w:when})};
   }

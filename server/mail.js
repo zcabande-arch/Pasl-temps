@@ -34,17 +34,33 @@ function mailerFrom(env){
   return null;
 }
 
-// Contenu de l'e-mail de connexion (français ou anglais)
+// Contenu de l'e-mail de connexion, dans la langue de l'appli (français par défaut)
+const MAILS = {
+  fr: {subject: "{code} est ton code Pas l'temps", intro: "Tape ce code dans l'appli Pas l'temps pour te connecter (valable 20 minutes) :",
+       or: "Tu utilises Pas l'temps dans ton navigateur ? Tu peux aussi toucher le bouton.", btn: "Me connecter",
+       ignore: "Tu n'as rien demandé ? Ignore simplement cet e-mail : il ne se passera rien."},
+  en: {subject: "{code} is your Pas l'temps code", intro: "Type this code in the Pas l'temps app to sign in (valid 20 minutes):",
+       or: "Using Pas l'temps in your browser? You can also just tap the button.", btn: "Sign in",
+       ignore: "Didn't ask for this? Just ignore this email: nothing will happen."},
+  es: {subject: "{code} es tu código de Pas l'temps", intro: "Escribe este código en la app Pas l'temps para iniciar sesión (válido 20 minutos):",
+       or: "¿Usas Pas l'temps en el navegador? También puedes tocar el botón.", btn: "Iniciar sesión",
+       ignore: "¿No lo has pedido tú? Ignora este correo: no pasará nada."},
+  de: {subject: "{code} ist dein Pas l'temps-Code", intro: "Gib diesen Code in der Pas l'temps-App ein, um dich anzumelden (20 Minuten gültig):",
+       or: "Nutzt du Pas l'temps im Browser? Du kannst auch einfach auf den Button tippen.", btn: "Anmelden",
+       ignore: "Nicht angefordert? Ignoriere diese E-Mail einfach: Es passiert nichts."},
+  it: {subject: "{code} è il tuo codice Pas l'temps", intro: "Scrivi questo codice nell'app Pas l'temps per accedere (valido 20 minuti):",
+       or: "Usi Pas l'temps nel browser? Puoi anche toccare il pulsante.", btn: "Accedi",
+       ignore: "Non l'hai chiesto tu? Ignora questa email: non succederà nulla."},
+  pt: {subject: "{code} é o seu código Pas l'temps", intro: "Digite este código no app Pas l'temps para entrar (válido por 20 minutos):",
+       or: "Está usando Pas l'temps no navegador? Você também pode tocar no botão.", btn: "Entrar",
+       ignore: "Não pediu isso? Ignore este email: nada vai acontecer."},
+  nl: {subject: "{code} is je Pas l'temps-code", intro: "Typ deze code in de Pas l'temps-app om in te loggen (20 minuten geldig):",
+       or: "Gebruik je Pas l'temps in je browser? Je kunt ook gewoon op de knop tikken.", btn: "Inloggen",
+       ignore: "Niet aangevraagd? Negeer deze e-mail gewoon: er gebeurt niets."}
+};
 function loginMail(link, lang, code){
-  const en = lang === "en";
-  const subject = en ? `${code} is your Pas l'temps code` : `${code} est ton code Pas l'temps`;
-  const intro = en ? "Type this code in the Pas l'temps app to sign in (valid 20 minutes):"
-    : "Tape ce code dans l'appli Pas l'temps pour te connecter (valable 20 minutes) :";
-  const or = en ? "Using Pas l'temps in your browser? You can also just tap the button."
-    : "Tu utilises Pas l'temps dans ton navigateur ? Tu peux aussi toucher le bouton.";
-  const btn = en ? "Sign in" : "Me connecter";
-  const ignore = en ? "Didn't ask for this? Just ignore this email: nothing will happen."
-    : "Tu n'as rien demandé ? Ignore simplement cet e-mail : il ne se passera rien.";
+  const M = MAILS[lang] || MAILS.fr;
+  const subject = M.subject.replace("{code}", code), {intro, or, btn, ignore} = M;
   const esc = s => s.replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
   const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#1C1512">
 <p style="font-size:22px;font-weight:bold;margin:0 0 12px">Pas l'temps</p>
@@ -56,4 +72,4 @@ function loginMail(link, lang, code){
   return {subject, html, text: `${intro}\n\n${code}\n\n${or}\n${link}\n\n${ignore}`};
 }
 
-module.exports = { brevoMailer, webhookMailer, mailerFrom, loginMail };
+module.exports = { brevoMailer, webhookMailer, mailerFrom, loginMail, MAILS };

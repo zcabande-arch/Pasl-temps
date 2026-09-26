@@ -46,7 +46,22 @@ const NUDGES = {
        "Petite pause aujourd'hui ? Ouvre Pas l'temps, on s'occupe du reste."],
   en: ["No time? 20 minutes is enough for a real break.", "Coffee break? We'll find a spot right around the corner.",
        "How about 20 minutes of fresh air?", "Got half an hour? There's surely something nice near you.",
-       "A little break today? Open Pas l'temps, we'll handle the rest."]
+       "A little break today? Open Pas l'temps, we'll handle the rest."],
+  es: ["¿No tienes tiempo? 20 minutos bastan para una pausa de verdad.", "¿Una pausa para un café? Te encontramos un sitio justo al lado.",
+       "¿Y si tomas el aire 20 minutos?", "¿Tienes media hora? Seguro que hay algo chulo cerca de ti.",
+       "¿Una pausita hoy? Abre Pas l'temps, nosotros nos encargamos del resto."],
+  de: ["Keine Zeit? 20 Minuten reichen für eine echte Pause.", "Kaffeepause? Wir finden dir einen Ort gleich um die Ecke.",
+       "Wie wär's mit 20 Minuten frischer Luft?", "Eine halbe Stunde Zeit? In deiner Nähe gibt's bestimmt was Schönes.",
+       "Kleine Pause heute? Öffne Pas l'temps, wir kümmern uns um den Rest."],
+  it: ["Non hai tempo? Bastano 20 minuti per una vera pausa.", "Pausa caffè? Ti troviamo un posto proprio qui vicino.",
+       "E se prendessi un po' d'aria per 20 minuti?", "Hai mezz'ora? Di sicuro c'è qualcosa di bello vicino a te.",
+       "Una pausa oggi? Apri Pas l'temps, al resto pensiamo noi."],
+  pt: ["Sem tempo? 20 minutos bastam para uma pausa de verdade.", "Pausa pro café? A gente acha um lugar bem pertinho.",
+       "Que tal 20 minutos de ar livre?", "Tem meia hora? Com certeza tem algo legal perto de você.",
+       "Uma pausinha hoje? Abra Pas l'temps, a gente cuida do resto."],
+  nl: ["Geen tijd? 20 minuten is genoeg voor een echte pauze.", "Koffiepauze? We vinden een plekje vlak om de hoek.",
+       "Wat dacht je van 20 minuten frisse lucht?", "Half uurtje? Er is vast iets leuks bij jou in de buurt.",
+       "Even pauze vandaag? Open Pas l'temps, wij regelen de rest."]
 };
 
 // → {publicKey (base64url, 65 octets), privateJwk}
@@ -97,7 +112,8 @@ async function runReminders(store, {fetchFn = fetch, now = Date.now(), contact =
     await go(t.endpoint, t.sub, msg, 900);             // plus d'intérêt au-delà de 15 min
   }
   for(const s of due){
-    let lang = "fr"; try{ lang = JSON.parse(s.sub).lang === "en" ? "en" : "fr"; }catch(e){}
+    let lang = "fr"; try{ lang = JSON.parse(s.sub).lang; }catch(e){}
+    if(!NUDGES[lang]) lang = "fr";
     const list = NUDGES[lang];
     await go(s.endpoint, s.sub, {title: "Pas l'temps", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"}, 43200);
     await store.pushNext(s.endpoint, nextAt(now, s.hour, s.tz, s.every));

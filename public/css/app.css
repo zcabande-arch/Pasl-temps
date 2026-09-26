@@ -155,6 +155,8 @@ main{position:relative}
 .seg{display:flex;background:var(--bg);border-radius:999px;padding:4px}
 .seg button{flex:1;border:0;background:transparent;border-radius:999px;padding:9px 0;font-weight:600;font-size:15px;color:var(--soft)}
 .seg button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+#langSeg{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;border-radius:18px}
+#langSeg button{padding:9px 2px;font-size:14px;border-radius:14px}
 .sheet .done{width:100%;margin-top:24px;border:0;border-radius:999px;background:var(--ink);color:var(--card);padding:13px;font-weight:800;font-size:16px}
 
 .rec{background:var(--bg);border-radius:18px;padding:14px}

@@ -1,11 +1,15 @@
 // Pas l'temps — langues. Le français est la langue de référence : chaque texte de l'appli est écrit en français
-// et traduit à l'affichage avec tx("texte", {variables}). Réglage « Langue » : auto (langue de l'appareil), fr ou en.
+// et traduit à l'affichage avec tx("texte", {variables}). Réglage « Langue » : auto (langue de l'appareil) ou une des LANGS.
+// L'anglais est ici ; les autres langues sont dans js/lang/<code>.js, chargé seulement si besoin.
 // Les textes fixes de la page (index.html) sont traduits au chargement par translateDom().
 (function(){
   let pref = "auto";
   try{ pref = JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").lang || "auto"; }catch(e){}
-  const device = /^fr\b/i.test((navigator.languages && navigator.languages[0]) || navigator.language || "fr") ? "fr" : "en";
-  const lang = pref === "fr" || pref === "en" ? pref : device;
+  const LANGS = ["fr", "en", "es", "de", "it", "pt", "nl"];
+  const wanted = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "fr"]).map(l => String(l).slice(0, 2).toLowerCase());
+  const device = wanted.find(l => LANGS.includes(l)) || "en";
+  const lang = LANGS.includes(pref) ? pref : device;
+  const DICTS = window.I18N_DICTS = window.I18N_DICTS || {};
 
   const EN = {
     // --- Page ---
@@ -222,27 +226,39 @@
     "Fermé à ton arrivée · rouvre {w}": "Closed when you arrive · reopens {w}", "Fermé · ouvre {w}": "Closed · opens {w}"
   };
 
+  DICTS.en = EN;
+  const dict = () => DICTS[lang] || EN;
+  const has = (d, s) => Object.prototype.hasOwnProperty.call(d, s);
   function tx(s, v){
-    let r = lang === "en" && Object.prototype.hasOwnProperty.call(EN, s) ? EN[s] : s;
+    const d = dict();
+    let r = lang === "fr" ? s : has(d, s) ? d[s] : has(EN, s) ? EN[s] : s;
     if(v) r = r.replace(/\{(\w+)\}/g, (m, k) => k in v ? v[k] : m);
     return r;
   }
   // Textes fixes de la page : nœuds de texte et attributs (placeholder, aria-label, title)
   function translateDom(root){
-    if(lang === "fr" || !root) return;
+    if(lang === "fr" || !root || !DICTS[lang]) return;
+    const d = dict();
     const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode: n =>
       n.parentNode && /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT});
     const nodes = []; while(w.nextNode()) nodes.push(w.currentNode);
     nodes.forEach(n => {
       const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(n.nodeValue);
-      if(m[2] && Object.prototype.hasOwnProperty.call(EN, m[2])) n.nodeValue = m[1] + EN[m[2]] + m[3];
+      if(m[2] && has(d, m[2])) n.nodeValue = m[1] + d[m[2]] + m[3];
     });
     root.querySelectorAll("[placeholder],[aria-label],[title]").forEach(el => ["placeholder", "aria-label", "title"].forEach(a => {
-      const v = el.getAttribute(a); if(v && Object.prototype.hasOwnProperty.call(EN, v)) el.setAttribute(a, EN[v]);
+      const v = el.getAttribute(a); if(v && has(d, v)) el.setAttribute(a, d[v]);
     }));
   }
   document.documentElement.lang = lang;
-  window.I18N = {lang, pref, tx, translateDom};
+  // Heure « 14:00 » partout sauf en français (« 14h00 »)
+  const locale = {fr: "fr-FR", en: "en-GB", es: "es-ES", de: "de-DE", it: "it-IT", pt: "pt-BR", nl: "nl-NL"}[lang];
+  window.I18N = {lang, pref, tx, translateDom, LANGS, locale};
   window.tx = tx;
+  // Langue hors fr/en : le dictionnaire est chargé avant les scripts suivants, et retraduit la page en arrivant
+  if(!DICTS[lang] && document.readyState === "loading"){
+    const src = (document.currentScript && document.currentScript.src || "js/i18n.js").replace(/i18n\.js(\?.*)?$/, "lang/" + lang + ".js");
+    document.write('<script src="' + src + '"><\/script>');
+  }
   translateDom(document.body);
 })();

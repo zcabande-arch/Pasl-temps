@@ -311,7 +311,7 @@
 
   // Photon (Komoot, données OpenStreetMap) : secours si Nominatim ne répond pas
   async function geocodePhoton(query){
-    const j = await getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=4&lang=${LANG() === "en" ? "en" : "fr"}`, 6000);
+    const j = await getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=4&lang=${["en", "de", "it"].includes(LANG()) ? LANG() : LANG() === "fr" ? "fr" : "en"}`, 6000);
     const seen = new Set();
     return ((j && j.features) || []).filter(f => f.geometry).map(f => {
       const p = f.properties || {}, first = [p.housenumber, p.street].filter(Boolean).join(" ") || p.name || "";

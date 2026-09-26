@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "52";
+const APP_VERSION = "53";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -607,7 +607,7 @@ $("dial").addEventListener("click", e => {
 // Une heure de retour au lieu d'une durée : le temps disponible se recalcule tout seul à chaque minute.
 let BACK_AT = null;
 const minsLeft = () => Math.floor((BACK_AT - Date.now()) / 60000);
-const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2, "0"); return I18N.lang === "en" ? `${d.getHours()}:${m}` : `${d.getHours()}h${m}`; };
+const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2, "0"); return I18N.lang !== "fr" ? `${d.getHours()}:${m}` : `${d.getHours()}h${m}`; };
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
@@ -1802,10 +1802,10 @@ function patch(id, p){ const e = HIST.find(h => h.id === id); if(!e) return; Obj
 function removeEntry(id){ HIST = HIST.filter(h => h.id !== id); renderHistory(); renderResults(); write(id, () => store.remove(id)); }
 function whenTxt(t){
   const d = new Date(t), now = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-  const en = I18N.lang === "en", mm = String(d.getMinutes()).padStart(2,"0");
+  const en = I18N.lang !== "fr", mm = String(d.getMinutes()).padStart(2,"0");
   const diff = Math.round((day(now) - day(d)) / 864e5), h = en ? `${d.getHours()}:${mm}` : `${d.getHours()}h${mm}`;
   if(diff === 0) return tx("Aujourd'hui") + " " + h; if(diff === 1) return tx("Hier") + " " + h;
-  return d.toLocaleDateString(en ? "en-GB" : "fr-FR", {day:"numeric", month:"short"}) + " " + h;
+  return d.toLocaleDateString(I18N.locale, {day:"numeric", month:"short"}) + " " + h;
 }
 function renderHistory(){
   const L = $("histList"); L.innerHTML = "";

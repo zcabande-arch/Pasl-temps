@@ -9,6 +9,7 @@ const MAX_BODY = 1_600_000;
 // Cibles de signalement : post:<uid>:<id>, comment:<uid>:<id>, user:<uid>
 const TARGET = /^(post|comment):[A-Za-z0-9_-]{1,80}:[A-Za-z0-9_-]{1,80}$|^user:[A-Za-z0-9_-]{1,80}$/;
 const REASONS = ["spam", "insulte", "inapproprie", "faux", "autre"];
+const LANGS = ["fr", "en", "es", "de", "it", "pt", "nl"];
 
 // ---------- Règles d'accès ----------
 // walls/<uid>                   : lisible par tous, modifiable par son propriétaire
@@ -118,7 +119,7 @@ function createApi(store, opts = {}){
       // … et un code à 6 chiffres, à taper dans l'appli installée (l'iPhone ouvre le lien dans Safari, pas dans l'appli)
       const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
       await store.setCode(email, await sha(email + ":" + code), Date.now() + LOGIN_TTL);
-      const m = loginMail(back.href, b.value.lang === "en" ? "en" : "fr", code);
+      const m = loginMail(back.href, LANGS.includes(b.value.lang) ? b.value.lang : "fr", code);
       try{ await opts.sendMail({to: email, ...m}); }
       catch(e){ console.error(e); return fail(502, "mail_failed"); }
       return ok({ok:true});
@@ -213,7 +214,7 @@ function createApi(store, opts = {}){
       const tz = Math.min(840, Math.max(-840, Math.round(+v.tz) || 0));
       const every = Math.min(14, Math.max(1, Math.round(+v.every) || 3));
       if(!isObj(sub.keys) || typeof sub.keys.p256dh !== "string" || typeof sub.keys.auth !== "string") return fail(400, "bad_subscription");
-      const saved = JSON.stringify({endpoint: sub.endpoint, keys: {p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100)}, lang: v.lang === "en" ? "en" : "fr"});
+      const saved = JSON.stringify({endpoint: sub.endpoint, keys: {p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100)}, lang: LANGS.includes(v.lang) ? v.lang : "fr"});
       // premier abonnement : rappel dans 3 jours ; ensuite le rythme continue (le serveur garde la date prévue)
       await store.pushSet(sub.endpoint, uid, saved, hour, tz, every, push.nextAt(Date.now(), hour, tz, every));
       return ok({ok:true});
