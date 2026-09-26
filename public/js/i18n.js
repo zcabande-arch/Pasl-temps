@@ -164,6 +164,10 @@
     "Boire un verre": "Grab a drink", "Bars, pubs, cafés": "Bars, pubs, cafés", "Bars": "Bars", "Pubs, brasseries": "Pubs & beer gardens",
     "Cafés": "Cafés", "Bars, pubs": "Bars & pubs", "bar": "bar", "pub": "pub",
     "L'abus d'alcool est dangereux pour la santé. À consommer avec modération.": "Excessive drinking is dangerous for your health. Drink responsibly.",
+    "Faire les courses": "Groceries", "Courses": "Groceries", "Supermarchés, épiceries, primeurs": "Supermarkets, corner shops, greengrocers",
+    "Supermarchés": "Supermarkets", "Supérettes, épiceries": "Corner shops & grocers", "Primeurs, bio": "Greengrocers & organic",
+    "Boucheries, fromageries, poissonneries": "Butchers, cheese & fish shops", "Cavistes": "Wine shops",
+    "supermarché": "supermarket", "supérette": "convenience store", "primeur": "greengrocer", "boucherie": "butcher", "caviste": "wine shop",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",

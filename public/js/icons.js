@@ -24,6 +24,10 @@
     vase:      {f:"M18 20 C11 24 12 35 18 39 H30 C36 35 37 24 30 20 Z", k:"M20 20 V13 H28 V20 M17.5 10 H30.5 M20 15 C14 15 13 22 16.5 25 M28 15 C34 15 35 22 31.5 25 M16 43 H32"},
     cocktail:  {f:"M11 10 H37 L24 25 Z", k:"M24 25 V39 M16 41 H32 M31 4 L27.5 14 M33 16 A3 3 0 1 1 32.99 16"},
     beer:      {f:"M11 16 H29 V40 H11 Z", k:"M29 21 H34 A3 3 0 0 1 37 24 V31 A3 3 0 0 1 34 34 H29 M9 17 C8 11 14 9 17 12 C19 7 26 8 27 12 C30 10 34 13 31 17 M16 23 V34 M22 23 V34"},
+    cart:      {f:"M13 14 H41 L37 28 H16.5 Z", k:"M5 9 H11 L17 33 H37 M20 39 A2.5 2.5 0 1 1 19.99 39 M34 39 A2.5 2.5 0 1 1 33.99 39"},
+    carrot:    {f:"M33 15 C36 18 35 21 33 23 L12 39 C10 40 9 39 10 37 L25 16 C27 13 30 12 33 15 Z", k:"M31 13 L35 5 M33 14 L42 9 M34 17 L42 18 M17 30 L20.5 32.5 M22 23.5 L25.5 26"},
+    cheese:    {f:"M7 24 L40 14 V37 H7 Z", k:"M7 24 L28 10 L40 14 M16 30 A2.5 2.5 0 1 1 15.99 30 M31 26 A3 3 0 1 1 30.99 26 M24 33.5 A1.5 1.5 0 1 1 23.99 33.5"},
+    wine:      {f:"M19 22 C19 18 21 17 21 14 H27 C27 17 29 18 29 22 V41 H19 Z", k:"M21 14 V6 H27 V14 M19 28 H29 M19 35 H29"},
     frame:     {a:"M14 32 L21 23 L26 29 L29 25 L34 32", k:"M9 11 H39 V38 H9 Z M13 15 H35 V34 H13 Z M30 20 A2 2 0 1 1 29.99 20"},
     dumbbell:  {a:"M11 15 V33 M37 15 V33", k:"M15 24 H33 M6 20 V28 M42 20 V28 M15 18 V30 M33 18 V30"},
     compass:   {f:"M24 11 L28 24 L24 27 L20 24 Z", k:"M24 5 A19 19 0 1 1 23.99 5 M24 27 L28 24 L24 37 L20 24 Z"},
@@ -40,7 +44,7 @@
   const FROM_EMOJI = {
     "🥐":"plate", "🌳":"tree", "🛍️":"bag", "📚":"books", "🛋️":"chair", "🏃":"shoe",
     "🥖":"baguette", "☕":"cup", "🫖":"cup", "🌯":"sandwich", "🍦":"icecream", "🍝":"plate",
-    "🌲":"forest", "🧺":"market", "🎁":"gift", "📖":"openbook", "🏛️":"monument", "🖼️":"frame", "🏺":"vase", "🍸":"cocktail", "🍺":"beer",
+    "🌲":"forest", "🧺":"market", "🎁":"gift", "📖":"openbook", "🏛️":"monument", "🖼️":"frame", "🏺":"vase", "🍸":"cocktail", "🛒":"cart", "🏪":"mall", "🥕":"carrot", "🧀":"cheese", "🍷":"wine", "🍺":"beer",
     "👟":"shoe", "🏋️":"dumbbell", "🧭":"compass", "⭐":"star", "📝":"pencil", "📍":"pin"
   };
   function ico(name, size){

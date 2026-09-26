@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "37";
+const APP_VERSION = "38";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -25,6 +25,13 @@ const MOODS = {
   air: {img:"img/moods/air.svg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
+  courses: {img:"img/moods/courses.svg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
+    {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stay:20, q:"supermarché"},
+    {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stay:10, q:"supérette"},
+    {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stay:10, q:"primeur"},
+    {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stay:10, q:"boucherie"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:15, q:"marché"},
+    {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stay:10, q:"caviste", adult:true}]},
   shopping: {img:"img/moods/shopping.svg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
@@ -86,6 +93,7 @@ const PREF_TYPES = [
   {k:"monument",l:tx("Monuments"),           ico:"monument", sels:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"]},
   {k:"library", l:tx("Bibliothèques"),       ico:"books",    sels:["amenity=library"]},
   {k:"bar",     l:tx("Bars, pubs"),          ico:"cocktail", sels:["amenity=bar","amenity=pub","amenity=biergarten"]},
+  {k:"courses", l:tx("Courses"),             ico:"cart",     sels:["shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli"]},
   {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
 ];
 function isPreferred(g){
@@ -120,7 +128,9 @@ const travelOf = d => { const t = TR(); return Math.max(1, Math.round(d * t.deto
 // Distance maximale pour que aller + retour + temps sur place tiennent dans t minutes
 const radiusFor = (stay, t = T) => { const m = TR(); return Math.min(m.cap, Math.max(150, ((t - stay) / 2 - m.over) * m.speed / m.detour)); };
 const fits = (g, t) => (!g.minT || t >= g.minT) && t - g.stay - 2 * TR().over >= 2;
-const groupsNow = () => MOODS[M].groups.filter(g => fits(g, T));
+// (rubriques d'alcool masquées aux moins de 18 ans)
+const allowed = g => !(g.adult && isMinor());
+const groupsNow = () => MOODS[M].groups.filter(g => allowed(g) && fits(g, T));
 function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${TR().gm}`; }
 function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+tx(" à proximité"))}`; }
 
@@ -438,7 +448,7 @@ function renderMoods(){
 }
 // Rubriques de l'envie qui ne tiennent pas dans le temps choisi, avec la durée qu'il faudrait (parmi les choix proposés)
 function laterGroups(){
-  return MOODS[M].groups.filter(g => !fits(g, T)).map(g => ({g, t: TIMES.find(t => t > T && fits(g, t))})).filter(x => x.t);
+  return MOODS[M].groups.filter(g => allowed(g) && !fits(g, T)).map(g => ({g, t: TIMES.find(t => t > T && fits(g, t))})).filter(x => x.t);
 }
 // Choix du temps : jusqu'à 2 h
 const TIMES = [10, 20, 30, 45, 60, 90, 120];
@@ -1528,6 +1538,7 @@ const HOUR_FIT = [
   {re:/Parc|vert|marcher/, h:[[7,20,1.6]]},
   {re:/Musée|Biblioth|Librair/, h:[[10,18,1.6]]},
   {re:/sport/, h:[[6,9.5,2],[17,21,2]]},
+  {re:/Supermarch|Supérette|Primeur|Boucher/, h:[[11.5,13.5,1.4],[17,20,1.8]]},
   {re:/^Bars|^Pubs/, h:[[17.5,24,3],[12,14,1.2]]}
 ];
 function hourBoost(g, hr){
