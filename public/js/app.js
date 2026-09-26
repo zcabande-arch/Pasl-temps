@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "43";
+const APP_VERSION = "44";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -232,6 +232,7 @@ function placeEl(p){
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg;
   el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+    <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       <p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
@@ -240,14 +241,18 @@ function placeEl(p){
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
+      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
   el.querySelector(".go").addEventListener("click", () => { const h = logVisit(p); startTimer(p, h); });
   el.querySelector(".shr").onclick = e => sharePlace(p, e.currentTarget);
   el.querySelector(".rep").onclick = () => openReport(p);
-  el.querySelector(".fv").onclick = e => { toggleList("fav", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.fav[p.id])); };
+  el.querySelector(".fvstar").onclick = e => {
+    toggleList("fav", p); const on = !!LISTS.fav[p.id], b = e.currentTarget;
+    b.setAttribute("aria-pressed", String(on)); b.textContent = on ? "★" : "☆";
+    b.classList.remove("pop"); void b.offsetWidth; if(on) b.classList.add("pop");
+  };
   el.querySelector(".td").onclick = e => { toggleList("todo", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.todo[p.id])); };
   const rvBox = el.querySelector(".rvs");
   rv.filter(r => r.text).slice(0,2).forEach(r => { const q = document.createElement("div"); q.className = "quote"; q.innerHTML = `<b></b> `; q.firstChild.textContent = (r.author.pseudo||"Quelqu'un") + " :"; q.appendChild(document.createTextNode(r.text.length > 140 ? r.text.slice(0,140) + "…" : r.text)); rvBox.appendChild(q); });

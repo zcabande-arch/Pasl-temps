@@ -182,6 +182,7 @@
     "Une question, un bug, une idée ? Écris-nous sur la page du projet.": "A question, a bug, an idea? Write to us on the project page.",
     "Nous écrire": "Write to us", "Une question, un bug, une idée ? On lit tous les messages.": "A question, a bug, an idea? We read every message.",
     "Copier": "Copy", "Copié ✓": "Copied ✓",
+    "Favori": "Favourite",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",

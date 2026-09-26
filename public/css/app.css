@@ -691,3 +691,10 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .ctopics{display:flex;flex-wrap:wrap;gap:8px}
 .ctopics .chip{text-decoration:none}
 #reported .srow{margin-bottom:8px}
+/* Étoile des favoris, en haut à gauche de chaque lieu */
+.place .fvstar{position:absolute;top:5px;left:5px;z-index:2;width:30px;height:30px;border-radius:50%;border:0;padding:0;display:grid;place-items:center;
+  font-size:18px;line-height:1;background:var(--card);color:var(--soft);box-shadow:0 1px 4px rgba(0,0,0,.18)}
+.place .fvstar[aria-pressed="true"]{color:#F2B632;background:var(--card)}
+.place .fvstar.pop{animation:starPop .35s ease}
+@keyframes starPop{50%{transform:scale(1.3)}}
+.no-motion .place .fvstar.pop{animation:none}
