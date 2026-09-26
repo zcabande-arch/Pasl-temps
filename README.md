@@ -31,10 +31,10 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
 
 **Recherche rapide par tuiles** : chaque semaine, le workflow « Construire les lieux » télécharge
-OpenStreetMap France, garde les ~450 000 lieux utiles (avec horaires, site, téléphone) et les découpe
+OpenStreetMap pour toute l'Europe (pays par pays, plus l'Outre-mer), garde les lieux utiles (avec horaires, site, téléphone) et les découpe
 en tuiles d'environ 5 km, publiées sur la branche `places`. L'appli ne charge que les 1 à 4 tuiles
 autour de soi (≈ 0,2 à 0,8 s), puis les garde sur l'appareil. Le service Overpass ne sert qu'en dehors
-de la France. Les adresses tapées sont cherchées dans la Base Adresse Nationale (service public libre),
+de l'Europe. Les adresses tapées sont cherchées dans la Base Adresse Nationale (service public libre),
 Nominatim ne sert qu'en secours (étranger, noms de lieux).
 
 ## Lancer l'appli

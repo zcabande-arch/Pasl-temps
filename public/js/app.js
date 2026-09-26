@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "49";
+const APP_VERSION = "50";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -707,7 +707,7 @@ $("whereForm").addEventListener("submit", async e => {
   const msg = $("whereMsg");
   msg.textContent = tx("Je cherche…"); renderWhere();   // efface les choix d'une recherche précédente
   try{
-    const found = await PLACES.geocode(q);
+    const found = await PLACES.geocode(q, pos);
     if(!found.length){ msg.textContent = /\b\d{5}\b/.test(q) ? tx("Code postal {q} introuvable. Vérifie les 5 chiffres, ou ajoute la ville.", {q:q.trim()}) : tx("Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon » ou un code postal."); return; }
     $("whereInput").value = ""; $("whereInput").blur();
     if(found.length === 1){ msg.textContent = ""; setPlace(found[0].lat, found[0].lng, found[0].label, true); }

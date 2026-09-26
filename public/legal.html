@@ -83,7 +83,7 @@
     <p>Pour fonctionner, ton navigateur contacte directement quelques services. Comme pour tout site web, ils voient ton adresse IP :</p>
     <ul>
       <li><strong>GitHub</strong> (hébergement de l'appli et des fichiers de lieux, via raw.githubusercontent.com) et, en secours, <strong>jsDelivr</strong> : ils reçoivent la zone de carte demandée (une case d'environ 5 km), pas ta position exacte.</li>
-      <li><strong>Base Adresse Nationale</strong> (IGN / État français) : reçoit l'adresse, la ville ou le code postal que tu tapes dans « Où es-tu ? ». Si elle ne trouve pas (adresse à l'étranger, nom de lieu…), la recherche part à <strong>Nominatim</strong> (Fondation OpenStreetMap).</li>
+      <li><strong>Base Adresse Nationale</strong> (IGN / État français) : reçoit l'adresse, la ville ou le code postal que tu tapes dans « Où es-tu ? ». Si elle ne trouve pas (adresse à l'étranger, nom de lieu…), la recherche part à <strong>Nominatim</strong> (Fondation OpenStreetMap), et en secours à <strong>Photon</strong> (Komoot).</li>
       <li><strong>Overpass API</strong> (serveurs OpenStreetMap) : seulement si tu cherches hors de France, reçoit la zone autour de toi.</li>
       <li><strong>Open-Meteo</strong> : reçoit ta position arrondie à environ 1 km, pour savoir s'il pleut ou s'il fait beau autour de toi.</li>
       <li><strong>Google Maps</strong> : seulement si tu touches « Je pars » ou si tu ouvres un lieu envoyé par un pote ; tu quittes alors l'appli et les règles de Google s'appliquent.</li>
@@ -135,7 +135,7 @@
   <section id="credits">
     <h2>Crédits &amp; licences</h2>
     <ul>
-      <li>Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a>, sous licence <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>. Extraits France fournis par <a href="https://www.geofabrik.de" target="_blank" rel="noopener">Geofabrik</a>. Tu peux corriger un lieu directement sur openstreetmap.org.</li>
+      <li>Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a>, sous licence <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">ODbL</a>. Extraits (France, Outre-mer et pays d'Europe) fournis par <a href="https://www.geofabrik.de" target="_blank" rel="noopener">Geofabrik</a>. Tu peux corriger un lieu directement sur openstreetmap.org.</li>
       <li>Recherche d'adresses : <a href="https://adresse.data.gouv.fr" target="_blank" rel="noopener">Base Adresse Nationale</a> (Licence Ouverte Etalab 2.0) et <a href="https://nominatim.org" target="_blank" rel="noopener">Nominatim</a>.</li>
       <li>Polices : Fraunces (The Fraunces Project Authors) et Bricolage Grotesque (The Bricolage Grotesque Project Authors), sous licence SIL Open Font License 1.1, hébergées avec l'appli.</li>
       <li>Météo : <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo.com</a> (CC BY 4.0).</li>

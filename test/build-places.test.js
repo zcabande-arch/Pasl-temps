@@ -56,3 +56,29 @@ test("codes postaux : centre des lieux, plusieurs communes pour un même code", 
   assert.deepEqual(pcs["01000"].map(x => x[2]), ["Bourg-en-Bresse", "Saint-Denis-lès-Bourg"]);
   assert.equal(pcs["750"], undefined);
 });
+
+test("Europe : plusieurs pays (.gz), doublons aux frontières, codes postaux par pays et par préfixe", async () => {
+  const zlib = require("node:zlib");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lieux-eu-"));
+  const f = (lng, lat, p) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[lng, lat]}, properties:p});
+  const fr = [f(2.35, 48.86, {"@type":"node", "@id":1, amenity:"cafe", name:"Café Paris", "addr:postcode":"75004", "addr:city":"Paris"}),
+              f(2.351, 48.861, {"@type":"node", "@id":2, amenity:"cafe", name:"Café 2", "addr:postcode":"75004", "addr:city":"Paris"}),
+              f(7.59, 47.56, {"@type":"node", "@id":9, amenity:"bar", name:"Bar frontière"})].join("\n");
+  const de = [f(13.4, 52.52, {"@type":"node", "@id":3, amenity:"pub", name:"Kneipe", "addr:postcode":"10115", "addr:city":"Berlin"}),
+              f(13.401, 52.521, {"@type":"node", "@id":4, shop:"supermarket", name:"Markt", "addr:postcode":"10115", "addr:city":"Berlin"}),
+              f(8.7, 48.9, {"@type":"node", "@id":5, amenity:"cafe", name:"Pforzheim Café", "addr:postcode":"75004", "addr:city":"Pforzheim"}),
+              f(8.701, 48.901, {"@type":"node", "@id":6, amenity:"cafe", name:"Pforzheim Café 2", "addr:postcode":"75004", "addr:city":"Pforzheim"}),
+              f(7.59, 47.56, {"@type":"node", "@id":9, amenity:"bar", name:"Bar frontière"})].join("\n");
+  fs.writeFileSync(path.join(dir, "fr.geojsonseq.gz"), zlib.gzipSync(fr));
+  fs.writeFileSync(path.join(dir, "de.geojsonseq"), de);
+  const r = await build([{path: path.join(dir, "fr.geojsonseq.gz"), cc:"fr"}, {path: path.join(dir, "de.geojsonseq"), cc:"de"}], path.join(dir, "out"));
+  assert.equal(r.kept, 7, "le bar présent dans les deux extraits n'est gardé qu'une fois");
+  const pc75 = JSON.parse(fs.readFileSync(path.join(dir, "out", "pc", "75.json"), "utf8"))["75004"];
+  assert.deepEqual(pc75.map(x => [x[2], x[4]]).sort(), [["Paris", "fr"], ["Pforzheim", "de"]]);
+  const pc10 = JSON.parse(fs.readFileSync(path.join(dir, "out", "pc", "10.json"), "utf8"))["10115"];
+  assert.equal(pc10[0][2], "Berlin");
+  const old = JSON.parse(fs.readFileSync(path.join(dir, "out", "postcodes.json"), "utf8"));
+  assert.deepEqual(Object.keys(old), ["75004"], "postcodes.json : France seulement (anciennes versions)");
+  const idx = JSON.parse(fs.readFileSync(path.join(dir, "out", "index.json"), "utf8"));
+  assert.deepEqual(idx.countries, ["fr", "de"]);
+});

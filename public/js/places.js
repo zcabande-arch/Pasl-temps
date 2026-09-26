@@ -218,34 +218,54 @@
       a.neighbourhood || a.suburb || a.quarter || "";
     const city = a.city || a.town || a.village || a.municipality || a.county || "";
     const label = [first, city].filter(Boolean).filter((x, i, arr) => arr.indexOf(x) === i).join(", ");
-    return label || String(r.display_name || "").split(",").slice(0, 3).join(",");
+    const cc = a.country_code && a.country_code !== "fr" ? " (" + a.country_code.toUpperCase() + ")" : "";   // hors de France : le pays
+    return (label || String(r.display_name || "").split(",").slice(0, 3).join(",")) + cc;
   }
 
   // ---------- Codes postaux ----------
   // 1) notre liste (calculée chaque semaine à partir des lieux, servie avec les tuiles) ;
   // 2) la Base Adresse Nationale (service officiel français) ; 3) OpenStreetMap, en précisant « code postal, France ».
   const BAN = CFG.ban || ["https://data.geopf.fr/geocodage/search", "https://api-adresse.data.gouv.fr/search/"];
-  let pcIndexP = null;
-  function postcodeIndex(){
-    if(!pcIndexP) pcIndexP = getTileFile("postcodes.json").catch(() => { pcIndexP = null; return null; });
-    return pcIndexP;
+  // Codes postaux à 5 chiffres : un fichier par préfixe (pc/75.json), avec le pays de chaque commune ;
+  // les anciennes données (France seule) sont dans postcodes.json
+  const pcShards = new Map();
+  async function postcodeIndex(pc){
+    const k = pc.slice(0, 2);
+    if(!pcShards.has(k)) pcShards.set(k, (async () => {
+      const idx = await tileIndex().catch(() => null);
+      if(idx && idx.pcShards) return getTileFile("pc/" + k + ".json").catch(e => (e && e.status === 404 ? {} : Promise.reject(e)));
+      return getTileFile("postcodes.json");
+    })().catch(() => { pcShards.delete(k); return null; }));
+    return pcShards.get(k);
   }
+  const LANG = () => (window.I18N && I18N.lang) || "fr";
+  // Pays préféré pour un code postal ambigu : celui de la commune la plus proche d'où l'on est, sinon celui du téléphone
+  const localeCc = () => { const m = /-([A-Za-z]{2})\b/.exec(navigator.language || ""); return (m ? m[1] : "fr").toLowerCase(); };
   const normTxt = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
   async function getJSON(url, ms){
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), ms || 8000);
     try{ const r = await fetch(url, {signal: ctl.signal, headers: {"Accept": "application/json"}}); return r.ok ? await r.json() : null; }
     catch(e){ return null; } finally{ clearTimeout(t); }
   }
-  async function geocodePostcode(pc, hint){
+  async function geocodePostcode(pc, hint, near){
     let list = [], ours = [];
-    const idx = await postcodeIndex();
+    const idx = await postcodeIndex(pc);
     if(idx && idx[pc]){
       // on écarte le bruit (erreurs de saisie dans OpenStreetMap) : une autre commune doit compter au moins 2 lieux,
       // et « Paris 11eme Arrondissement » est une variante de « Paris »
-      const raw = idx[pc], first = normTxt(raw[0][2]);
+      let raw = idx[pc];
+      // plusieurs pays pour ce code (ex. 75004 Paris et 75004 Pforzheim) : on garde celui d'ici
+      const ccs = [...new Set(raw.map(x => x[4] || "fr"))];
+      if(ccs.length > 1){
+        let pick = localeCc();
+        if(near){ const best = raw.reduce((a, b) => meters(near, {lat:a[0], lng:a[1]}) <= meters(near, {lat:b[0], lng:b[1]}) ? a : b); pick = best[4] || "fr"; }
+        if(ccs.includes(pick) && !hint) raw = raw.filter(x => (x[4] || "fr") === pick);
+      }
+      const first = normTxt(raw[0][2]);
       const pretty = c => c && c === c.toUpperCase() ? c.toLowerCase().replace(/(^|[\s-])\p{L}/gu, m => m.toUpperCase()) : c;
+      const multi = new Set(raw.map(x => x[4] || "fr")).size > 1;
       list = raw.filter((x, i) => i === 0 || (x[3] >= 2 && !(first && normTxt(x[2]).startsWith(first))))
-        .map(([lat, lng, city]) => ({lat, lng, label: (pc + " " + (pretty(city) || "")).trim()}));
+        .map(([lat, lng, city, n, cc]) => ({lat, lng, label: (pc + " " + (pretty(city) || "")).trim() + ((multi || (cc && cc !== localeCc())) && cc ? " (" + cc.toUpperCase() + ")" : "")}));
       // ville tapée avec le code mais absente de notre liste : on demande aux autres sources
       if(hint && !list.some(x => normTxt(x.label).includes(normTxt(hint)))){ ours = list; list = []; }
     }
@@ -256,8 +276,9 @@
       if(list.length) break;
     }
     if(!list.length){
-      const j = await getJSON(`${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=5&accept-language=fr&countrycodes=fr&postalcode=${pc}`);
-      list = (j || []).map(r => { const a = r.address || {}; return {lat: +r.lat, lng: +r.lon, label: `${pc} ${a.city || a.town || a.village || a.municipality || ""}`.trim()}; });
+      // pas en France (ni dans nos données) : partout
+      const j = await getJSON(`${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=5&accept-language=${LANG()}&postalcode=${pc}`);
+      list = (j || []).map(r => { const a = r.address || {}; return {lat: +r.lat, lng: +r.lon, label: `${pc} ${a.city || a.town || a.village || a.municipality || ""}${a.country_code && a.country_code !== "fr" ? " (" + a.country_code.toUpperCase() + ")" : ""}`.trim()}; });
     }
     list = list.filter(x => isFinite(x.lat) && isFinite(x.lng));
     if(!list.length) return ours;    // la ville tapée n'a été trouvée nulle part : communes connues pour ce code
@@ -286,11 +307,23 @@
     return [];
   }
 
-  async function geocode(query){
+  // Photon (Komoot, données OpenStreetMap) : secours si Nominatim ne répond pas
+  async function geocodePhoton(query){
+    const j = await getJSON(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=4&lang=${LANG() === "en" ? "en" : "fr"}`, 6000);
+    const seen = new Set();
+    return ((j && j.features) || []).filter(f => f.geometry).map(f => {
+      const p = f.properties || {}, first = [p.housenumber, p.street].filter(Boolean).join(" ") || p.name || "";
+      const label = [first, p.city || p.town || p.village || p.county, p.countrycode && p.countrycode !== "FR" ? p.countrycode : ""].filter(Boolean)
+        .filter((x, i, a) => a.indexOf(x) === i).join(", ");
+      return {lat: +f.geometry.coordinates[1], lng: +f.geometry.coordinates[0], label: label || query};
+    }).filter(x => isFinite(x.lat) && isFinite(x.lng) && !seen.has(x.label) && seen.add(x.label));
+  }
+
+  async function geocode(query, near){
     // « 75011 », « 75011 Paris » ou « Paris 75011 » : recherche par code postal
     const pcm = /^\s*(?:(.*?)[\s,]+)?(\d{5})(?:[\s,]+(.*?))?\s*$/.exec(query || "");
     if(pcm && !/\d/.test((pcm[1] || "") + (pcm[3] || ""))){
-      const found = await geocodePostcode(pcm[2], [pcm[1], pcm[3]].filter(Boolean).join(" "));
+      const found = await geocodePostcode(pcm[2], [pcm[1], pcm[3]].filter(Boolean).join(" "), near);
       if(found.length) return found;
       if(!pcm[1] && !pcm[3]) return [];
     }
@@ -298,12 +331,17 @@
     // Nominatim seulement si la BAN ne trouve rien de convaincant (adresse à l'étranger, lieu-dit…)
     const ban = await geocodeBAN(query);
     if(ban.length) return ban;
-    const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=fr&q=${encodeURIComponent(query)}`;
+    const u = `${NOMINATIM}/search?format=jsonv2&addressdetails=1&limit=4&accept-language=${LANG()}&q=${encodeURIComponent(query)}`;
     let res;
     try{ res = await fetch(u, {headers:{"Accept":"application/json"}}); }
-    catch(e){ throw {code: navigator.onLine === false ? "offline" : "server_unavailable"}; }
-    if(res.status === 429) throw {code:"rate_limited"};
-    if(!res.ok) throw {code:"server_unavailable"};
+    catch(e){ if(navigator.onLine === false) throw {code:"offline"}; res = null; }
+    if(!res || !res.ok){
+      const ph = await geocodePhoton(query);
+      if(ph.length) return ph;
+      if(!res) throw {code:"server_unavailable"};
+      if(res.status === 429) throw {code:"rate_limited"};
+      throw {code:"server_unavailable"};
+    }
     const list = await res.json();
     const seen = new Set();
     return list.map(r => ({lat:+r.lat, lng:+r.lon, label:shortLabel(r)}))

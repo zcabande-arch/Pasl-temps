@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 // Pas l'temps — fabrique les « tuiles » de lieux à partir d'un export OpenStreetMap.
-// Entrée : un fichier GeoJSON « seq » (une entité par ligne), produit par `osmium export`.
-// Sortie : <dossier>/t/<ligne>_<colonne>.json (une tuile par case de CELL degrés) + <dossier>/index.json
-// Usage : node scripts/build-places.js lieux.geojsonseq sortie/
+// Entrée : un ou plusieurs fichiers GeoJSON « seq » (une entité par ligne, éventuellement .gz), produits par
+// `osmium export`, chacun avec le code de son pays (les codes postaux en ont besoin : 75011 existe en France et ailleurs).
+// Sortie : <dossier>/t/<ligne>_<colonne>.json (une tuile par case de CELL degrés), <dossier>/index.json,
+//          <dossier>/pc/<2 premiers chiffres>.json (codes postaux à 5 chiffres) et postcodes.json (France, anciennes versions)
+// Usage : node scripts/build-places.js sortie/ fr:france.geojsonseq.gz de:germany.geojsonseq.gz …
+//    (ou, comme avant : node scripts/build-places.js lieux.geojsonseq sortie/)
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
 const readline = require("node:readline");
+const zlib = require("node:zlib");
 
 const CELL = 0.05; // ~5,5 km (nord-sud) × ~3,7 km (est-ouest) en France
 // Étiquettes OSM utilisées par l'appli (voir MOODS dans public/js/app.js)
@@ -43,11 +47,17 @@ function addr(t){
   return [street, city].filter(Boolean).join(", ");
 }
 
-async function build(input, outDir){
+// inputs : chemin, ou liste de {path, cc}
+async function build(inputs, outDir){
+  if(!Array.isArray(inputs)) inputs = [{path: inputs, cc: "fr"}];
   const tiles = new Map();
-  const postcodes = new Map();   // "75011|paris" → {pc, city, lat, lng, n}
+  const postcodes = new Map();   // "75011|fr|paris" → {pc, cc, city, lat, lng, n}
+  const seen = new Set();        // les extraits de pays se chevauchent un peu aux frontières
   let n = 0, kept = 0, minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-  const rl = readline.createInterface({input: fs.createReadStream(input), crlfDelay: Infinity});
+  for(const {path: input, cc} of inputs){
+  let stream = fs.createReadStream(input);
+  if(input.endsWith(".gz")) stream = stream.pipe(zlib.createGunzip());
+  const rl = readline.createInterface({input: stream, crlfDelay: Infinity});
   for await (let line of rl){
     line = line.replace(/^\x1e/, "").trim();   // geojsonseq : séparateur RS en début de ligne
     if(!line) continue;
@@ -62,6 +72,8 @@ async function build(input, outDir){
     if(!c || !isFinite(c[0]) || !isFinite(c[1])) continue;
     const lng = +c[0].toFixed(5), lat = +c[1].toFixed(5);
     const id = (t["@type"] ? t["@type"][0] : "x") + (t["@id"] || f.id || "");
+    if(seen.has(id)) continue;
+    seen.add(id);
     const row = [lat, lng, sels.length === 1 ? sels[0] : sels, clip(t.name, 80), clip(addr(t), 100),
       clip(t.opening_hours, 160), clip(t.website || t["contact:website"] || t.url, 120),
       clip(t.phone || t["contact:phone"], 30), clip(t.cuisine, 40), t.wheelchair === "yes" ? 1 : 0, id];
@@ -69,8 +81,8 @@ async function build(input, outDir){
     const pc = String(t["addr:postcode"] || "").trim();
     if(/^\d{5}$/.test(pc)){
       const city = String(t["addr:city"] || "").trim().slice(0, 60);
-      const k = pc + "|" + city.toLowerCase();
-      const e = postcodes.get(k) || {pc, city, lat: 0, lng: 0, n: 0};
+      const k = pc + "|" + cc + "|" + city.toLowerCase();
+      const e = postcodes.get(k) || {pc, cc, city, lat: 0, lng: 0, n: 0};
       e.lat += lat; e.lng += lng; e.n++; postcodes.set(k, e);
     }
     const key = Math.floor(lat / CELL) + "_" + Math.floor(lng / CELL);
@@ -79,38 +91,51 @@ async function build(input, outDir){
     kept++;
     minLat = Math.min(minLat, lat); maxLat = Math.max(maxLat, lat); minLng = Math.min(minLng, lng); maxLng = Math.max(maxLng, lng);
   }
+  }
   fs.mkdirSync(path.join(outDir, "t"), {recursive: true});
   let bytes = 0;
   for(const [key, rows] of tiles){
     const json = JSON.stringify(rows);
     bytes += json.length;
     fs.writeFileSync(path.join(outDir, "t", key + ".json"), json);
+    tiles.set(key, null);            // mémoire : l'Europe entière fait plusieurs millions de lieux
   }
-  // postcodes.json : { "75011": [[lat, lng, "Paris", nombre de lieux], …], … } (communes triées par nombre de lieux)
+  // Codes postaux : { "75011": [[lat, lng, "Paris", nombre de lieux, "fr"], …], … } (triés par nombre de lieux)
   const byPc = {};
   for(const e of postcodes.values()){
     if(e.n < 2 && !e.city) continue;
-    (byPc[e.pc] = byPc[e.pc] || []).push([+(e.lat / e.n).toFixed(5), +(e.lng / e.n).toFixed(5), e.city, e.n]);
+    ((byPc[e.pc] = byPc[e.pc] || {})[e.cc] = byPc[e.pc][e.cc] || []).push([+(e.lat / e.n).toFixed(5), +(e.lng / e.n).toFixed(5), e.city, e.n, e.cc]);
   }
+  const shards = {}, frOnly = {};
   for(const pc in byPc){
-    // même commune écrite de façons différentes / sans commune : on regroupe sous la plus fréquente
-    const list = byPc[pc].sort((a, b) => b[3] - a[3]);
-    const named = list.filter(x => x[2]);
-    byPc[pc] = (named.length ? named : list).slice(0, 6);
+    // par pays : même commune écrite de façons différentes / sans commune → on garde les plus fréquentes
+    const all = [];
+    for(const cc in byPc[pc]){
+      const list = byPc[pc][cc].sort((a, b) => b[3] - a[3]), named = list.filter(x => x[2]);
+      const keep = (named.length ? named : list).slice(0, 6);
+      all.push(...keep);
+      if(cc === "fr") frOnly[pc] = keep.map(x => x.slice(0, 4));
+    }
+    (shards[pc.slice(0, 2)] = shards[pc.slice(0, 2)] || {})[pc] = all.sort((a, b) => b[3] - a[3]);
   }
-  fs.writeFileSync(path.join(outDir, "postcodes.json"), JSON.stringify(byPc));
-  const index = {v: 1, postcodes: Object.keys(byPc).length, built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
+  fs.mkdirSync(path.join(outDir, "pc"), {recursive: true});
+  for(const k in shards) fs.writeFileSync(path.join(outDir, "pc", k + ".json"), JSON.stringify(shards[k]));
+  fs.writeFileSync(path.join(outDir, "postcodes.json"), JSON.stringify(frOnly));   // anciennes versions de l'appli
+  const index = {v: 2, postcodes: Object.keys(byPc).length, pcShards: true, countries: [...new Set(inputs.map(x => x.cc))], built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
     bbox: [+minLat.toFixed(3), +minLng.toFixed(3), +maxLat.toFixed(3), +maxLng.toFixed(3)],
     // colonnes de chaque lieu : [lat, lng, étiquette(s), nom, adresse, horaires, site, téléphone, cuisine, accessible, id]
     fields: ["lat","lng","sel","name","addr","oh","web","phone","cuisine","wc","id"]};
   fs.writeFileSync(path.join(outDir, "index.json"), JSON.stringify(index));
-  return {read: n, kept, tiles: tiles.size, bytes};
+  return {read: n, kept, tiles: tiles.size, bytes, postcodes: Object.keys(byPc).length};
 }
 
 if(require.main === module){
-  const [input, outDir] = process.argv.slice(2);
-  if(!input || !outDir){ console.error("Usage : node scripts/build-places.js lieux.geojsonseq sortie/"); process.exit(1); }
-  build(input, outDir).then(r => console.log(`${r.read} entités lues, ${r.kept} lieux gardés, ${r.tiles} tuiles, ${(r.bytes / 1e6).toFixed(1)} Mo`))
+  const args = process.argv.slice(2);
+  let outDir, inputs;
+  if(args.length === 2 && !args[1].includes(":")){ inputs = args[0]; outDir = args[1]; }          // ancienne forme
+  else { outDir = args[0]; inputs = args.slice(1).map(a => { const i = a.indexOf(":"); return {cc: a.slice(0, i).toLowerCase(), path: a.slice(i + 1)}; }); }
+  if(!outDir || !inputs || !inputs.length){ console.error("Usage : node scripts/build-places.js sortie/ fr:france.geojsonseq.gz de:germany.geojsonseq.gz …"); process.exit(1); }
+  build(inputs, outDir).then(r => console.log(`${r.read} entités lues, ${r.kept} lieux gardés, ${r.tiles} tuiles, ${(r.bytes / 1e6).toFixed(1)} Mo, ${r.postcodes} codes postaux`))
     .catch(e => { console.error(e); process.exit(1); });
 }
 

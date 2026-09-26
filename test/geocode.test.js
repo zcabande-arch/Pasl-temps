@@ -44,3 +44,19 @@ test("BAN en panne : on essaie la deuxième adresse de la BAN", async () => {
   const {P} = load([[/api-adresse/, {features: [feat("municipality", "Nantes", {postcode: "44000"})]}]]);
   assert.equal((await P.geocode("Nantes"))[0].label, "Nantes (44000)");
 });
+
+test("code postal présent dans plusieurs pays : celui d'où l'on est", async () => {
+  const shard = {"75004": [[48.86, 2.35, "Paris", 40, "fr"], [48.9, 8.7, "Pforzheim", 12, "de"]]};
+  const route = [[/index\.json/, {cell:0.05, bbox:[40,-10,60,30], pcShards:true, sels:[]}], [/pc\/75\.json/, shard]];
+  const near = async pos => { const {P} = load(route); return P.geocode("75004", pos); };
+  const paris = await near({lat:48.85, lng:2.34});
+  assert.deepEqual(paris.map(x => x.label), ["75004 Paris"]);
+  const de = await near({lat:48.8, lng:8.6});
+  assert.deepEqual(de.map(x => x.label), ["75004 Pforzheim (DE)"]);
+});
+
+test("hors de France : le pays est indiqué, et Photon prend le relais si Nominatim ne répond pas", async () => {
+  const {P} = load([[/photon/, {features:[{geometry:{coordinates:[13.4, 52.52]}, properties:{name:"Berlin", countrycode:"DE"}}]}]]);
+  const r = await P.geocode("Berlin");
+  assert.equal(r[0].label, "Berlin, DE");
+});
