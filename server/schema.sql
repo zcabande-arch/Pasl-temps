@@ -72,3 +72,12 @@ CREATE TABLE IF NOT EXISTS push_subs (
   next_at  INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS push_due ON push_subs(next_at);
+-- Notifications du chrono « Je pars » (c'est l'heure de repartir, temps écoulé) : envoyées une fois puis effacées
+CREATE TABLE IF NOT EXISTS push_timers (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  endpoint TEXT NOT NULL,
+  at       INTEGER NOT NULL,
+  payload  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS push_timers_at ON push_timers(at);
+CREATE INDEX IF NOT EXISTS push_timers_ep ON push_timers(endpoint);

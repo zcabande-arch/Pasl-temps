@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "48";
+const APP_VERSION = "49";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -380,8 +380,8 @@ function renderContact(){
   });
 }
 
-// ---------- Rappels « T'as l'temps ? » (notifications, tous les 3 jours sans ouvrir l'appli) ----------
-// Le serveur envoie la notification à l'heure choisie ; chaque ouverture de l'appli repousse le rappel de 3 jours.
+// ---------- Notifications : « T'as pas l'temps ? » tous les 3 jours, et le chrono « Je pars » ----------
+// Autorisation demandée par l'appli elle-même ; le serveur envoie les notifications à l'heure (même appli fermée).
 const pushOk = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -391,53 +391,49 @@ async function pushSubscribe(){
   let sub = await reg.pushManager.getSubscription();
   if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToBytes(await PLT.push.key())});
   const r = SET.remind || {};
-  await PLT.push.subscribe({subscription: sub.toJSON(), hour: r.hour || 12, tz: new Date().getTimezoneOffset(), every: 3});
+  await PLT.push.subscribe({subscription: sub.toJSON(), hour: r.hour || 12, tz: new Date().getTimezoneOffset(), every: 3, lang: I18N.lang});
 }
 async function pushUnsubscribe(){
   try{ const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
     if(sub){ try{ await PLT.push.unsubscribe(sub.endpoint); }catch(e){} await sub.unsubscribe(); } }catch(e){}
 }
-// À chaque ouverture (serveur joint) : on repousse le prochain rappel
+// À chaque ouverture (serveur joint) : abonnement tenu à jour (le rythme de 3 jours continue), sinon bannière
 function refreshRemind(){
-  if(SET.remind && SET.remind.on && pushOk() && Notification.permission === "granted") pushSubscribe().catch(() => {});
+  if(pushReady() && Notification.permission === "granted") pushSubscribe().catch(() => {});
+  renderPushAsk();
 }
-let remindMsg = "";
-function renderRemind(){
-  const box = $("remindBox"), R = $("remind"); if(!box) return;
-  box.hidden = !DB;                         // il faut le serveur de Pas l'temps
-  if(!DB) return;
-  const r = SET.remind || {on:false, hour:12};
-  if(!pushOk() || (isIOS() && !standalone())){
-    R.innerHTML = `<p style="margin:0">${isIOS() ? tx("Sur iPhone et iPad : ajoute d'abord Pas l'temps à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis l'icône pour activer les rappels.") : tx("Ce navigateur ne permet pas les notifications.")}</p>`;
-    return;
-  }
-  if(Notification.permission === "denied"){
-    R.innerHTML = `<p style="margin:0">${tx("Les notifications sont bloquées pour Pas l'temps. Autorise-les dans les réglages du téléphone, puis reviens ici.")}</p>`;
-    return;
-  }
-  R.innerHTML = `<p>${tx("Une petite notification si tu n'as pas ouvert l'appli depuis 3 jours : « T'as pas l'temps ? »")}</p>
-    <div class="seg" id="remindSeg"><button data-v="off" aria-pressed="${!r.on}">${tx("Non merci")}</button><button data-v="on" aria-pressed="${!!r.on}">🔔 ${tx("Tous les 3 jours")}</button></div>
-    <div class="sortrow" id="remindHour" style="margin-top:10px"${r.on ? "" : " hidden"}>${[12, 17, 19].map(h => `<button class="chip" data-h="${h}" aria-pressed="${(r.hour || 12) === h}">${tx("vers {h} h", {h})}</button>`).join("")}</div>
-    <p class="msg"></p>`;
-  R.querySelector(".msg").textContent = remindMsg;
-  $("remindSeg").onclick = async e => {
-    const b = e.target.closest("button"); if(!b) return;
-    const on = b.dataset.v === "on";
-    remindMsg = "";
-    if(on){
-      try{
-        if(await Notification.requestPermission() !== "granted"){ remindMsg = tx("Sans autorisation, pas de rappel."); renderRemind(); return; }
-        SET.remind = {on:true, hour:r.hour || 12}; saveSet();
-        await pushSubscribe(); remindMsg = tx("C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.");
-      }catch(err){ SET.remind = {...r, on:false}; saveSet(); remindMsg = tx("Activation impossible pour l'instant. Réessaie plus tard."); }
-    } else { SET.remind = {...r, on:false}; saveSet(); await pushUnsubscribe(); }
-    renderRemind();
-  };
-  $("remindHour").onclick = async e => {
-    const b = e.target.closest("button"); if(!b) return;
-    SET.remind = {on:true, hour:+b.dataset.h}; saveSet(); renderRemind();
-    try{ await pushSubscribe(); }catch(err){}
-  };
+// Demande d'autorisation : bannière (au plus tous les 3 jours si « Plus tard »), et au premier « Je pars »
+const pushReady = () => !!DB && pushOk() && (!isIOS() || standalone());
+async function enablePush(){
+  try{
+    if(Notification.permission === "default" && await Notification.requestPermission() !== "granted") return false;
+    if(Notification.permission !== "granted") return false;
+    await pushSubscribe(); return true;
+  }catch(e){ return false; }
+  finally{ renderPushAsk(); }
+}
+function renderPushAsk(){
+  const box = $("pushAsk"); if(!box) return;
+  let later = 0; try{ later = +localStorage.getItem("pasltemps.pushlater") || 0; }catch(e){}
+  const onb = document.getElementById("onb");
+  box.hidden = !(pushReady() && Notification.permission === "default" && Date.now() - later > 3 * 864e5 && !onb);
+}
+$("pushYes").onclick = () => enablePush();
+$("pushLater").onclick = () => { try{ localStorage.setItem("pasltemps.pushlater", String(Date.now())); }catch(e){} renderPushAsk(); };
+// Chrono « Je pars » : notifications « c'est l'heure de repartir » et « temps écoulé », même appli fermée
+async function scheduleTimerPush(){
+  if(!pushReady() || Notification.permission !== "granted") return;
+  try{
+    const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if(!sub) return;
+    const events = [];
+    if(TIMER){
+      const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, back = TIMER.start + (TIMER.T - TIMER.walk) * 60000, end = TIMER.start + TIMER.T * 60000;
+      if(back > Date.now() + 30e3) events.push({at: back, title: "Pas l'temps", body: tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
+      events.push({at: end, title: "Pas l'temps", body: tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
+    }
+    await PLT.push.timer(sub.endpoint, events);
+  }catch(e){}
 }
 
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
@@ -762,7 +758,6 @@ function renderSettings(){
     : innerWidth < 600 && SET.layout !== "phone" ? tx("Cet écran est trop petit : l'affichage reste en format mobile.") : "";
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
-  renderRemind();
 }
 function openSheet(on){
   $("sheet").classList.toggle("on", on); $("sheetBg").classList.toggle("on", on);
@@ -1457,10 +1452,14 @@ function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.
 function startTimer(p, h, total){
   TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   vibrated = false; saveTimer(); renderTimer();
+  // première fois : on demande l'autorisation ici (c'est le bon moment), puis on programme les notifications
+  if(pushReady() && Notification.permission === "default") enablePush().then(ok => ok && scheduleTimerPush());
+  else scheduleTimerPush();
 }
 function stopTimer(done){
   if(done && TIMER && TIMER.hid) patch(TIMER.hid, {done:true});
   TIMER = null; saveTimer(); renderTimer();
+  scheduleTimerPush();                 // annule les notifications du chrono
 }
 const mmss = s => { s = Math.abs(Math.round(s)); return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
 function renderTimer(){

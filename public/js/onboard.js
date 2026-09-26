@@ -35,7 +35,7 @@
     const inp = box.querySelector("#onbName"), n = inp ? inp.value.trim().slice(0, 30) : "";
     if(n){ PROFILE.name = n; saveProfile(); renderBrand(); }
     mark();
-    box.classList.add("out"); setTimeout(() => box.remove(), 400);
+    box.classList.add("out"); setTimeout(() => { box.remove(); if(typeof renderPushAsk === "function") renderPushAsk(); }, 400);
   }
   render();
   // juste après l'écran « Bonjour »

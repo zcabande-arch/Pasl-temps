@@ -207,8 +207,23 @@ function createApi(store, opts = {}){
       const hour = Math.min(22, Math.max(7, Math.round(+v.hour) || 12));
       const tz = Math.min(840, Math.max(-840, Math.round(+v.tz) || 0));
       const every = Math.min(14, Math.max(1, Math.round(+v.every) || 3));
-      await store.pushSet(sub.endpoint, uid, JSON.stringify(sub).slice(0, 2000), hour, tz, every, push.nextAt(Date.now(), hour, tz, every));
+      if(!isObj(sub.keys) || typeof sub.keys.p256dh !== "string" || typeof sub.keys.auth !== "string") return fail(400, "bad_subscription");
+      const saved = JSON.stringify({endpoint: sub.endpoint, keys: {p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100)}, lang: v.lang === "en" ? "en" : "fr"});
+      // premier abonnement : rappel dans 3 jours ; ensuite le rythme continue (le serveur garde la date prévue)
+      await store.pushSet(sub.endpoint, uid, saved, hour, tz, every, push.nextAt(Date.now(), hour, tz, every));
       return ok({ok:true});
+    }
+    // Chrono « Je pars » : notifications à heure fixe (c'est l'heure de repartir, temps écoulé) ; liste vide = annuler
+    if(path === "/api/push/timer" && method === "POST"){
+      if(!limited("timer:" + uid, 1, 30, 30 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {};
+      if(typeof v.endpoint !== "string" || (await store.pushOwner(v.endpoint)) !== uid) return fail(403, "forbidden");
+      const now = Date.now(), list = (Array.isArray(v.events) ? v.events : []).slice(0, 4)
+        .filter(e => isObj(e) && Number.isFinite(+e.at) && +e.at > now - 60e3 && +e.at < now + 6 * 3600e3)
+        .map(e => ({at: +e.at, payload: JSON.stringify({title: String(e.title || "Pas l'temps").slice(0, 80), body: String(e.body || "").slice(0, 200), tag: "pasltemps-chrono", url: "./"})}));
+      await store.timersSet(v.endpoint, list);
+      return ok({ok:true, count: list.length});
     }
     if(path === "/api/push/unsubscribe" && method === "POST"){
       const b = await body(req); if(b.error) return b.error;

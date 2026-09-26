@@ -29,13 +29,17 @@ function d1Store(db){
     async getCode(email){ return (await first("getCode", email)) || null; },
     async codeTry(email){ await run("codeTry", email); },
     async delCode(email){ await run("delCode", email); },
-    async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); await run("pushDelUid", uid); },
+    async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); await run("timerDelUid", uid); await run("pushDelUid", uid); },
     async kvGet(k){ const r = await first("kvGet", k); return r ? r.v : null; },
     async kvSet(k, v){ await run("kvSet", k, v); },
     async pushSet(endpoint, uid, sub, hour, tz, every, nextAt){ await run("pushSet", endpoint, uid, sub, hour, tz, every, nextAt); },
     async pushDel(endpoint){ await run("pushDel", endpoint); },
     async pushDue(now, limit){ return all("pushDue", now, limit); },
     async pushNext(endpoint, at){ await run("pushNext", at, endpoint); },
+    async pushOwner(endpoint){ const r = await first("pushOwner", endpoint); return r ? r.uid : null; },
+    async timersSet(endpoint, list){ await run("timerDelEp", endpoint); for(const t of list) await run("timerAdd", endpoint, t.at, t.payload); },
+    async timersDue(now, limit){ await run("timerStale", now - 3600e3); return all("timerDue", now, limit); },
+    async timerDel(id){ await run("timerDel", id); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;

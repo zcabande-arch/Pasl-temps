@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="48">
+<meta name="app-version" content="49">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pas l'temps</title>
 <meta name="description" content="10 minutes ou 2 heures devant toi ? Pas l'temps trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -40,6 +40,10 @@
   <p class="brand" id="brand">On n'a pas l'temps ?</p>
   <button class="gear" id="gear" aria-label="Réglages">⚙️</button>
   <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
+  <div class="pushask" id="pushAsk" hidden>
+    <p>🔔 <b>Active les notifications</b> : on te prévient quand il est l'heure de repartir, et on te fait signe tous les 3 jours.</p>
+    <div class="btns"><button class="go" id="pushYes">Autoriser</button><button class="link" id="pushLater">Plus tard</button></div>
+  </div>
   <div id="viewExplore">
   <div class="col-a">
   <header class="hero2">
@@ -173,10 +177,6 @@
   <p class="setnote" id="layoutNote"></p>
   <h4>Langue</h4>
   <div class="seg" id="langSeg"><button data-v="auto">Auto</button><button data-v="fr">Français</button><button data-v="en">English</button></div>
-  <div id="remindBox" hidden>
-    <h4>Rappels</h4>
-    <div class="rec" id="remind"></div>
-  </div>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
   <h4>Nous contacter</h4>

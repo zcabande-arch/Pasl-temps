@@ -211,6 +211,10 @@
     "Sans autorisation, pas de rappel.": "Without permission, no reminders.",
     "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Done ✓ First reminder in 3 days if you don't open the app before then.",
     "Activation impossible pour l'instant. Réessaie plus tard.": "Can't turn it on right now. Try again later.",
+    "🔔": "🔔", "Active les notifications": "Turn on notifications", "Autoriser": "Allow", "Plus tard": "Later",
+    ": on te prévient quand il est l'heure de repartir, et on te fait signe tous les 3 jours.": ": we'll tell you when it's time to head back, and check in every 3 days.",
+    "🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.": "🏃 Time to leave {n}: {m} min {of} to get back on time.",
+    "⏰ Ta pause est finie : il est l'heure d'être rentré·e !": "⏰ Your break is over: time to be back!",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",

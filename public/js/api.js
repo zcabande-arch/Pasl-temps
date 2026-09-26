@@ -116,7 +116,8 @@
   const pushApi = {
     async key(){ const r = await fetch(BASE + "/api/push/key"); if(!r.ok) throw {code: "http_" + r.status}; return (await r.json()).key; },
     subscribe: body => call("POST", "/api/push/subscribe", body),
-    unsubscribe: endpoint => call("POST", "/api/push/unsubscribe", {endpoint})
+    unsubscribe: endpoint => call("POST", "/api/push/unsubscribe", {endpoint}),
+    timer: (endpoint, events) => call("POST", "/api/push/timer", {endpoint, events})
   };
 
   window.PLT = {connect, account, push: pushApi};

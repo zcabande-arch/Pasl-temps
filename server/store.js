@@ -35,7 +35,7 @@ function openStore(file){
     getCode(email){ return q.getCode.get(email) || null; },
     codeTry(email){ q.codeTry.run(email); },
     delCode(email){ q.delCode.run(email); },
-    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.pushDelUid.run(uid); },
+    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.timerDelUid.run(uid); q.pushDelUid.run(uid); },
     // Notifications
     kvGet(k){ const r = q.kvGet.get(k); return r ? r.v : null; },
     kvSet(k, v){ q.kvSet.run(k, v); },
@@ -43,6 +43,10 @@ function openStore(file){
     pushDel(endpoint){ q.pushDel.run(endpoint); },
     pushDue(now, limit){ return q.pushDue.all(now, limit); },
     pushNext(endpoint, at){ q.pushNext.run(at, endpoint); },
+    pushOwner(endpoint){ const r = q.pushOwner.get(endpoint); return r ? r.uid : null; },
+    timersSet(endpoint, list){ q.timerDelEp.run(endpoint); for(const t of list) q.timerAdd.run(endpoint, t.at, t.payload); },
+    timersDue(now, limit){ q.timerStale.run(now - 3600e3); return q.timerDue.all(now, limit); },
+    timerDel(id){ q.timerDel.run(id); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

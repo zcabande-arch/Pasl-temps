@@ -13,7 +13,7 @@ function reply(status, body){
 }
 
 export default {
-  // Toutes les heures (wrangler.toml, [triggers]) : envoi des rappels « T'as l'temps ? » arrivés à échéance
+  // Chaque minute (wrangler.toml, [triggers]) : envoi des notifications arrivées à l'heure
   async scheduled(event, env, ctx){
     ctx.waitUntil(push.runReminders(d1.d1Store(env.DB)).then(r => console.log("rappels", JSON.stringify(r))));
   },

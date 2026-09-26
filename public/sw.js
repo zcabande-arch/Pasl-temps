@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v48";
+const VERSION = "pasltemps-v49";
 const CORE = [
   "./",
   "./index.html",
@@ -107,10 +107,13 @@ const RAPPELS = {
        "A little break today? Open Pas l'temps, we'll handle the rest."]
 };
 self.addEventListener("push", e => {
+  // le serveur envoie {title, body, tag, url} (chiffré, déchiffré par le navigateur) ; sinon, message au hasard
+  let m = null; try{ m = e.data ? e.data.json() : null; }catch(err){}
   const lang = /^fr\b/i.test(self.navigator.language || "fr") ? "fr" : "en", list = RAPPELS[lang];
-  e.waitUntil(self.registration.showNotification("Pas l'temps", {
-    body: list[Math.floor(Math.random() * list.length)], icon: "icons/icon-192.png", badge: "icons/icon-192.png",
-    tag: "pasltemps-rappel", data: {url: "./"}
+  if(!m || !m.body) m = {title: "Pas l'temps", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"};
+  e.waitUntil(self.registration.showNotification(m.title || "Pas l'temps", {
+    body: m.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: m.tag || "pasltemps", renotify: true,
+    vibrate: [200, 100, 200], data: {url: m.url || "./"}
   }));
 });
 self.addEventListener("notificationclick", e => {
