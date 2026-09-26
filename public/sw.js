@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v50";
+const VERSION = "pasltemps-v51";
 const CORE = [
   "./",
   "./index.html",
@@ -89,6 +89,8 @@ self.addEventListener("fetch", e => {
     e.respondWith(
       caches.open("pasltemps-lieux").then(c => c.match(req).then(hit => {
         const net = fetch(req).then(res => { if (res.ok || res.status === 404) c.put(req, res.clone()); return res; }).catch(() => hit);
+        // la liste des zones couvertes et les « rien ici » gardés en mémoire : réseau d'abord (la couverture s'agrandit)
+        if (hit && (hit.status === 404 || url.pathname.endsWith("/index.json"))) return net.then(r => r || hit);
         return hit || net;
       }))
     );
