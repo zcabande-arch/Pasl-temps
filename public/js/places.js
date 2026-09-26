@@ -108,7 +108,9 @@
   }
   let indexP = null;
   function tileIndex(){
-    if(!indexP) indexP = getTileFile("index.json").catch(() => { indexP = null; return null; });
+    // adresse différente chaque heure : aucune vieille copie (navigateur, service worker) ne peut resservir
+    // une ancienne liste des zones couvertes (la couverture s'agrandit : France, puis Europe…)
+    if(!indexP) indexP = getTileFile("index.json?h=" + Math.floor(Date.now() / 36e5)).catch(() => { indexP = null; return null; });
     return indexP;
   }
   const tileCache = new Map();
