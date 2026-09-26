@@ -4,6 +4,6 @@
 //   apiBase: "https://pasltemps.example.com"
 // contactEmail : adresse du service client (« Nous contacter », signalements). Vide = page du projet sur GitHub.
 window.PASLTEMPS_CONFIG = {
-  apiBase: "",
+  apiBase: "https://pasltemps.pasltempssav.workers.dev",
   contactEmail: "pasltempssav@gmail.com"
 };

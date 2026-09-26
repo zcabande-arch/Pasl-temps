@@ -13,4 +13,4 @@ APP_ORIGINS = "https://zcabande-arch.github.io"
 [[d1_databases]]
 binding = "DB"
 database_name = "pasltemps"
-database_id = "A_REMPLIR_AUTOMATIQUEMENT"
+database_id = "8fec2d16-9f82-43a5-9809-7d58553239d8"
