@@ -196,6 +196,9 @@
     "La connexion par e-mail n'est pas encore active.": "Email sign-in isn't active yet.", "L'e-mail n'a pas pu partir. Réessaie dans une minute.": "The email couldn't be sent. Try again in a minute.",
     "Ce lien a expiré ou a déjà servi. Demande un nouveau lien ci-dessous.": "This link has expired or was already used. Ask for a new one below.",
     "Connexion impossible pour l'instant. Réessaie dans une minute.": "Can't sign in right now. Try again in a minute.",
+    "Tape ici le code à 6 chiffres reçu par e-mail. Pas reçu ? Regarde dans les spams.": "Type the 6-digit code from the email here. Nothing? Check your spam folder.",
+    "Valider": "Confirm", "Vérification…": "Checking…", "Code incorrect. Vérifie les 6 chiffres.": "Wrong code. Check the 6 digits.",
+    "Code expiré ou trop d'essais : redemande un code.": "Code expired or too many tries: ask for a new one.",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
     "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",

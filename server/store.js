@@ -31,6 +31,10 @@ function openStore(file){
     addAccount(email, uid){ q.addAccount.run(email, uid, Date.now()); },
     addLogin(hash, email, expires){ q.purgeLogins.run(Date.now() - 864e5); q.addLogin.run(hash, email, expires); },
     takeLogin(hash){ const r = q.takeLogin.get(hash, Date.now()); return r ? r.email : null; },
+    setCode(email, hash, expires){ q.setCode.run(email, hash, expires); },
+    getCode(email){ return q.getCode.get(email) || null; },
+    codeTry(email){ q.codeTry.run(email); },
+    delCode(email){ q.delCode.run(email); },
     deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },

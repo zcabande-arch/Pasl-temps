@@ -141,10 +141,30 @@
       };
     } else if(sentTo){
       R.innerHTML = `<p>${tx("C'est envoyé à")} <b class="accmail"></b> !</p>
-        <p class="phelp">${tx("Ouvre l'e-mail sur cet appareil et touche « Me connecter ». Pas reçu ? Regarde dans les spams.")}</p>
-        <div class="btns"><button class="ghost" id="accAgain">${tx("Changer d'adresse ou renvoyer")}</button></div>${note}`;
+        <p class="phelp">${tx("Tape ici le code à 6 chiffres reçu par e-mail. Pas reçu ? Regarde dans les spams.")}</p>
+        <form id="codeForm" class="accform"><input class="field codein" id="accCodeIn" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]*" maxlength="7" placeholder="123456" required>
+        <button class="go" type="submit">${tx("Valider")}</button></form>${note}
+        <div class="btns"><button class="link" id="accAgain">${tx("Changer d'adresse ou renvoyer")}</button></div>`;
       R.querySelector(".accmail").textContent = sentTo;
       $("accAgain").onclick = () => { sentTo = ""; renderRec(); };
+      $("codeForm").onsubmit = async e => {
+        e.preventDefault();
+        const btn = R.querySelector("#codeForm button"), msgEl = R.querySelector(".msg");
+        btn.disabled = true; msgEl.classList.remove("warn"); msgEl.textContent = tx("Vérification…");
+        try{
+          try{ localStorage.setItem("pasltemps.merge", JSON.stringify(portableData())); }catch(_){}
+          await PLT.account.verifyCode(sentTo, $("accCodeIn").value);
+          location.reload();
+        }catch(err){
+          try{ localStorage.removeItem("pasltemps.merge"); }catch(_){}
+          btn.disabled = false; msgEl.classList.add("warn");
+          const c = err && err.code;
+          msgEl.textContent = c === "bad_code" ? tx("Code incorrect. Vérifie les 6 chiffres.")
+            : c === "expired" ? tx("Code expiré ou trop d'essais : redemande un code.")
+            : tx("Connexion impossible pour l'instant. Réessaie dans une minute.");
+        }
+      };
+      setTimeout(() => { const i = $("accCodeIn"); if(i) i.focus(); }, 200);
     } else {
       R.innerHTML = `<p>${tx("Retrouve ton profil, tes favoris et ton historique sur tous tes appareils. Pas de mot de passe : on t'envoie un lien par e-mail.")}</p>
         <form id="accForm" class="accform"><input class="field" id="accEmail" type="email" inputmode="email" autocomplete="email" placeholder="${tx("ton@adresse.fr")}" required>

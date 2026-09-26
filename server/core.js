@@ -114,7 +114,10 @@ function createApi(store, opts = {}){
       const token = randomId(24);
       await store.addLogin(await sha(token), email, Date.now() + LOGIN_TTL);
       back.hash = "login=" + token;
-      const m = loginMail(back.href, b.value.lang === "en" ? "en" : "fr");
+      // … et un code à 6 chiffres, à taper dans l'appli installée (l'iPhone ouvre le lien dans Safari, pas dans l'appli)
+      const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
+      await store.setCode(email, await sha(email + ":" + code), Date.now() + LOGIN_TTL);
+      const m = loginMail(back.href, b.value.lang === "en" ? "en" : "fr", code);
       try{ await opts.sendMail({to: email, ...m}); }
       catch(e){ console.error(e); return fail(502, "mail_failed"); }
       return ok({ok:true});
@@ -122,10 +125,23 @@ function createApi(store, opts = {}){
     if(path === "/api/login/verify" && method === "POST"){
       if(!limited("verify:" + req.ip, 1, 20, 20 / 3600)) return fail(429, "rate_limited");
       const b = await body(req); if(b.error) return b.error;
-      const token = String(b.value && b.value.token || "");
-      if(!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return fail(400, "bad_token");
-      const email = await store.takeLogin(await sha(token));
-      if(!email) return fail(400, "expired");
+      let email;
+      if(b.value && b.value.code != null){
+        // Code à 6 chiffres + adresse
+        email = String(b.value.email || "").trim().toLowerCase();
+        const code = String(b.value.code).replace(/\s/g, "");
+        if(!EMAIL.test(email) || !/^\d{6}$/.test(code)) return fail(400, "bad_code");
+        const c = await store.getCode(email);
+        if(!c || c.expires < Date.now() || c.tries >= 5) return fail(400, "expired");
+        if(c.hash !== await sha(email + ":" + code)){ await store.codeTry(email); return fail(400, c.tries >= 4 ? "expired" : "bad_code"); }
+        await store.delCode(email);
+      } else {
+        const token = String(b.value && b.value.token || "");
+        if(!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return fail(400, "bad_token");
+        email = await store.takeLogin(await sha(token));
+        if(!email) return fail(400, "expired");
+        await store.delCode(email);
+      }
       let uid = await store.accountUid(email);
       if(!uid){
         // Première connexion : le compte de cet appareil (s'il en a un, pas encore relié) devient celui de l'adresse

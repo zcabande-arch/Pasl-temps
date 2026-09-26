@@ -25,6 +25,10 @@ function d1Store(db){
     async addAccount(email, uid){ await run("addAccount", email, uid, Date.now()); },
     async addLogin(hash, email, expires){ await run("purgeLogins", Date.now() - 864e5); await run("addLogin", hash, email, expires); },
     async takeLogin(hash){ const r = await first("takeLogin", hash, Date.now()); return r ? r.email : null; },
+    async setCode(email, hash, expires){ await run("setCode", email, hash, expires); },
+    async getCode(email){ return (await first("getCode", email)) || null; },
+    async codeTry(email){ await run("codeTry", email); },
+    async delCode(email){ await run("delCode", email); },
     async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());

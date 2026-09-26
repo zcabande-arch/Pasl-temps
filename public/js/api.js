@@ -106,6 +106,8 @@
     start: (email, lang) => post("/api/login/start", {email, lang, back: location.origin + location.pathname}),
     // échange le jeton du lien contre la session du compte (l'appareil garde ses données s'il n'avait pas encore de compte)
     async verify(token){ const r = await post("/api/login/verify", {token}, true); saveAuth({uid: r.uid, token: r.token, email: r.email}); return r; },
+    // même chose avec le code à 6 chiffres de l'e-mail (l'appli installée sur iPhone ne reçoit pas le lien)
+    async verifyCode(email, code){ const r = await post("/api/login/verify", {email, code}, true); saveAuth({uid: r.uid, token: r.token, email: r.email}); return r; },
     logout(){ saveAuth(null); },
     async remove(){ await call("DELETE", "/api/account"); saveAuth(null); }
   };

@@ -48,3 +48,11 @@ CREATE TABLE IF NOT EXISTS logins (
   expires INTEGER NOT NULL,
   used    INTEGER NOT NULL DEFAULT 0
 );
+-- Code à 6 chiffres envoyé avec le lien (pour l'appli installée, qui ne reçoit pas le lien) : un seul actif par adresse,
+-- 5 essais au plus
+CREATE TABLE IF NOT EXISTS login_codes (
+  email   TEXT PRIMARY KEY,
+  hash    TEXT NOT NULL,
+  expires INTEGER NOT NULL,
+  tries   INTEGER NOT NULL DEFAULT 0
+);

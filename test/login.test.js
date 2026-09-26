@@ -108,3 +108,23 @@ test("envoi par Gmail : appelle le script Google avec la clé et suit sa redirec
     await assert.rejects(webhookMailer(u, "mauvaise")({to:"a@b.fr", subject:"S", html:"", text:""}));
   } finally { g.close(); }
 });
+
+test("code à 6 chiffres (appli installée) : bon code, mauvais code, 5 essais au plus", async () => {
+  const codeOf = m => /\n(\d{6})\n/.exec(m.text)[1];
+  await post("/api/login/start", {email:"ipad@mail.fr", back:"https://app.example/"});
+  const m = sent[sent.length - 1], code = codeOf(m);
+  assert.match(m.subject, new RegExp("^" + code));
+  const wrong = code === "000000" ? "111111" : "000000";
+  assert.equal((await post("/api/login/verify", {email:"ipad@mail.fr", code:wrong})).status, 400);
+  const ok = await (await post("/api/login/verify", {email:" IPAD@mail.fr", code})).json();
+  assert.equal(ok.email, "ipad@mail.fr");
+  assert.ok(ok.token);
+  assert.equal((await post("/api/login/verify", {email:"ipad@mail.fr", code})).status, 400, "code déjà utilisé");
+  // 5 mauvais essais : même le bon code ne marche plus
+  await post("/api/login/start", {email:"ipad@mail.fr", back:"https://app.example/"});
+  const c2 = codeOf(sent[sent.length - 1]), bad = c2 === "123456" ? "654321" : "123456";
+  for(let i = 0; i < 5; i++) await post("/api/login/verify", {email:"ipad@mail.fr", code:bad});
+  const r = await post("/api/login/verify", {email:"ipad@mail.fr", code:c2});
+  assert.equal(r.status, 400);
+  assert.equal((await r.json()).error, "expired");
+});

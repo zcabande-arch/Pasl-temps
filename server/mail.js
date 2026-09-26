@@ -35,11 +35,13 @@ function mailerFrom(env){
 }
 
 // Contenu de l'e-mail de connexion (français ou anglais)
-function loginMail(link, lang){
+function loginMail(link, lang, code){
   const en = lang === "en";
-  const subject = en ? "Your Pas l'temps sign-in link" : "Ton lien de connexion Pas l'temps";
-  const intro = en ? "Tap the button to sign in to Pas l'temps on this device. The link works once, for 20 minutes."
-    : "Touche le bouton pour te connecter à Pas l'temps sur cet appareil. Le lien marche une seule fois, pendant 20 minutes.";
+  const subject = en ? `${code} is your Pas l'temps code` : `${code} est ton code Pas l'temps`;
+  const intro = en ? "Type this code in the Pas l'temps app to sign in (valid 20 minutes):"
+    : "Tape ce code dans l'appli Pas l'temps pour te connecter (valable 20 minutes) :";
+  const or = en ? "Using Pas l'temps in your browser? You can also just tap the button."
+    : "Tu utilises Pas l'temps dans ton navigateur ? Tu peux aussi toucher le bouton.";
   const btn = en ? "Sign in" : "Me connecter";
   const ignore = en ? "Didn't ask for this? Just ignore this email: nothing will happen."
     : "Tu n'as rien demandé ? Ignore simplement cet e-mail : il ne se passera rien.";
@@ -47,9 +49,11 @@ function loginMail(link, lang){
   const html = `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;color:#1C1512">
 <p style="font-size:22px;font-weight:bold;margin:0 0 12px">Pas l'temps</p>
 <p style="font-size:16px;line-height:1.5">${esc(intro)}</p>
-<p style="margin:24px 0"><a href="${esc(link)}" style="background:#E1140A;color:#fff;text-decoration:none;padding:14px 26px;border-radius:999px;font-weight:bold;font-size:16px">${esc(btn)}</a></p>
+<p style="font-size:34px;font-weight:bold;letter-spacing:8px;margin:16px 0 24px">${esc(code)}</p>
+<p style="font-size:14px;color:#7A6E63">${esc(or)}</p>
+<p style="margin:16px 0 24px"><a href="${esc(link)}" style="background:#E1140A;color:#fff;text-decoration:none;padding:14px 26px;border-radius:999px;font-weight:bold;font-size:16px">${esc(btn)}</a></p>
 <p style="font-size:13px;color:#7A6E63">${esc(ignore)}</p></div>`;
-  return {subject, html, text: `${intro}\n\n${link}\n\n${ignore}`};
+  return {subject, html, text: `${intro}\n\n${code}\n\n${or}\n${link}\n\n${ignore}`};
 }
 
 module.exports = { brevoMailer, webhookMailer, mailerFrom, loginMail };
