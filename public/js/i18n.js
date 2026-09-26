@@ -180,7 +180,7 @@
     "Aucun. Dans la fiche d'un lieu, « 🚫 Signaler » le retire de tes résultats s'il est fermé.": "None. In a place's details, “🚫 Report” removes it from your results if it's closed.",
     "Nous contacter": "Contact us", "Un bug": "A bug", "Une idée": "An idea", "Un lieu à corriger": "A place to fix", "Je suis commerçant·e": "I run a shop", "Mes données": "My data",
     "Une question, un bug, une idée ? Écris-nous sur la page du projet.": "A question, a bug, an idea? Write to us on the project page.",
-    "Nous écrire": "Write to us", "Une question, un bug, une idée ? Réponse sous 48 h.": "A question, a bug, an idea? We reply within 48 h.",
+    "Nous écrire": "Write to us", "Une question, un bug, une idée ? On lit tous les messages.": "A question, a bug, an idea? We read every message.",
     "Copier": "Copy", "Copié ✓": "Copied ✓",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "42";
+const APP_VERSION = "43";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -363,7 +363,7 @@ function renderContact(){
       return;
     }
     const body = `\n\n—\nPas l'temps, version ${APP_VERSION} · ${navigator.userAgent}`;
-    B.innerHTML = `<p>${tx("Une question, un bug, une idée ? Réponse sous 48 h.")}</p>
+    B.innerHTML = `<p>${tx("Une question, un bug, une idée ? On lit tous les messages.")}</p>
       <p class="cmail"><span class="addr"></span> <button class="link cp">${tx("Copier")}</button></p>
       <div class="ctopics">${topics.map(([e, t]) => `<a class="chip" href="${esc(mailto(`Pas l'temps · ${tx(t)}`, body))}">${e} ${esc(tx(t))}</a>`).join("")}</div>`;
     B.querySelector(".addr").textContent = CONTACT;

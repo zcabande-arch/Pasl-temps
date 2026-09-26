@@ -5,5 +5,5 @@
 // contactEmail : adresse du service client (« Nous contacter », signalements). Vide = page du projet sur GitHub.
 window.PASLTEMPS_CONFIG = {
   apiBase: "",
-  contactEmail: ""
+  contactEmail: "pasltempssav@gmail.com"
 };
