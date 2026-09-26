@@ -69,6 +69,7 @@ const ok = body => ({status:200, body});
 const fail = (status, error) => ({status, body:{error}});
 
 const { loginMail } = require("./mail");
+const push = require("./push");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
@@ -163,6 +164,9 @@ function createApi(store, opts = {}){
       return ok({uid, token});
     }
 
+    // Clé publique des notifications (créée à la première demande)
+    if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
+
     // Contenus masqués par la modération (public)
     if(path === "/api/hidden" && method === "GET") return ok({targets: await store.hidden()});
 
@@ -192,6 +196,25 @@ function createApi(store, opts = {}){
 
     const uid = await whoIs(req);
     if(!uid) return fail(401, "unauthenticated");
+
+    // Rappels « T'as l'temps ? » : s'abonner (heure locale, tous les N jours) ou se désabonner
+    if(path === "/api/push/subscribe" && method === "POST"){
+      if(!limited("push:" + uid, 1, 20, 20 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {}, sub = v.subscription || {};
+      let ep; try{ ep = new URL(sub.endpoint); }catch(e){ return fail(400, "bad_subscription"); }
+      if(ep.protocol !== "https:" || String(sub.endpoint).length > 800) return fail(400, "bad_subscription");
+      const hour = Math.min(22, Math.max(7, Math.round(+v.hour) || 12));
+      const tz = Math.min(840, Math.max(-840, Math.round(+v.tz) || 0));
+      const every = Math.min(14, Math.max(1, Math.round(+v.every) || 3));
+      await store.pushSet(sub.endpoint, uid, JSON.stringify(sub).slice(0, 2000), hour, tz, every, push.nextAt(Date.now(), hour, tz, every));
+      return ok({ok:true});
+    }
+    if(path === "/api/push/unsubscribe" && method === "POST"){
+      const b = await body(req); if(b.error) return b.error;
+      if(b.value && typeof b.value.endpoint === "string") await store.pushDel(b.value.endpoint);
+      return ok({ok:true});
+    }
 
     // Le compte de cette session : adresse e-mail reliée, ou suppression complète (données comprises)
     if(path === "/api/account"){

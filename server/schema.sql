@@ -56,3 +56,19 @@ CREATE TABLE IF NOT EXISTS login_codes (
   expires INTEGER NOT NULL,
   tries   INTEGER NOT NULL DEFAULT 0
 );
+-- Réglages internes du serveur (ex. clés des notifications, créées une fois)
+CREATE TABLE IF NOT EXISTS kv (
+  k TEXT PRIMARY KEY,
+  v TEXT NOT NULL
+);
+-- Rappels « T'as l'temps ? » : un abonnement aux notifications par appareil
+CREATE TABLE IF NOT EXISTS push_subs (
+  endpoint TEXT PRIMARY KEY,
+  uid      TEXT NOT NULL,
+  sub      TEXT NOT NULL,
+  hour     INTEGER NOT NULL,
+  tz       INTEGER NOT NULL,
+  every    INTEGER NOT NULL,
+  next_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS push_due ON push_subs(next_at);

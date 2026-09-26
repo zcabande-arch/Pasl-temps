@@ -35,7 +35,14 @@ function openStore(file){
     getCode(email){ return q.getCode.get(email) || null; },
     codeTry(email){ q.codeTry.run(email); },
     delCode(email){ q.delCode.run(email); },
-    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); },
+    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.pushDelUid.run(uid); },
+    // Notifications
+    kvGet(k){ const r = q.kvGet.get(k); return r ? r.v : null; },
+    kvSet(k, v){ q.kvSet.run(k, v); },
+    pushSet(endpoint, uid, sub, hour, tz, every, nextAt){ q.pushSet.run(endpoint, uid, sub, hour, tz, every, nextAt); },
+    pushDel(endpoint){ q.pushDel.run(endpoint); },
+    pushDue(now, limit){ return q.pushDue.all(now, limit); },
+    pushNext(endpoint, at){ q.pushNext.run(at, endpoint); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

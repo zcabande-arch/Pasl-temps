@@ -112,5 +112,12 @@
     async remove(){ await call("DELETE", "/api/account"); saveAuth(null); }
   };
 
-  window.PLT = {connect, account};
+  // ---------- Rappels (notifications) ----------
+  const pushApi = {
+    async key(){ const r = await fetch(BASE + "/api/push/key"); if(!r.ok) throw {code: "http_" + r.status}; return (await r.json()).key; },
+    subscribe: body => call("POST", "/api/push/subscribe", body),
+    unsubscribe: endpoint => call("POST", "/api/push/unsubscribe", {endpoint})
+  };
+
+  window.PLT = {connect, account, push: pushApi};
 })();

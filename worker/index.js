@@ -3,6 +3,7 @@
 import core from "../server/core.js";
 import d1 from "./store-d1.js";
 import mail from "../server/mail.js";
+import push from "../server/push.js";
 
 const { createApi, CORS, MAX_BODY } = core;
 let api = null;
@@ -12,6 +13,10 @@ function reply(status, body){
 }
 
 export default {
+  // Toutes les heures (wrangler.toml, [triggers]) : envoi des rappels « T'as l'temps ? » arrivés à échéance
+  async scheduled(event, env, ctx){
+    ctx.waitUntil(push.runReminders(d1.d1Store(env.DB)).then(r => console.log("rappels", JSON.stringify(r))));
+  },
   async fetch(request, env){
     const url = new URL(request.url);
     if(request.method === "OPTIONS") return new Response(null, {status: 204, headers: CORS});

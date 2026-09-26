@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "47";
+const APP_VERSION = "48";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -380,6 +380,66 @@ function renderContact(){
   });
 }
 
+// ---------- Rappels « T'as l'temps ? » (notifications, tous les 3 jours sans ouvrir l'appli) ----------
+// Le serveur envoie la notification à l'heure choisie ; chaque ouverture de l'appli repousse le rappel de 3 jours.
+const pushOk = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const b64ToBytes = s => { s = s.replace(/-/g, "+").replace(/_/g, "/"); return Uint8Array.from(atob(s + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0)); };
+async function pushSubscribe(){
+  const reg = await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToBytes(await PLT.push.key())});
+  const r = SET.remind || {};
+  await PLT.push.subscribe({subscription: sub.toJSON(), hour: r.hour || 12, tz: new Date().getTimezoneOffset(), every: 3});
+}
+async function pushUnsubscribe(){
+  try{ const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
+    if(sub){ try{ await PLT.push.unsubscribe(sub.endpoint); }catch(e){} await sub.unsubscribe(); } }catch(e){}
+}
+// À chaque ouverture (serveur joint) : on repousse le prochain rappel
+function refreshRemind(){
+  if(SET.remind && SET.remind.on && pushOk() && Notification.permission === "granted") pushSubscribe().catch(() => {});
+}
+let remindMsg = "";
+function renderRemind(){
+  const box = $("remindBox"), R = $("remind"); if(!box) return;
+  box.hidden = !DB;                         // il faut le serveur de Pas l'temps
+  if(!DB) return;
+  const r = SET.remind || {on:false, hour:12};
+  if(!pushOk() || (isIOS() && !standalone())){
+    R.innerHTML = `<p style="margin:0">${isIOS() ? tx("Sur iPhone et iPad : ajoute d'abord Pas l'temps à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis l'icône pour activer les rappels.") : tx("Ce navigateur ne permet pas les notifications.")}</p>`;
+    return;
+  }
+  if(Notification.permission === "denied"){
+    R.innerHTML = `<p style="margin:0">${tx("Les notifications sont bloquées pour Pas l'temps. Autorise-les dans les réglages du téléphone, puis reviens ici.")}</p>`;
+    return;
+  }
+  R.innerHTML = `<p>${tx("Une petite notification si tu n'as pas ouvert l'appli depuis 3 jours : « T'as pas l'temps ? »")}</p>
+    <div class="seg" id="remindSeg"><button data-v="off" aria-pressed="${!r.on}">${tx("Non merci")}</button><button data-v="on" aria-pressed="${!!r.on}">🔔 ${tx("Tous les 3 jours")}</button></div>
+    <div class="sortrow" id="remindHour" style="margin-top:10px"${r.on ? "" : " hidden"}>${[12, 17, 19].map(h => `<button class="chip" data-h="${h}" aria-pressed="${(r.hour || 12) === h}">${tx("vers {h} h", {h})}</button>`).join("")}</div>
+    <p class="msg"></p>`;
+  R.querySelector(".msg").textContent = remindMsg;
+  $("remindSeg").onclick = async e => {
+    const b = e.target.closest("button"); if(!b) return;
+    const on = b.dataset.v === "on";
+    remindMsg = "";
+    if(on){
+      try{
+        if(await Notification.requestPermission() !== "granted"){ remindMsg = tx("Sans autorisation, pas de rappel."); renderRemind(); return; }
+        SET.remind = {on:true, hour:r.hour || 12}; saveSet();
+        await pushSubscribe(); remindMsg = tx("C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.");
+      }catch(err){ SET.remind = {...r, on:false}; saveSet(); remindMsg = tx("Activation impossible pour l'instant. Réessaie plus tard."); }
+    } else { SET.remind = {...r, on:false}; saveSet(); await pushUnsubscribe(); }
+    renderRemind();
+  };
+  $("remindHour").onclick = async e => {
+    const b = e.target.closest("button"); if(!b) return;
+    SET.remind = {on:true, hour:+b.dataset.h}; saveSet(); renderRemind();
+    try{ await pushSubscribe(); }catch(err){}
+  };
+}
+
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
 const FILTER = {q:"", cu:""};
 const isNight = () => { const h = new Date().getHours(); return h >= 20 || h < 7; };
@@ -702,6 +762,7 @@ function renderSettings(){
     : innerWidth < 600 && SET.layout !== "phone" ? tx("Cet écran est trop petit : l'affichage reste en format mobile.") : "";
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
+  renderRemind();
 }
 function openSheet(on){
   $("sheet").classList.toggle("on", on); $("sheetBg").classList.toggle("on", on);
@@ -1704,7 +1765,7 @@ async function initHistory(){
     UID = uid; dbState = db && uid ? "ok" : "none";
     // Blog, avis et code de récupération n'apparaissent que si le serveur répond
     document.body.classList.toggle("social-on", dbState === "ok");
-    if(db && uid){ initBlog(); initLists(); afterLogin(); }
+    if(db && uid){ initBlog(); initLists(); afterLogin(); refreshRemind(); }
     if(db && uid){
       const col = db.doc("data/users/" + uid + "/profile").collection("history");
       store = { add: e => col.doc(e.id).set(e), set: (id, e) => col.doc(id).set(e), remove: id => col.doc(id).delete() };

@@ -10,6 +10,10 @@ REPORT_THRESHOLD = "3"
 MAIL_FROM = "Pas l'temps <pasltempssav@gmail.com>"
 APP_ORIGINS = "https://zcabande-arch.github.io"
 
+# Rappels « T'as l'temps ? » : on regarde toutes les heures qui doit en recevoir un
+[triggers]
+crons = ["7 * * * *"]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "pasltemps"

@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v47";
+const VERSION = "pasltemps-v48";
 const CORE = [
   "./",
   "./index.html",
@@ -94,4 +94,29 @@ self.addEventListener("fetch", e => {
     );
     return;
   }
+});
+
+// ---------- Rappels « T'as l'temps ? » ----------
+// Le serveur envoie une notification vide ; on choisit ici le message (dans la langue du téléphone).
+const RAPPELS = {
+  fr: ["T'as pas l'temps ? 20 minutes suffisent pour une vraie pause.", "Une pause café ? On te trouve un endroit juste à côté.",
+       "Et si tu prenais l'air 20 minutes ?", "T'as une demi-heure ? Il y a sûrement un truc sympa près de toi.",
+       "Petite pause aujourd'hui ? Ouvre Pas l'temps, on s'occupe du reste."],
+  en: ["No time? 20 minutes is enough for a real break.", "Coffee break? We'll find a spot right around the corner.",
+       "How about 20 minutes of fresh air?", "Got half an hour? There's surely something nice near you.",
+       "A little break today? Open Pas l'temps, we'll handle the rest."]
+};
+self.addEventListener("push", e => {
+  const lang = /^fr\b/i.test(self.navigator.language || "fr") ? "fr" : "en", list = RAPPELS[lang];
+  e.waitUntil(self.registration.showNotification("Pas l'temps", {
+    body: list[Math.floor(Math.random() * list.length)], icon: "icons/icon-192.png", badge: "icons/icon-192.png",
+    tag: "pasltemps-rappel", data: {url: "./"}
+  }));
+});
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(list => {
+    const open = list.find(c => "focus" in c);
+    return open ? open.focus() : self.clients.openWindow("./");
+  }));
 });

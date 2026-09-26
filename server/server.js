@@ -90,6 +90,9 @@ if(require.main === module){
   fs.mkdirSync(DATA_DIR, {recursive:true});
   const store = openStore(path.join(DATA_DIR, "pasltemps.db"));
   createServer(store).listen(PORT, HOST, () => console.log(`Pas l'temps : http://localhost:${PORT}`));
+  // Rappels « T'as l'temps ? » : toutes les heures
+  const { runReminders } = require("./push");
+  setInterval(() => runReminders(store).catch(e => console.error(e)), 3600e3);
 }
 
 module.exports = { createServer, rule, parsePath };
