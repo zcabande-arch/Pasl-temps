@@ -54,7 +54,7 @@ async function build(inputs, outDir){
   const postcodes = new Map();   // "75011|fr|paris" → {pc, cc, city, lat, lng, n}
   const seen = new Set();        // les extraits de pays se chevauchent un peu aux frontières
   let n = 0, kept = 0, minLat = 90, maxLat = -90, minLng = 180, maxLng = -180;
-  for(const {path: input, cc} of inputs){
+  for(const {path: input, cc: cc0} of inputs){
   let stream = fs.createReadStream(input);
   if(input.endsWith(".gz")) stream = stream.pipe(zlib.createGunzip());
   const rl = readline.createInterface({input: stream, crlfDelay: Infinity});
@@ -80,6 +80,8 @@ async function build(inputs, outDir){
     // Codes postaux : centre des lieux qui portent ce code (et cette commune)
     const pc = String(t["addr:postcode"] || "").trim();
     if(/^\d{5}$/.test(pc)){
+      // pays : celui de l'adresse s'il est indiqué (extraits par continent), sinon celui de l'extrait
+      const ac = String(t["addr:country"] || "").trim().toLowerCase(), cc = /^[a-z]{2}$/.test(ac) ? ac : cc0;
       const city = String(t["addr:city"] || "").trim().slice(0, 60);
       const k = pc + "|" + cc + "|" + city.toLowerCase();
       const e = postcodes.get(k) || {pc, cc, city, lat: 0, lng: 0, n: 0};
@@ -121,7 +123,7 @@ async function build(inputs, outDir){
   fs.mkdirSync(path.join(outDir, "pc"), {recursive: true});
   for(const k in shards) fs.writeFileSync(path.join(outDir, "pc", k + ".json"), JSON.stringify(shards[k]));
   fs.writeFileSync(path.join(outDir, "postcodes.json"), JSON.stringify(frOnly));   // anciennes versions de l'appli
-  const index = {v: 2, postcodes: Object.keys(byPc).length, pcShards: true, countries: [...new Set(inputs.map(x => x.cc))], built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
+  const index = {v: 2, postcodes: Object.keys(byPc).length, pcShards: true, countries: [...new Set(inputs.map(x => x.cc).filter(Boolean))], built: new Date().toISOString(), cell: CELL, sels: SELS, count: kept, tiles: tiles.size,
     bbox: [+minLat.toFixed(3), +minLng.toFixed(3), +maxLat.toFixed(3), +maxLng.toFixed(3)],
     // colonnes de chaque lieu : [lat, lng, étiquette(s), nom, adresse, horaires, site, téléphone, cuisine, accessible, id]
     fields: ["lat","lng","sel","name","addr","oh","web","phone","cuisine","wc","id"]};

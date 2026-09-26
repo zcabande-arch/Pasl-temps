@@ -31,10 +31,10 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
 
 **Recherche rapide par tuiles** : chaque semaine, le workflow « Construire les lieux » télécharge
-OpenStreetMap pour toute l'Europe (pays par pays, plus l'Outre-mer), garde les lieux utiles (avec horaires, site, téléphone) et les découpe
+OpenStreetMap pour le monde entier (continent par continent, en parallèle, puis réassemblé), garde les lieux utiles (avec horaires, site, téléphone) et les découpe
 en tuiles d'environ 5 km, publiées sur la branche `places`. L'appli ne charge que les 1 à 4 tuiles
-autour de soi (≈ 0,2 à 0,8 s), puis les garde sur l'appareil. Le service Overpass ne sert qu'en dehors
-de l'Europe. Les adresses tapées sont cherchées dans la Base Adresse Nationale (service public libre),
+autour de soi (≈ 0,2 à 0,8 s), puis les garde sur l'appareil. Le service Overpass ne sert qu'en secours,
+là où il n'y a pas de tuile. Les adresses tapées sont cherchées dans la Base Adresse Nationale (service public libre),
 Nominatim ne sert qu'en secours (étranger, noms de lieux).
 
 ## Lancer l'appli
@@ -126,6 +126,8 @@ Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 | `public/js/i18n.js` | Traductions (français → anglais) et réglage de langue |
 | `public/legal.html` | Mentions légales, confidentialité, conditions, crédits |
 | `scripts/build-places.js` | Fabrique les tuiles de lieux (workflow hebdomadaire) |
+| `scripts/extract-places.sh` | Télécharge une liste de régions OpenStreetMap et garde les lieux utiles |
+| `scripts/merge-places.js` | Réassemble les tuiles calculées continent par continent |
 | `public/js/hours.js` | Horaires d'ouverture : ouvert ou fermé à l'arrivée |
 | `public/js/icons.js` | Petits dessins au trait (à la place des emojis) |
 | `public/admin.html` | Page de modération |

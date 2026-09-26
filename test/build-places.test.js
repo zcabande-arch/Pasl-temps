@@ -82,3 +82,30 @@ test("Europe : plusieurs pays (.gz), doublons aux frontières, codes postaux par
   const idx = JSON.parse(fs.readFileSync(path.join(dir, "out", "index.json"), "utf8"));
   assert.deepEqual(idx.countries, ["fr", "de"]);
 });
+
+test("monde : les continents calculés à part sont réassemblés (cases de frontière fusionnées, sans doublon)", async () => {
+  const { merge } = require("../scripts/merge-places");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lieux-monde-"));
+  const f = (lng, lat, p) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[lng, lat]}, properties:p});
+  fs.writeFileSync(path.join(dir, "eu.geojsonseq"), [
+    f(28.97, 41.01, {"@type":"node", "@id":1, amenity:"cafe", name:"Istanbul A"}),
+    f(28.971, 41.011, {"@type":"node", "@id":2, amenity:"cafe", name:"Istanbul B"}),
+    f(2.35, 48.86, {"@type":"node", "@id":5, amenity:"cafe", name:"Paris", "addr:postcode":"75004", "addr:city":"Paris"}),
+    f(2.351, 48.861, {"@type":"node", "@id":6, amenity:"cafe", name:"Paris 2", "addr:postcode":"75004", "addr:city":"Paris"})].join("\n"));
+  fs.writeFileSync(path.join(dir, "as.geojsonseq"), [
+    f(28.97, 41.01, {"@type":"node", "@id":1, amenity:"cafe", name:"Istanbul A"}),
+    f(28.972, 41.012, {"@type":"node", "@id":3, amenity:"cafe", name:"Istanbul C"}),
+    f(-77.03, 38.9, {"@type":"node", "@id":4, amenity:"cafe", name:"DC", "addr:postcode":"20001", "addr:country":"US"}),
+    f(-77.031, 38.901, {"@type":"node", "@id":7, amenity:"cafe", name:"DC 2", "addr:postcode":"20001", "addr:country":"US"})].join("\n"));
+  await build([{path: path.join(dir, "eu.geojsonseq"), cc:"tr"}], path.join(dir, "p-eu"));
+  await build([{path: path.join(dir, "as.geojsonseq"), cc:"as"}], path.join(dir, "p-as"));
+  const r = merge(path.join(dir, "out"), [path.join(dir, "p-eu"), path.join(dir, "p-as"), path.join(dir, "absent")]);
+  assert.equal(r.count, 7, "Istanbul A, présent des deux côtés, n'est gardé qu'une fois");
+  const ist = JSON.parse(fs.readFileSync(path.join(dir, "out", "t", "820_579.json"), "utf8"));
+  assert.deepEqual(ist.map(x => x[3]).sort(), ["Istanbul A", "Istanbul B", "Istanbul C"]);
+  const us = JSON.parse(fs.readFileSync(path.join(dir, "out", "pc", "20.json"), "utf8"))["20001"];
+  assert.equal(us[0][4], "us", "pays pris dans addr:country");
+  const idx = JSON.parse(fs.readFileSync(path.join(dir, "out", "index.json"), "utf8"));
+  assert.ok(idx.bbox[1] < -70 && idx.bbox[3] > 28);
+  assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(dir, "out", "postcodes.json"), "utf8"))), [], "postcodes.json : France seule (ici, aucune)");
+});

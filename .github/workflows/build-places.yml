@@ -1,16 +1,16 @@
 name: Construire les lieux (OpenStreetMap)
 
-# Chaque semaine : télécharge les données OpenStreetMap de l'Europe (et de l'Outre-mer français), garde les lieux utiles à l'appli
-# (boulangeries, cafés, parcs, musées…) et les découpe en petites tuiles d'environ 5 km.
-# Les tuiles sont publiées sur la branche « places » ; l'appli les lit directement, sans passer par
-# le service Overpass (lent et souvent surchargé).
+# Chaque semaine : télécharge OpenStreetMap pour le monde entier (continent par continent, en parallèle),
+# garde les lieux utiles à l'appli (boulangeries, cafés, parcs, musées…) et les découpe en tuiles d'environ 5 km,
+# puis réassemble le tout et le publie sur la branche « places ». L'appli les lit directement, sans passer
+# par le service Overpass (lent et souvent surchargé).
 on:
   schedule:
     - cron: "17 3 * * 1"   # le lundi vers 5 h (heure de Paris)
   workflow_dispatch:
   push:
     branches: [main, claude/pas-ltemps-web-app-i23p2m]
-    paths: [scripts/build-places.js, .github/workflows/build-places.yml]
+    paths: [scripts/build-places.js, scripts/merge-places.js, scripts/extract-places.sh, .github/workflows/build-places.yml]
 
 permissions:
   contents: write
@@ -20,59 +20,79 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  partie:
+    name: Lieux – ${{ matrix.nom }}
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # « région:pays » ; pays vide = continent entier (le pays vient de l'adresse de chaque lieu)
+          - nom: europe
+            obligatoire: europe/france
+            regions: "europe/france:fr europe/france/guadeloupe:fr europe/france/martinique:fr europe/france/guyane:fr europe/france/reunion:fr europe/france/mayotte:fr europe/albania:al europe/andorra:ad europe/austria:at europe/azores:pt europe/belgium:be europe/bosnia-herzegovina:ba europe/bulgaria:bg europe/croatia:hr europe/cyprus:cy europe/czech-republic:cz europe/denmark:dk europe/estonia:ee europe/faroe-islands:fo europe/finland:fi europe/germany:de europe/great-britain:gb europe/greece:gr europe/guernsey-jersey:gg europe/hungary:hu europe/iceland:is europe/ireland-and-northern-ireland:ie europe/isle-of-man:im europe/italy:it europe/kosovo:xk europe/latvia:lv europe/liechtenstein:li europe/lithuania:lt europe/luxembourg:lu europe/macedonia:mk europe/malta:mt europe/moldova:md europe/monaco:mc europe/montenegro:me europe/netherlands:nl europe/norway:no europe/poland:pl europe/portugal:pt europe/romania:ro europe/serbia:rs europe/slovakia:sk europe/slovenia:si europe/spain:es europe/sweden:se europe/switzerland:ch europe/ukraine:ua europe/turkey:tr europe/belarus:by "
+          - nom: russie
+            regions: "russia:ru"
+          - nom: amerique-du-nord
+            regions: "north-america/us:us north-america/canada:ca north-america/mexico:mx north-america/greenland:gl"
+          - nom: amerique-centrale-et-du-sud
+            regions: "central-america: south-america:"
+          - nom: asie
+            regions: "asia:"
+          - nom: afrique
+            regions: "africa:"
+          - nom: oceanie
+            regions: "australia-oceania:"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-
+      - name: Faire de la place sur le disque
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL || true
+          df -h .
       - name: Installer osmium
         run: sudo apt-get update -qq && sudo apt-get install -y -qq osmium-tool
-
-      - name: Télécharger OpenStreetMap (toute l'Europe, pays par pays) et garder les lieux utiles
-        run: |
-          set -o pipefail
-          # région Geofabrik : code pays (pour les codes postaux). La France est obligatoire, les autres sont ignorés s'ils échouent.
-          REGIONS="france:fr france/guadeloupe:fr france/martinique:fr france/guyane:fr france/reunion:fr france/mayotte:fr
-            albania:al andorra:ad austria:at azores:pt belgium:be bosnia-herzegovina:ba bulgaria:bg croatia:hr cyprus:cy
-            czech-republic:cz denmark:dk estonia:ee faroe-islands:fo finland:fi germany:de great-britain:gb greece:gr
-            guernsey-jersey:gg hungary:hu iceland:is ireland-and-northern-ireland:ie isle-of-man:im italy:it kosovo:xk
-            latvia:lv liechtenstein:li lithuania:lt luxembourg:lu macedonia:mk malta:mt moldova:md monaco:mc montenegro:me
-            netherlands:nl norway:no poland:pl portugal:pt romania:ro serbia:rs slovakia:sk slovenia:si spain:es sweden:se
-            switzerland:ch ukraine:ua"
-          mkdir -p extraits
-          ARGS=""
-          for rc in $REGIONS; do
-            r="${rc%%:*}"; cc="${rc##*:}"; f="${r//\//-}"
-            if ! curl -fsSL --retry 3 --retry-delay 20 -o "$f.osm.pbf" "https://download.geofabrik.de/europe/$r-latest.osm.pbf"; then
-              if [ "$r" = "france" ]; then echo "::error::France non téléchargée"; exit 1; fi
-              echo "::warning::$r non téléchargé, ignoré cette semaine"; rm -f "$f.osm.pbf"; continue
-            fi
-            osmium tags-filter "$f.osm.pbf" \
-              nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books,supermarket,convenience,greengrocer,organic,butcher,cheese,seafood,deli,wine,alcohol,frozen_food \
-              nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library,bar,pub,biergarten \
-              nwr/leisure=park,garden,nature_reserve,common,track,fitness_centre,sports_centre \
-              nwr/tourism=picnic_site,viewpoint,attraction,museum,gallery \
-              nwr/historic=monument,castle \
-              -o "$f.lieux.pbf" \
-            && osmium export "$f.lieux.pbf" -f geojsonseq -a type,id --geometry-types=point,linestring,polygon -o - | gzip -1 > "extraits/$f.geojsonseq.gz" \
-            || { rm -f "$f.osm.pbf" "$f.lieux.pbf" "extraits/$f.geojsonseq.gz"; [ "$r" = "france" ] && exit 1; echo "::warning::$r illisible, ignoré"; continue; }
-            rm -f "$f.osm.pbf" "$f.lieux.pbf"
-            ARGS="$ARGS $cc:extraits/$f.geojsonseq.gz"
-            echo "$r ($cc) : $(du -h "extraits/$f.geojsonseq.gz" | cut -f1)"
-          done
-          echo "$ARGS" > extraits/args.txt
-          du -sh extraits
-
+      - name: Télécharger et garder les lieux utiles
+        run: scripts/extract-places.sh extraits "${{ matrix.regions }}" "${{ matrix.obligatoire }}"
       - name: Découper en tuiles
-        # (la zone couverte n'est pas un rectangle : l'appli regarde s'il y a une tuile là où l'on est)
         run: |
           set -o pipefail
-          node --max-old-space-size=12000 scripts/build-places.js sortie/ $(cat extraits/args.txt) | tee -a "$GITHUB_STEP_SUMMARY"
+          node --max-old-space-size=12000 scripts/build-places.js partie/ $(cat extraits/args.txt) | tee -a "$GITHUB_STEP_SUMMARY"
+          tar -czf partie-${{ matrix.nom }}.tgz -C partie .
+          ls -lh partie-${{ matrix.nom }}.tgz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: partie-${{ matrix.nom }}
+          path: partie-${{ matrix.nom }}.tgz
+          retention-days: 2
 
+  publier:
+    name: Réassembler et publier
+    needs: partie
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: partie-*
+          path: parties
+          merge-multiple: true
+      - name: Réassembler
+        run: |
+          set -o pipefail
+          for f in parties/*.tgz; do d="parties/$(basename "$f" .tgz)"; mkdir -p "$d"; tar -xzf "$f" -C "$d"; rm "$f"; done
+          # sans l'Europe (France comprise), on ne publie rien : l'ancienne version reste en ligne
+          test -f parties/partie-europe/index.json || { echo "::error::partie Europe manquante"; exit 1; }
+          node --max-old-space-size=12000 scripts/merge-places.js sortie/ parties/partie-* | tee -a "$GITHUB_STEP_SUMMARY"
+          test -f sortie/t/977_47.json
       - name: Publier sur la branche « places »
         run: |
           cd sortie
