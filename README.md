@@ -25,7 +25,7 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 📤 **Envoyer un lieu à un pote**, 👋 accueil en 3 écrans au premier lancement, 🏝️ Outre-mer couvert par les tuiles
 - 🇬🇧 **Français et anglais** (réglage « Langue », auto = langue de l'appareil)
 - ⚖️ **Mentions légales**, confidentialité, conditions d'utilisation et crédits (`public/legal.html`), avec un bouton « Tout effacer »
-- 🖼️ Illustrations maison (aucune image sous droits) et polices hébergées avec l'appli (aucune requête vers Google)
+- 🖼️ Photos libres de droits (Pexels) pour chaque envie et polices hébergées avec l'appli (aucune requête vers Google)
 
 Les lieux et adresses viennent d'**OpenStreetMap** : gratuit, sans clé d'API.
 
@@ -115,7 +115,6 @@ Mettre ensuite son adresse dans `public/config.js` (`apiBase`).
 | `public/js/places.js` | Recherche de lieux (tuiles, Overpass en secours) et d'adresses (BAN, Nominatim en secours) |
 | `public/js/i18n.js` | Traductions (français → anglais) et réglage de langue |
 | `public/legal.html` | Mentions légales, confidentialité, conditions, crédits |
-| `scripts/build-covers.js` | Fabrique les illustrations des envies (`public/img/moods/*.svg`) |
 | `scripts/build-places.js` | Fabrique les tuiles de lieux (workflow hebdomadaire) |
 | `public/js/hours.js` | Horaires d'ouverture : ouvert ou fermé à l'arrivée |
 | `public/js/icons.js` | Petits dessins au trait (à la place des emojis) |

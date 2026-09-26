@@ -1,5 +1,5 @@
 /* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v40";
+const VERSION = "pasltemps-v41";
 const CORE = [
   "./",
   "./index.html",
@@ -23,7 +23,7 @@ const CORE = [
   "./img/moods/boire.jpg",
   "./img/moods/courses.jpg",
   "./img/moods/shopping.jpg",
-  "./img/moods/poser.svg",
+  "./img/moods/poser.jpg",
   "./img/moods/bouger.jpg",
   "./img/moods/culture.jpg",
   "./icons/icon.svg",

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "40";
+const APP_VERSION = "41";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -42,7 +42,7 @@ const MOODS = {
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
     {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
     {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stay:30, q:"galerie d'art"}]},
-  poser: {img:"img/moods/poser.svg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
+  poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
