@@ -16,9 +16,7 @@ const C = {red: "#E1140A", cream: "#F4ECDF", ink: "#1C1512", sun: "#F2B632", gre
 
 // Chaque illustration : fond, formes de décor (dans un carré 400×400), dessin (icône), couleurs du dessin
 const COVERS = {
-  "air":      {bg: C.green, deco: [["circle", 290, 120, 80, C.sun], ["half", 200, 400, 190, C.cream]], icon: "tree", a: C.red, k: C.ink},
-  "poser":    {bg: C.sky,   deco: [["circle", 210, 200, 150, C.cream], ["rect", 40, 330, 320, 18, C.red]], icon: "chair", a: C.red, k: C.ink},
-  "bouger":   {bg: C.red,   deco: [["circle", 200, 200, 150, C.cream], ["rect", 30, 120, 90, 14, C.ink], ["rect", 10, 160, 110, 14, C.ink], ["rect", 40, 200, 80, 14, C.ink]], icon: "shoe", a: C.red, k: C.ink}
+  "poser":    {bg: C.sky,   deco: [["circle", 210, 200, 150, C.cream], ["rect", 40, 330, 320, 18, C.red]], icon: "chair", a: C.red, k: C.ink}
 };
 
 function deco(d){

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "39";
+const APP_VERSION = "40";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -22,7 +22,7 @@ const MOODS = {
     {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stay:30, q:"bar"},
     {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stay:30, q:"pub"},
     {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stay:15, q:"café"}]},
-  air: {img:"img/moods/air.svg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
+  air: {img:"img/moods/air.jpg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
   courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
@@ -46,7 +46,7 @@ const MOODS = {
     {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
     {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
-  bouger: {img:"img/moods/bouger.svg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
+  bouger: {img:"img/moods/bouger.jpg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
     {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]}
 };
