@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "38";
+const APP_VERSION = "39";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -12,31 +12,31 @@ const APP_VERSION = "38";
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
-  manger: {img:"img/moods/manger.svg", imgs:["img/moods/manger.svg","img/moods/manger-2.svg","img/moods/manger-3.svg","img/moods/manger-4.svg"], d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
+  manger: {img:"img/moods/manger.jpg", d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:20, q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:60, q:"restaurant"}]},
-  boire: {img:"img/moods/boire.svg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
+  boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
     {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stay:30, q:"bar"},
     {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stay:30, q:"pub"},
     {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stay:15, q:"café"}]},
   air: {img:"img/moods/air.svg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
-  courses: {img:"img/moods/courses.svg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
+  courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
     {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stay:20, q:"supermarché"},
     {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stay:10, q:"supérette"},
     {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stay:10, q:"primeur"},
     {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stay:10, q:"boucherie"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:15, q:"marché"},
     {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stay:10, q:"caviste", adult:true}]},
-  shopping: {img:"img/moods/shopping.svg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
+  shopping: {img:"img/moods/shopping.jpg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
     {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
-  culture: {img:"img/moods/culture.svg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
+  culture: {img:"img/moods/culture.jpg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
     {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
     {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
@@ -420,7 +420,7 @@ function moodImg(k, large){
   const v = MOODS[k], list = v.imgs || (v.img ? [v.img] : []);
   if(!list.length) return "";
   const img = list[photoSlot() % list.length];
-  return large ? img.replace(".svg", "-large.svg") : img;
+  return large ? img.replace(/\.(svg|jpg)$/, "-large.$1") : img;
 }
 let lastSlot = photoSlot();
 setInterval(() => {

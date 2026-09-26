@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pas l'temps — fabrique les illustrations des envies (public/img/moods/*.svg), dans le style de l'icône :
+// Pas l'temps — fabrique les illustrations des envies qui n'ont pas (encore) de photo (public/img/moods/*.svg), dans le style de l'icône :
 // grandes formes à plat + dessin au trait (rouge épais, noir fin) repris de public/js/icons.js, en grand.
 // Deux formats : <nom>.svg (vignette 4:5) et <nom>-large.svg (bandeau large, dessin à droite).
 // Usage : node scripts/build-covers.js
@@ -16,15 +16,7 @@ const C = {red: "#E1140A", cream: "#F4ECDF", ink: "#1C1512", sun: "#F2B632", gre
 
 // Chaque illustration : fond, formes de décor (dans un carré 400×400), dessin (icône), couleurs du dessin
 const COVERS = {
-  "manger":   {bg: C.sun,   deco: [["circle", 200, 200, 150, C.cream], ["rect", 40, 300, 320, 22, C.ink]], icon: "croissant", a: C.red, k: C.ink},
-  "manger-2": {bg: C.red,   deco: [["circle", 200, 210, 150, C.cream], ["half", 200, 60, 90, C.sun]], icon: "cup", a: C.red, k: C.ink},
-  "manger-3": {bg: C.pink,  deco: [["circle", 130, 140, 110, C.cream], ["circle", 290, 290, 80, C.sun]], icon: "icecream", a: C.red, k: C.ink},
-  "manger-4": {bg: C.ink,   deco: [["circle", 200, 200, 155, C.cream], ["rect", 0, 360, 400, 40, C.red]], icon: "plate", a: C.red, k: C.ink},
-  "boire":    {bg: "#2B3A67", deco: [["circle", 200, 205, 150, C.cream], ["circle", 330, 80, 40, C.sun]], icon: "cocktail", a: C.red, k: C.ink},
-  "courses":  {bg: "#E07A2E", deco: [["circle", 200, 200, 150, C.cream], ["rect", 40, 330, 320, 20, C.ink]], icon: "cart", a: C.red, k: C.ink},
   "air":      {bg: C.green, deco: [["circle", 290, 120, 80, C.sun], ["half", 200, 400, 190, C.cream]], icon: "tree", a: C.red, k: C.ink},
-  "shopping": {bg: C.blue,  deco: [["rect", 70, 70, 260, 260, C.cream], ["circle", 330, 90, 50, C.red]], icon: "bag", a: C.red, k: C.ink},
-  "culture":  {bg: C.cream, deco: [["circle", 200, 180, 150, C.sun], ["rect", 0, 330, 400, 70, C.ink]], icon: "monument", a: C.red, k: C.ink},
   "poser":    {bg: C.sky,   deco: [["circle", 210, 200, 150, C.cream], ["rect", 40, 330, 320, 18, C.red]], icon: "chair", a: C.red, k: C.ink},
   "bouger":   {bg: C.red,   deco: [["circle", 200, 200, 150, C.cream], ["rect", 30, 120, 90, 14, C.ink], ["rect", 10, 160, 110, 14, C.ink], ["rect", 40, 200, 80, 14, C.ink]], icon: "shoe", a: C.red, k: C.ink}
 };
