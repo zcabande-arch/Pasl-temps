@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="41">
+<meta name="app-version" content="42">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Pas l'temps</title>
 <meta name="description" content="10 minutes ou 2 heures devant toi ? Pas l'temps trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -126,6 +126,14 @@
       <h2>Code de récupération</h2>
       <div class="rec" id="rec"></div>
     </section>
+    <section class="pcard">
+      <h2>Lieux que tu as signalés</h2>
+      <div id="reported"></div>
+    </section>
+    <section class="pcard">
+      <h2>Nous contacter</h2>
+      <div class="contactBox"></div>
+    </section>
     <p class="credits"><a href="legal.html#confidentialite">Tes données et ta vie privée</a> · <a href="legal.html">Mentions légales</a></p>
   </div>
 
@@ -167,12 +175,16 @@
   <div class="seg" id="langSeg"><button data-v="auto">Auto</button><button data-v="fr">Français</button><button data-v="en">English</button></div>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
+  <h4>Nous contacter</h4>
+  <div class="rec contactBox"></div>
   <h4>Installer l'appli</h4>
   <div class="rec" id="install"></div>
   <p class="credits">Pas l'temps · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a><br><a href="legal.html">Mentions légales · Confidentialité · Conditions</a></p>
   <button class="done" id="sheetDone">Terminé</button>
 </div>
 
+<div class="sheet-bg" id="repBg"></div>
+<div class="sheet" id="repSheet" role="dialog" aria-modal="true" aria-labelledby="repTitle"></div>
 <script src="config.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/api.js"></script>

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "41";
+const APP_VERSION = "42";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -240,12 +240,13 @@ function placeEl(p){
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button></div>
+      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 fv" aria-pressed="${!!LISTS.fav[p.id]}">⭐</button><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
   el.querySelector(".go").addEventListener("click", () => { const h = logVisit(p); startTimer(p, h); });
   el.querySelector(".shr").onclick = e => sharePlace(p, e.currentTarget);
+  el.querySelector(".rep").onclick = () => openReport(p);
   el.querySelector(".fv").onclick = e => { toggleList("fav", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.fav[p.id])); };
   el.querySelector(".td").onclick = e => { toggleList("todo", p); e.currentTarget.setAttribute("aria-pressed", String(!!LISTS.todo[p.id])); };
   const rvBox = el.querySelector(".rvs");
@@ -292,6 +293,85 @@ async function sharePlace(p, btn){
   catch(e){ if(e && e.name === "AbortError") return; }
   try{ await navigator.clipboard.writeText(text + " " + url); btn.textContent = tx("Lien copié ✓"); }
   catch(e){ prompt(tx("Copie ce message :"), text + " " + url); }
+}
+
+// ---------- Signaler un lieu (fermé, horaires faux, introuvable) ----------
+// Gardé sur l'appareil : le lieu disparaît de tes résultats (ou passe en « fermé »).
+// Pour tout le monde : un message à l'équipe et/ou une note sur OpenStreetMap (les lieux sont remis à jour chaque semaine).
+const CONTACT = (window.PASLTEMPS_CONFIG || {}).contactEmail || "";
+const ISSUES = "https://github.com/zcabande-arch/Pasl-temps/issues";
+const REP_KEY = "pasltemps.reports";
+let REPORTS = {}; try{ REPORTS = JSON.parse(localStorage.getItem(REP_KEY) || "{}"); }catch(e){}
+// « horaires faux » : oublié au bout de 30 jours (les horaires changent) ; le reste est gardé
+Object.keys(REPORTS).forEach(id => { if(REPORTS[id].why === "hours" && Date.now() - REPORTS[id].at > 30 * 864e5) delete REPORTS[id]; });
+const saveReports = () => { try{ localStorage.setItem(REP_KEY, JSON.stringify(REPORTS)); }catch(e){} };
+const reportHidden = p => !!REPORTS[p.id] && REPORTS[p.id].why !== "hours";
+const WHY = {gone:"🚫 Fermé définitivement", hours:"🕐 Fermé alors qu'il est indiqué ouvert", nothere:"📍 Pas à cet endroit, ou n'existe pas"};
+function osmLink(p){
+  const m = /^osm:([nwr])(\d+)$/.exec(p.id || "");
+  return m ? `https://www.openstreetmap.org/${{n:"node", w:"way", r:"relation"}[m[1]]}/${m[2]}` : "";
+}
+function mailto(subject, body){
+  return `mailto:${CONTACT}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+}
+function openReport(p){
+  const S = $("repSheet"), done = REPORTS[p.id];
+  const close = () => { S.classList.remove("on"); $("repBg").classList.remove("on"); };
+  $("repBg").onclick = close;
+  if(!done){
+    S.innerHTML = `<div class="grab"></div><h2 id="repTitle">${tx("Signaler un problème")}</h2><p class="repname"></p>
+      <div class="repwhy">${Object.entries(WHY).map(([k, l]) => `<button class="chip" data-why="${k}">${esc(tx(l))}</button>`).join("")}</div>
+      <button class="done">${tx("Annuler")}</button>`;
+    S.querySelector(".repname").textContent = p.name + (p.addr ? " · " + p.addr.split(",")[0] : "");
+    S.querySelectorAll("[data-why]").forEach(b => b.onclick = () => {
+      REPORTS[p.id] = {why:b.dataset.why, at:Date.now(), name:p.name, addr:p.addr || "", lat:p.lat, lng:p.lng};
+      saveReports(); renderResults(); renderReported(); openReport(p);
+    });
+  } else {
+    const why = tx(WHY[done.why] || WHY.gone), osm = osmLink(p);
+    const body = `${tx("Lieu")} : ${p.name}\n${tx("Adresse")} : ${p.addr || "—"}\n${tx("Problème")} : ${why}\n${osm || `${p.lat}, ${p.lng}`}\n\n(Pas l'temps, version ${APP_VERSION})`;
+    S.innerHTML = `<div class="grab"></div><h2 id="repTitle">${tx("Merci !")}</h2>
+      <p class="setnote">${done.why === "hours" ? tx("Noté : pour toi, ce lieu est affiché fermé pendant 30 jours.") : tx("Noté : ce lieu n'apparaît plus dans tes résultats.")}</p>
+      <p class="setnote">${tx("Pour corriger pour tout le monde :")}</p>
+      <div class="btns">
+        ${CONTACT ? `<a class="go" href="${esc(mailto(tx("Lieu à corriger : {n}", {n:p.name}), body))}">✉️ ${tx("Prévenir l'équipe")}</a>` : `<a class="go" target="_blank" rel="noopener" href="${ISSUES}">✉️ ${tx("Prévenir l'équipe")}</a>`}
+        <a class="ghost" target="_blank" rel="noopener" href="https://www.openstreetmap.org/note/new?lat=${p.lat}&lon=${p.lng}#map=19/${p.lat}/${p.lng}">🗺️ ${tx("Corriger sur OpenStreetMap")}</a>
+      </div>
+      <p class="setnote small">${tx("Une correction sur OpenStreetMap arrive dans l'appli au plus tard le lundi suivant.")}</p>
+      <button class="link undo">${tx("Annuler mon signalement")}</button>
+      <button class="done">${tx("Terminé")}</button>`;
+    S.querySelector(".undo").onclick = () => { delete REPORTS[p.id]; saveReports(); renderResults(); renderReported(); close(); };
+  }
+  S.querySelector(".done").onclick = close;
+  S.classList.add("on"); $("repBg").classList.add("on");
+}
+function renderReported(){
+  const R = $("reported"); if(!R) return;
+  const list = Object.entries(REPORTS).sort((a, b) => b[1].at - a[1].at);
+  if(!list.length){ R.innerHTML = `<p class="phelp">${tx("Aucun. Dans la fiche d'un lieu, « 🚫 Signaler » le retire de tes résultats s'il est fermé.")}</p>`; return; }
+  R.innerHTML = list.map(([id, r]) => `<div class="srow"><div class="t"><b></b><small>${esc(tx(WHY[r.why] || WHY.gone))}</small></div><button class="ghost" data-id="${esc(id)}">${tx("Réafficher")}</button></div>`).join("");
+  R.querySelectorAll("b").forEach((b, i) => b.textContent = list[i][1].name);
+  R.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => { delete REPORTS[b.dataset.id]; saveReports(); renderReported(); renderResults(); });
+}
+
+// ---------- Nous contacter ----------
+function renderContact(){
+  const topics = [["🐞", "Un bug"], ["💡", "Une idée"], ["📍", "Un lieu à corriger"], ["🤝", "Je suis commerçant·e"], ["🔒", "Mes données"]];
+  document.querySelectorAll(".contactBox").forEach(B => {
+    if(!CONTACT){
+      B.innerHTML = `<p>${tx("Une question, un bug, une idée ? Écris-nous sur la page du projet.")}</p><div class="btns"><a class="go" target="_blank" rel="noopener" href="${ISSUES}">✉️ ${tx("Nous écrire")}</a></div>`;
+      return;
+    }
+    const body = `\n\n—\nPas l'temps, version ${APP_VERSION} · ${navigator.userAgent}`;
+    B.innerHTML = `<p>${tx("Une question, un bug, une idée ? Réponse sous 48 h.")}</p>
+      <p class="cmail"><span class="addr"></span> <button class="link cp">${tx("Copier")}</button></p>
+      <div class="ctopics">${topics.map(([e, t]) => `<a class="chip" href="${esc(mailto(`Pas l'temps · ${tx(t)}`, body))}">${e} ${esc(tx(t))}</a>`).join("")}</div>`;
+    B.querySelector(".addr").textContent = CONTACT;
+    B.querySelector(".cp").onclick = async e => {
+      try{ await navigator.clipboard.writeText(CONTACT); e.target.textContent = tx("Copié ✓"); }
+      catch(err){ const r = document.createRange(); r.selectNodeContents(B.querySelector(".addr")); getSelection().removeAllRanges(); getSelection().addRange(r); }
+    };
+  });
 }
 
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
@@ -367,7 +447,7 @@ function renderResults(){
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
     // Ouvert / fermé à l'arrivée : les lieux fermés passent en bas (ou disparaissent avec le filtre)
-    const all = st && st.items ? st.items.map(p => ({...p, open: HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
+    const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
     const items = all.filter(p => passFilter(p))
       .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
@@ -411,7 +491,7 @@ function renderResults(){
 }
 
 const EXPANDED = new Set();
-function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []); }
+function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []).filter(p => !reportHidden(p)); }
 
 // Photo du moment d'une envie : si elle en a plusieurs, on passe à la suivante toutes les 10 minutes
 const PHOTO_EVERY = 10 * 60e3;
@@ -1685,6 +1765,7 @@ document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.data
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
 HIST = lsLoad();
+renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();
 
 // Hors connexion

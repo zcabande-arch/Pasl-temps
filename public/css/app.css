@@ -679,3 +679,15 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .lay-tablet .moods button.photo{background-position:center top!important}
 .lay-tablet .moods button.photo:last-child:is(:nth-child(4n+1),:nth-child(4n+3)){background-position:center!important}
 .lay-tablet .moods{grid-template-columns:repeat(4,1fr)}
+/* Signaler un lieu, nous contacter */
+.repname{color:var(--soft);margin:-10px 0 16px;font-size:15px}
+.repwhy{display:flex;flex-direction:column;gap:8px}
+.repwhy .chip{text-align:left;font-size:16px;padding:12px 16px;width:100%;max-width:none;white-space:normal;overflow:visible;text-overflow:clip}
+#repSheet .btns{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}
+#repSheet .setnote.small{font-size:13px}
+#repSheet .undo{display:block;margin:10px 0 0;font-size:15px}
+.cmail{font-weight:700;margin:8px 0}
+.cmail .addr{user-select:all}
+.ctopics{display:flex;flex-wrap:wrap;gap:8px}
+.ctopics .chip{text-decoration:none}
+#reported .srow{margin-bottom:8px}

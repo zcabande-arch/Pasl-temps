@@ -54,7 +54,7 @@
     <p>« Pas l'temps » est une application web gratuite, sans publicité, éditée à titre non professionnel par un particulier. Comme l'y autorise l'article 6-III-2 de la LCEN, l'éditeur a choisi de ne pas publier son identité ; ses coordonnées ont été communiquées à l'hébergeur.</p>
     <p>Directeur de la publication : l'éditeur.</p>
     <h3>Contact</h3>
-    <p>Pour toute question, signalement ou demande (droit d'auteur, retrait d'un contenu, données personnelles) : <a href="https://github.com/zcabande-arch/Pasl-temps/issues" target="_blank" rel="noopener">ouvre un message sur la page du projet</a>.</p>
+    <p>Pour toute question, signalement ou demande (droit d'auteur, retrait d'un contenu, données personnelles) : <span id="legalMail"><a href="https://github.com/zcabande-arch/Pasl-temps/issues" target="_blank" rel="noopener">ouvre un message sur la page du projet</a></span>.</p>
     <h3>Hébergeur</h3>
     <p>GitHub, Inc. (service GitHub Pages)<br>88 Colin P. Kelly Jr. Street, San Francisco, CA 94107, États-Unis<br><a href="https://github.com" target="_blank" rel="noopener">github.com</a></p>
     <h3>Propriété intellectuelle</h3>
@@ -69,7 +69,7 @@
     <p>L'appli garde dans la mémoire de ton navigateur (stockage local) :</p>
     <ul>
       <li>ton profil : prénom, âge, genre, photo, endroits préférés (tout est facultatif) ;</li>
-      <li>tes filtres et la dernière météo reçue ;</li>
+      <li>tes filtres, la dernière météo reçue et les lieux que tu as signalés ;</li>
       <li>tes favoris, tes lieux « À tester », ton historique de sorties et tes notes ;</li>
       <li>tes réglages (couleurs, apparence, format) et tes dernières adresses ;</li>
       <li>une copie des lieux déjà chargés, pour aller plus vite et marcher hors connexion.</li>
@@ -140,7 +140,12 @@
   </section>
   <p class="small" style="text-align:center">Pas l'temps · fait avec amour pour les pauses trop courtes.</p>
 </div>
+<script src="config.js"></script>
 <script>
+(function(){ // adresse du service client, si elle est réglée (config.js)
+  var m = (window.PASLTEMPS_CONFIG || {}).contactEmail;
+  if(m){ var a = document.createElement("a"); a.href = "mailto:" + m; a.textContent = m; var s = document.getElementById("legalMail"); s.textContent = "écris-nous à "; s.appendChild(a); }
+})();
 document.getElementById("wipe").addEventListener("click", async function(){
   if(!confirm("Effacer ton profil, tes favoris, ton historique et tes réglages de cet appareil ? Garde ton code de récupération si tu veux les retrouver.")) return;
   try{ Object.keys(localStorage).filter(function(k){ return k.indexOf("pasltemps.") === 0; }).forEach(function(k){ localStorage.removeItem(k); }); }catch(e){}
