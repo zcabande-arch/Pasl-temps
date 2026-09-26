@@ -23,7 +23,15 @@ function openStore(file){
       return (desc ? q.listDesc : q.listAsc).all(parent, limit).map(r => ({id:r.id, data:JSON.parse(r.data)}));
     },
     addUser(uid, tokenHash){ q.addUser.run(uid, tokenHash, Date.now()); },
-    userFor(tokenHash){ const r = q.user.get(tokenHash); return r ? r.uid : null; },
+    userFor(tokenHash){ const r = q.user.get(tokenHash, tokenHash); return r ? r.uid : null; },
+    // Comptes par e-mail
+    addSession(uid, tokenHash){ q.addSession.run(tokenHash, uid, Date.now()); },
+    accountUid(email){ const r = q.accountByEmail.get(email); return r ? r.uid : null; },
+    accountEmail(uid){ const r = q.accountByUid.get(uid); return r ? r.email : null; },
+    addAccount(email, uid){ q.addAccount.run(email, uid, Date.now()); },
+    addLogin(hash, email, expires){ q.purgeLogins.run(Date.now() - 864e5); q.addLogin.run(hash, email, expires); },
+    takeLogin(hash){ const r = q.takeLogin.get(hash, Date.now()); return r ? r.email : null; },
+    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

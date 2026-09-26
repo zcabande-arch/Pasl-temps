@@ -6,6 +6,9 @@ workers_dev = true
 
 [vars]
 REPORT_THRESHOLD = "3"
+# Connexion par e-mail : expéditeur (adresse validée dans Brevo) et adresses où l'appli est servie
+MAIL_FROM = "Pas l'temps <pasltempssav@gmail.com>"
+APP_ORIGINS = "https://zcabande-arch.github.io"
 
 [[d1_databases]]
 binding = "DB"

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "44";
+const APP_VERSION = "45";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -771,7 +771,28 @@ async function saveBackup(code){
   await DB.doc("backups/" + await docIdFor(code)).set({v:1, iv:b64(iv), ct:b64(ct), at:Date.now()});
   lastBackup = Date.now();
 }
+// Compte e-mail : profil, réglages, lieux récents et signalements suivent le compte (data/users/<uid>/me)
+let meTimer = null;
+function scheduleMeSync(){
+  if(!DB || !UID || !PLT.account.email()) return;
+  clearTimeout(meTimer);
+  meTimer = setTimeout(() => DB.doc("data/users/" + UID + "/me").set({me:{name:PROFILE.name, age:PROFILE.age, gender:PROFILE.gender, prefs:PROFILE.prefs, photo:PROFILE.photo || ""},
+    settings:SET, recents:RECENTS.slice(0,5), reports:REPORTS, at:Date.now()}).catch(() => {}), 2500);
+}
+async function pullMe(){
+  try{
+    const d = await DB.doc("data/users/" + UID + "/me").get();
+    if(!d.exists) return scheduleMeSync();          // premier appareil du compte : on envoie ce qu'on a
+    const x = d.data();
+    if(x.me && x.me.photo && !PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(x.me.photo)){ PROFILE.photo = x.me.photo; }
+    if(x.reports && typeof x.reports === "object"){ REPORTS = {...x.reports, ...REPORTS}; saveReports(); renderReported(); }
+    await applyBackupData({v:1, me:x.me, settings:x.settings, recents:x.recents});
+    renderBrand(); renderMoods();
+    if(typeof renderProfile === "function" && !$("viewProfile").hidden) renderProfile();
+  }catch(e){}
+}
 function scheduleBackup(){
+  scheduleMeSync();
   if(!MYCODE || !DB) return;
   clearTimeout(backupTimer);
   backupTimer = setTimeout(() => saveBackup(MYCODE).then(renderRec).catch(() => {}), 4000);
@@ -826,6 +847,8 @@ function setCode(c){ MYCODE = c; try{ c ? localStorage.setItem(CODE_KEY, c) : lo
 let recView = "main";
 function renderRec(msg, warn){
   const R = $("rec"); if(!R) return;
+  if($("recTitle")) $("recTitle").textContent = DB ? tx("Ton compte") : tx("Code de récupération");
+  if(DB && typeof renderAccount === "function") return renderAccount(R, msg, warn);
   if(!DB){
     if(typeof renderPortable === "function") return renderPortable(R, msg, warn);
     R.innerHTML = `<p>Chargement…</p>`; return;
@@ -1685,7 +1708,7 @@ async function initHistory(){
     UID = uid; dbState = db && uid ? "ok" : "none";
     // Blog, avis et code de récupération n'apparaissent que si le serveur répond
     document.body.classList.toggle("social-on", dbState === "ok");
-    if(db && uid){ initBlog(); initLists(); }
+    if(db && uid){ initBlog(); initLists(); afterLogin(); }
     if(db && uid){
       const col = db.doc("data/users/" + uid + "/profile").collection("history");
       store = { add: e => col.doc(e.id).set(e), set: (id, e) => col.doc(id).set(e), remove: id => col.doc(id).delete() };

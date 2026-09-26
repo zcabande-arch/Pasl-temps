@@ -15,6 +15,7 @@ l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en vo
 - 🔑 **Code de récupération** : sauvegarde chiffrée (AES-GCM) pour tout retrouver sur un autre appareil
 - 🛡️ **Modération** : signaler un post, un commentaire ou un avis, bloquer quelqu'un ; masquage automatique après 3 signalements, page de modération
 - 👤 **Profil** : photo, prénom, âge, genre, endroits préférés (mis en avant dans les résultats) ; écran d'accueil « Bonjour, t'as pas l'temps *Prénom* »
+- 📧 **Compte par e-mail** (quand le serveur est en ligne) : un lien de connexion, pas de mot de passe ; profil, favoris et historique sur tous les appareils ; suppression du compte en un geste
 - 🔑 **Code de récupération sans serveur** : un code (ou un lien) qui contient le profil, les réglages, les favoris et l'historique
 - 🎨 Style « Crème » et 6 autres thèmes, mode sombre, format mobile / tablette / grand écran,
   **installable** sur le téléphone et utilisable **hors connexion**
@@ -82,7 +83,16 @@ L'appli est sur **https://zcabande-arch.github.io/Pasl-temps/** (la page d'accue
    - `CLOUDFLARE_API_TOKEN` : la clé de l'étape 2
    - `CLOUDFLARE_ACCOUNT_ID` : l'identifiant de l'étape 3
    - `ADMIN_TOKEN` : un code secret de votre choix, pour la page de modération `admin.html`
+   - `BREVO_API_KEY` : la clé Brevo (étape 3 bis), pour les e-mails de connexion
 5. **Actions → Publier l'API (Cloudflare, gratuit) → Run workflow.**
+
+**3 bis. Les e-mails de connexion : Brevo** (gratuit jusqu'à 300 e-mails par jour)
+- Créer un compte sur [brevo.com](https://www.brevo.com) avec l'adresse `pasltempssav@gmail.com`.
+- **Expéditeurs** (Senders, Domains & Dedicated IPs → Senders) : ajouter `pasltempssav@gmail.com`
+  et cliquer le lien de validation reçu dans cette boîte.
+- **SMTP & API → API Keys → Generate a new API key** : copier la clé dans le secret `BREVO_API_KEY`.
+- L'expéditeur se change dans `wrangler.toml` (`MAIL_FROM`). Avec un nom de domaine à vous,
+  validez-le dans Brevo : les e-mails arrivent encore mieux (moins de spams).
 
 Le workflow crée la base, publie le serveur, puis **branche l'appli dessus tout seul**
 (il écrit l'adresse dans `public/config.js`). Il se relance à chaque modification du serveur.

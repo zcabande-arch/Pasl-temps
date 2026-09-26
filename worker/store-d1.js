@@ -18,7 +18,14 @@ function d1Store(db){
       return (await all(desc ? "listDesc" : "listAsc", parent, limit)).map(r => ({id:r.id, data:JSON.parse(r.data)}));
     },
     async addUser(uid, tokenHash){ await run("addUser", uid, tokenHash, Date.now()); },
-    async userFor(tokenHash){ const r = await first("user", tokenHash); return r ? r.uid : null; },
+    async userFor(tokenHash){ const r = await first("user", tokenHash, tokenHash); return r ? r.uid : null; },
+    async addSession(uid, tokenHash){ await run("addSession", tokenHash, uid, Date.now()); },
+    async accountUid(email){ const r = await first("accountByEmail", email); return r ? r.uid : null; },
+    async accountEmail(uid){ const r = await first("accountByUid", uid); return r ? r.email : null; },
+    async addAccount(email, uid){ await run("addAccount", email, uid, Date.now()); },
+    async addLogin(hash, email, expires){ await run("purgeLogins", Date.now() - 864e5); await run("addLogin", hash, email, expires); },
+    async takeLogin(hash){ const r = await first("takeLogin", hash, Date.now()); return r ? r.email : null; },
+    async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;

@@ -90,5 +90,25 @@
     }catch(e){ return null; }
   }
 
-  window.PLT = {connect};
+  // ---------- Connexion par e-mail (lien à usage unique) ----------
+  async function post(url, body, withAuth){
+    const res = await fetch(BASE + url, {method: "POST",
+      headers: {"Content-Type": "application/json", ...(withAuth && auth && auth.token ? {"Authorization": "Bearer " + auth.token} : {})},
+      body: JSON.stringify(body)});
+    let data = null; try{ data = await res.json(); }catch(e){}
+    if(!res.ok) throw {code: (data && data.error) || "http_" + res.status, status: res.status};
+    return data;
+  }
+  function saveAuth(a){ auth = a; try{ a ? localStorage.setItem(AUTH_KEY, JSON.stringify(a)) : localStorage.removeItem(AUTH_KEY); }catch(e){} }
+  const account = {
+    email: () => (auth && auth.email) || "",
+    // envoie l'e-mail ; le lien ramène à cette page avec #login=<jeton>
+    start: (email, lang) => post("/api/login/start", {email, lang, back: location.origin + location.pathname}),
+    // échange le jeton du lien contre la session du compte (l'appareil garde ses données s'il n'avait pas encore de compte)
+    async verify(token){ const r = await post("/api/login/verify", {token}, true); saveAuth({uid: r.uid, token: r.token, email: r.email}); return r; },
+    logout(){ saveAuth(null); },
+    async remove(){ await call("DELETE", "/api/account"); saveAuth(null); }
+  };
+
+  window.PLT = {connect, account};
 })();

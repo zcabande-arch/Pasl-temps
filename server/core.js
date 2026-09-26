@@ -68,7 +68,13 @@ const isObj = v => v && typeof v === "object" && !Array.isArray(v);
 const ok = body => ({status:200, body});
 const fail = (status, error) => ({status, body:{error}});
 
-// opts : {adminToken, reportThreshold, rateLimit}
+const { loginMail } = require("./mail");
+const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
+const LOGIN_TTL = 20 * 60_000;
+// Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
+const DEFAULT_ORIGINS = ["https://zcabande-arch.github.io"];
+
+// opts : {adminToken, reportThreshold, rateLimit, sendMail({to, subject, html, text}), appOrigins: [origines autorisées]}
 // req  : {method, url (URL), header(nom) → valeur, ip, json() → corps JSON (rejette {code})}
 // → {status, body}
 function createApi(store, opts = {}){
@@ -90,6 +96,47 @@ function createApi(store, opts = {}){
     if(!limited(req.ip, write ? 4 : 1)) return fail(429, "rate_limited");
 
     if(path === "/api/health") return ok({ok:true, app:"pasltemps"});
+
+    // ---------- Connexion par e-mail ----------
+    // 1. l'appli demande un lien pour une adresse ; 2. le lien de l'e-mail ramène à l'appli avec #login=<jeton> ;
+    // 3. l'appli échange ce jeton contre une session du compte (créé à la première connexion).
+    if(path === "/api/login/start" && method === "POST"){
+      if(!opts.sendMail) return fail(503, "mail_unavailable");
+      const b = await body(req); if(b.error) return b.error;
+      const email = String(b.value && b.value.email || "").trim().toLowerCase();
+      if(!EMAIL.test(email)) return fail(400, "bad_email");
+      // 5 demandes par heure et par adresse IP, 3 par heure et par adresse e-mail
+      if(!limited("mailip:" + req.ip, 1, 5, 5 / 3600) || !limited("mail:" + email, 1, 3, 3 / 3600)) return fail(429, "rate_limited");
+      let back;
+      try{ back = new URL(String(b.value.back || "")); }catch(e){ return fail(400, "bad_back"); }
+      const origins = opts.appOrigins || DEFAULT_ORIGINS;
+      if(!origins.includes(back.origin)) return fail(400, "bad_back");
+      const token = randomId(24);
+      await store.addLogin(await sha(token), email, Date.now() + LOGIN_TTL);
+      back.hash = "login=" + token;
+      const m = loginMail(back.href, b.value.lang === "en" ? "en" : "fr");
+      try{ await opts.sendMail({to: email, ...m}); }
+      catch(e){ console.error(e); return fail(502, "mail_failed"); }
+      return ok({ok:true});
+    }
+    if(path === "/api/login/verify" && method === "POST"){
+      if(!limited("verify:" + req.ip, 1, 20, 20 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const token = String(b.value && b.value.token || "");
+      if(!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return fail(400, "bad_token");
+      const email = await store.takeLogin(await sha(token));
+      if(!email) return fail(400, "expired");
+      let uid = await store.accountUid(email);
+      if(!uid){
+        // Première connexion : le compte de cet appareil (s'il en a un, pas encore relié) devient celui de l'adresse
+        const device = await whoIs(req);
+        uid = device && !(await store.accountEmail(device)) ? device : "u" + randomId(9).replace(/[^A-Za-z0-9]/g, "x");
+        await store.addAccount(email, uid);
+      }
+      const session = randomId(24);
+      await store.addSession(uid, await sha(session));
+      return ok({uid, token: session, email});
+    }
 
     if(path === "/api/session" && method === "POST"){
       // Création de compte : 30 d'un coup par adresse, puis 1 toutes les 10 s (familles, bureaux derrière une même box)
@@ -129,6 +176,17 @@ function createApi(store, opts = {}){
 
     const uid = await whoIs(req);
     if(!uid) return fail(401, "unauthenticated");
+
+    // Le compte de cette session : adresse e-mail reliée, ou suppression complète (données comprises)
+    if(path === "/api/account"){
+      if(method === "GET") return ok({email: await store.accountEmail(uid)});
+      if(method === "DELETE"){
+        await store.del("data/users/" + uid); await store.del("walls/" + uid);
+        await store.deleteAccount(uid);
+        return ok({ok:true});
+      }
+      return fail(405, "method");
+    }
 
     if(path === "/api/report" && method === "POST"){
       if(!limited("report:" + uid, 1, 20, 20 / 3600)) return fail(429, "rate_limited"); // 20 signalements par heure

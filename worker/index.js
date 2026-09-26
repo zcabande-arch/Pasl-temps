@@ -2,6 +2,7 @@
 // L'appli elle-même reste sur GitHub Pages et appelle cette adresse (voir public/config.js).
 import core from "../server/core.js";
 import d1 from "./store-d1.js";
+import mail from "../server/mail.js";
 
 const { createApi, CORS, MAX_BODY } = core;
 let api = null;
@@ -15,7 +16,11 @@ export default {
     const url = new URL(request.url);
     if(request.method === "OPTIONS") return new Response(null, {status: 204, headers: CORS});
     if(!url.pathname.startsWith("/api/")) return reply(200, {app: "pasltemps", info: "API de Pas l'temps. L'appli : https://zcabande-arch.github.io/Pasl-temps/"});
-    if(!api) api = createApi(d1.d1Store(env.DB), {adminToken: env.ADMIN_TOKEN, reportThreshold: +env.REPORT_THRESHOLD || 3, rateLimit: env.RATE_LIMIT !== "off"});
+    if(!api) api = createApi(d1.d1Store(env.DB), {
+      adminToken: env.ADMIN_TOKEN, reportThreshold: +env.REPORT_THRESHOLD || 3, rateLimit: env.RATE_LIMIT !== "off",
+      sendMail: env.BREVO_API_KEY ? mail.brevoMailer(env.BREVO_API_KEY, env.MAIL_FROM) : null,
+      appOrigins: String(env.APP_ORIGINS || "https://zcabande-arch.github.io").split(",").map(s => s.trim())
+    });
     try{
       const r = await api({
         method: request.method, url,

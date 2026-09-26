@@ -20,6 +20,7 @@
 
   window.renderProfile = function(){
     photo(); hello();
+    $("pPost").textContent = PLT.account.email() ? tx("Sauvegardé sur ton compte, sur tous tes appareils.") : tx("Tout reste sur ton appareil.");
     if(document.activeElement !== $("pName")) $("pName").value = PROFILE.name || "";
     if(document.activeElement !== $("pAge")) $("pAge").value = PROFILE.age || "";
     document.querySelectorAll("#pGender button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === PROFILE.gender)));
@@ -119,6 +120,82 @@
       catch(e){ $("pcOut").value = url; $("pcOut").select(); R.querySelector(".msg").textContent = tx("Le lien est sélectionné : copie-le à la main."); }
     };
   };
+
+  // ---------- Compte par e-mail (quand le serveur est en ligne) ----------
+  // Pas de mot de passe : on reçoit un lien par e-mail, qui connecte cet appareil au compte de l'adresse.
+  let sentTo = "";
+  window.renderAccount = function(R, msg, warn){
+    if(pView === "enter") return renderPortable(R, msg, warn);     // un ancien code de récupération reste utilisable
+    const email = PLT.account.email();
+    const note = `<p class="msg${warn ? " warn" : ""}"></p>`;
+    if(email){
+      R.innerHTML = `<p>${tx("Connecté·e avec")} <b class="accmail"></b> ✓</p>
+        <p class="phelp">${tx("Ton profil, tes favoris et ton historique sont sauvegardés : connecte-toi avec la même adresse sur un autre appareil pour tout retrouver.")}</p>
+        <div class="btns"><button class="ghost" id="accOut">${tx("Me déconnecter")}</button><button class="link danger" id="accDel">${tx("Supprimer mon compte")}</button></div>${note}`;
+      R.querySelector(".accmail").textContent = email;
+      $("accOut").onclick = () => { if(!confirm(tx("Te déconnecter sur cet appareil ? Ce qui est sur le téléphone reste là."))) return; PLT.account.logout(); location.reload(); };
+      $("accDel").onclick = async () => {
+        if(!confirm(tx("Supprimer ton compte et tout ce qui est sauvegardé en ligne ? C'est définitif. Ce qui est sur ce téléphone reste là."))) return;
+        try{ await PLT.account.remove(); location.reload(); }
+        catch(e){ renderRec(tx("Suppression impossible pour l'instant. Réessaie dans une minute."), true); }
+      };
+    } else if(sentTo){
+      R.innerHTML = `<p>${tx("C'est envoyé à")} <b class="accmail"></b> !</p>
+        <p class="phelp">${tx("Ouvre l'e-mail sur cet appareil et touche « Me connecter ». Pas reçu ? Regarde dans les spams.")}</p>
+        <div class="btns"><button class="ghost" id="accAgain">${tx("Changer d'adresse ou renvoyer")}</button></div>${note}`;
+      R.querySelector(".accmail").textContent = sentTo;
+      $("accAgain").onclick = () => { sentTo = ""; renderRec(); };
+    } else {
+      R.innerHTML = `<p>${tx("Retrouve ton profil, tes favoris et ton historique sur tous tes appareils. Pas de mot de passe : on t'envoie un lien par e-mail.")}</p>
+        <form id="accForm" class="accform"><input class="field" id="accEmail" type="email" inputmode="email" autocomplete="email" placeholder="${tx("ton@adresse.fr")}" required>
+        <button class="go" type="submit">${tx("Recevoir le lien")}</button></form>${note}
+        <p class="phelp"><button class="link" id="accCode">${tx("J'ai un ancien code de récupération")}</button></p>`;
+      $("accCode").onclick = () => { pView = "enter"; renderRec(); };
+      $("accForm").onsubmit = async e => {
+        e.preventDefault();
+        const email = $("accEmail").value.trim(), btn = R.querySelector("button[type=submit]");
+        btn.disabled = true; R.querySelector(".msg").textContent = tx("Envoi…");
+        try{ await PLT.account.start(email, I18N.lang); sentTo = email; renderRec(); }
+        catch(err){
+          btn.disabled = false;
+          const c = err && err.code;
+          R.querySelector(".msg").textContent = c === "bad_email" ? tx("Cette adresse n'a pas l'air valide.")
+            : c === "rate_limited" ? tx("Trop de demandes : réessaie dans un moment.")
+            : c === "mail_unavailable" ? tx("La connexion par e-mail n'est pas encore active.")
+            : tx("L'e-mail n'a pas pu partir. Réessaie dans une minute.");
+          R.querySelector(".msg").classList.add("warn");
+        }
+      };
+    }
+    const m = R.querySelector(".msg"); if(m && msg) m.textContent = msg;
+  };
+  // Une fois le serveur joint : données apportées d'avant la connexion, puis profil du compte
+  window.afterLogin = async function(){
+    let merge = null; try{ merge = JSON.parse(localStorage.getItem("pasltemps.merge") || "null"); localStorage.removeItem("pasltemps.merge"); }catch(e){}
+    if(merge) try{ await applyBackupData(merge); }catch(e){}
+    if(PLT.account.email()) await pullMe();
+    renderRec();
+  };
+  // Arrivée par le lien de l'e-mail (…#login=<jeton>)
+  // (au chargement, ou si l'appli était déjà ouverte dans cet onglet)
+  function loginFromHash(){
+  const lm = /[#&]login=([A-Za-z0-9_-]{20,100})/.exec(location.hash);
+  if(lm){
+    history.replaceState(null, "", location.pathname + location.search);
+    (async () => {
+      try{
+        try{ localStorage.setItem("pasltemps.merge", JSON.stringify(portableData())); }catch(e){}
+        await PLT.account.verify(lm[1]);
+        location.reload();
+      }catch(e){
+        try{ localStorage.removeItem("pasltemps.merge"); }catch(_){}
+        setTimeout(() => { showView("profile"); renderRec(e && e.code === "expired" ? tx("Ce lien a expiré ou a déjà servi. Demande un nouveau lien ci-dessous.") : tx("Connexion impossible pour l'instant. Réessaie dans une minute."), true); }, 2300);
+      }
+    })();
+  }
+  }
+  loginFromHash();
+  addEventListener("hashchange", loginFromHash);
 
   // Ouverture d'un lien de récupération (…#r=PLT1.…) : on propose de tout récupérer
   const m = /[#&]r=(PLT[01]\.[A-Za-z0-9_-]+)/.exec(location.hash);

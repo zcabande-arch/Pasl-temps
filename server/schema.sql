@@ -29,3 +29,22 @@ CREATE TABLE IF NOT EXISTS users (
   token   TEXT NOT NULL UNIQUE,
   created INTEGER NOT NULL
 );
+-- Connexion par e-mail : un compte = une adresse, plusieurs appareils (un jeton de session chacun)
+CREATE TABLE IF NOT EXISTS accounts (
+  email   TEXT PRIMARY KEY,
+  uid     TEXT NOT NULL UNIQUE,
+  created INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS sessions (
+  token   TEXT PRIMARY KEY,
+  uid     TEXT NOT NULL,
+  created INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS sessions_uid ON sessions(uid);
+-- Liens de connexion envoyés par e-mail (on ne garde que l'empreinte du lien)
+CREATE TABLE IF NOT EXISTS logins (
+  hash    TEXT PRIMARY KEY,
+  email   TEXT NOT NULL,
+  expires INTEGER NOT NULL,
+  used    INTEGER NOT NULL DEFAULT 0
+);
