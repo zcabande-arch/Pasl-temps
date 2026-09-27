@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "56";
+const APP_VERSION = "57";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -486,6 +486,7 @@ function renderResults(){
   $("numTxt").textContent = num; $("unitTxt").textContent = unit;
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = ""; $("bannerBox").innerHTML = "";
+  $("whereAt").replaceChildren(...(pos ? [whereTitle()] : []));
   renderFilters();
   const s = $("status");
   // Statut
@@ -505,7 +506,6 @@ function renderResults(){
   if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); renderSee(0, false); return; }
   let total = 0;
   const rd = radarEl(); if(rd) R.appendChild(rd);
-  R.appendChild(whereTitle());
   groups.forEach(g => {
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
@@ -750,7 +750,7 @@ function renderWhere(choices){
   list.forEach(r => {
     const b = document.createElement("button"); b.className = "chip";
     b.textContent = (choices ? "👉 " : "🕘 ") + r.label;
-    b.onclick = () => { $("whereMsg").textContent = ""; setPlace(r.lat, r.lng, r.label, true); };
+    b.onclick = () => { $("whereMsg").textContent = ""; setPlace(r.lat, r.lng, r.label, true); if(choices) goStep(2); };
     row.appendChild(b);
   });
 }
@@ -763,7 +763,7 @@ $("whereForm").addEventListener("submit", async e => {
     const found = await PLACES.geocode(q, pos);
     if(!found.length){ msg.textContent = /\b\d{5}\b/.test(q) ? tx("Code postal {q} introuvable. Vérifie les 5 chiffres, ou ajoute la ville.", {q:q.trim()}) : tx("Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon » ou un code postal."); return; }
     $("whereInput").value = ""; $("whereInput").blur();
-    if(found.length === 1){ msg.textContent = ""; setPlace(found[0].lat, found[0].lng, found[0].label, true); }
+    if(found.length === 1){ msg.textContent = ""; setPlace(found[0].lat, found[0].lng, found[0].label, true); goStep(2); }
     else { msg.textContent = tx("Lequel ?"); renderWhere(found); }
   }catch(err){ msg.textContent = err && err.code === "offline" ? tx("Pas de connexion internet.") : tx("La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute, ou touche « Ma position »."); }
 });
