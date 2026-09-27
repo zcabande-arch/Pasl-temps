@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "55";
+const APP_VERSION = "56";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -502,7 +502,7 @@ function renderResults(){
     sec.querySelector(".more-time").onclick = () => $("dial").querySelector(`button[data-t="${t}"]`).click();
     R.appendChild(sec);
   });
-  if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); return; }
+  if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); renderSee(0, false); return; }
   let total = 0;
   const rd = radarEl(); if(rd) R.appendChild(rd);
   R.appendChild(whereTitle());
@@ -551,6 +551,7 @@ function renderResults(){
     $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
+  renderSee(total, groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading"));
 }
 
 // « Alors, on fait quoi à Lyon ? » sous la carte : la ville vient du nom du lieu choisi
@@ -679,7 +680,33 @@ $("travelSeg").addEventListener("click", e => {
 $("moods").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   M = b.dataset.m; renderMoods(); search();
+  if(pos) goStep(2);            // l'envie choisie : on passe directement aux propositions
 });
+
+// ---------- Deux pages : 1) les réglages, 2) les propositions ----------
+// (sur ordinateur, les deux restent côte à côte). Le bouton « retour » du téléphone revient aux réglages.
+let STEP = 1;
+const wideNow = () => document.body.classList.contains("lay-wide");
+function goStep(n, push){
+  if(n === STEP) return;
+  STEP = n; $("viewExplore").classList.toggle("step2", n === 2);
+  if(n === 2 && push !== false && !wideNow()) try{ history.pushState({step: 2}, ""); }catch(e){}
+  if(!wideNow()) window.scrollTo(0, 0);
+}
+$("viewExplore").classList.add("steps");
+$("backBtn").addEventListener("click", () => {
+  if(history.state && history.state.step === 2) history.back(); else goStep(1, false);
+});
+addEventListener("popstate", () => goStep(history.state && history.state.step === 2 ? 2 : 1, false));
+$("seeBtn").addEventListener("click", () => {
+  if(!pos){ $("whereInput").focus(); $("where").scrollIntoView({behavior: SET.motion === "off" ? "auto" : "smooth", block: "center"}); return; }
+  goStep(2);
+});
+function renderSee(total, loading){
+  $("seeBtn").textContent = !pos ? tx("📍 Dis-moi d'abord où tu es") : loading && !total ? tx("Je cherche autour de toi…")
+    : total > 1 ? tx("Voir les {n} lieux →", {n: total}) : total === 1 ? tx("Voir le lieu →") : tx("Voir les propositions →");
+  $("resSum").textContent = `${fmtDur(T)} · ${TR().way}`;
+}
 
 function locate(manual){
   if(!pos){ geoState = "wait"; renderResults(); }
