@@ -1,6 +1,8 @@
 // Pas l'temps — textes en allemand (clé = texte français). Chargé par i18n.js si la langue est choisie.
 (window.I18N_DICTS = window.I18N_DICTS || {}).de = {
   "Animations": "Animationen",
+  "Alors, on fait quoi à {v} ?": "Und, was machen wir in {v}?",
+  "Alors, on fait quoi par ici ?": "Und, was machen wir hier?",
   "Bonjour,": "Hallo,",
   "t'as pas l'temps": "keine Zeit",
   "Réglages": "Einstellungen",

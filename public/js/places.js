@@ -378,5 +378,14 @@
       .filter(x => isFinite(x.lat) && isFinite(x.lng) && !seen.has(x.label) && seen.add(x.label));
   }
 
-  window.PLACES = {nearby, geocode, meters, isPostcode: q => /^\s*\d{5}\s*$/.test(q || "")};
+  // Nom de la ville où l'on est (position GPS sans nom) : Nominatim, une fois par endroit
+  const towns = new Map();
+  function townAt(pos){
+    const k = pos.lat.toFixed(2) + "," + pos.lng.toFixed(2);
+    if(!towns.has(k)) towns.set(k, getJSON(`${NOMINATIM}/reverse?format=jsonv2&zoom=10&addressdetails=1&accept-language=${LANG()}&lat=${pos.lat}&lon=${pos.lng}`, 6000)
+      .then(j => { const a = (j && j.address) || {}; return a.city || a.town || a.village || a.municipality || null; }));
+    return towns.get(k);
+  }
+
+  window.PLACES = {nearby, geocode, townAt, meters, isPostcode: q => /^\s*\d{5}\s*$/.test(q || "")};
 })();

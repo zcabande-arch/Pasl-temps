@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "54";
+const APP_VERSION = "55";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -505,6 +505,7 @@ function renderResults(){
   if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); return; }
   let total = 0;
   const rd = radarEl(); if(rd) R.appendChild(rd);
+  R.appendChild(whereTitle());
   groups.forEach(g => {
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
@@ -550,6 +551,31 @@ function renderResults(){
     $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
+}
+
+// « Alors, on fait quoi à Lyon ? » sous la carte : la ville vient du nom du lieu choisi
+// (« 12 Rue de Rivoli, 75004 Paris » → Paris), ou d'OpenStreetMap pour la position GPS
+function townOf(label){
+  if(!label || label === tx("ma position") || label === "ma position") return null;
+  let s = String(label).replace(/\s*\([A-Z]{2}\)\s*$/, "").replace(/,\s*[A-Z]{2}\s*$/, "").replace(/\s*\(\d[\d ]*\)\s*$/, "");
+  s = s.split(",").pop().trim().replace(/^\d[\d\s-]*\s(?:[A-Z]{2}\s)?/, "").trim();
+  return s || null;
+}
+let gpsTown = {k: "", v: null};
+function whereTitle(){
+  const h = document.createElement("h2"); h.className = "whereat";
+  const town = townOf(posLabel) || (pos && gpsTown.k === pos.lat.toFixed(2) + "," + pos.lng.toFixed(2) ? gpsTown.v : null);
+  const fill = t => {
+    if(!t){ h.textContent = tx("Alors, on fait quoi par ici ?"); return; }
+    const [a, b] = tx("Alors, on fait quoi à {v} ?").split("{v}");
+    h.textContent = ""; h.append(a); const em = document.createElement("em"); em.textContent = t; h.append(em, b);
+  };
+  fill(town);
+  if(!town && pos && PLACES.townAt){
+    const k = pos.lat.toFixed(2) + "," + pos.lng.toFixed(2);
+    PLACES.townAt(pos).then(t => { gpsTown = {k, v: t}; if(t && h.isConnected) fill(t); }).catch(() => {});
+  }
+  return h;
 }
 
 const EXPANDED = new Set();

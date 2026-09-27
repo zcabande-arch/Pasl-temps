@@ -1,6 +1,8 @@
 // Pas l'temps — textes en néerlandais (clé = texte français). Chargé par i18n.js si la langue est choisie.
 (window.I18N_DICTS = window.I18N_DICTS || {}).nl = {
   "Animations": "Animaties",
+  "Alors, on fait quoi à {v} ?": "Zo, wat gaan we doen in {v}?",
+  "Alors, on fait quoi par ici ?": "Zo, wat gaan we hier doen?",
   "Bonjour,": "Hoi,",
   "t'as pas l'temps": "geen tijd",
   "Réglages": "Instellingen",

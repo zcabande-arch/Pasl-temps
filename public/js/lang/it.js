@@ -1,6 +1,8 @@
 // Pas l'temps — textes en italien (clé = texte français). Chargé par i18n.js si la langue est choisie.
 (window.I18N_DICTS = window.I18N_DICTS || {}).it = {
   "Animations": "Animazioni",
+  "Alors, on fait quoi à {v} ?": "Allora, cosa facciamo a {v}?",
+  "Alors, on fait quoi par ici ?": "Allora, cosa facciamo qui?",
   "Bonjour,": "Ciao,",
   "t'as pas l'temps": "non hai tempo",
   "Réglages": "Impostazioni",

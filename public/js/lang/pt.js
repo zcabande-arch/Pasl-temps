@@ -1,6 +1,8 @@
 // Pas l'temps — textes en portugais (clé = texte français). Chargé par i18n.js si la langue est choisie.
 (window.I18N_DICTS = window.I18N_DICTS || {}).pt = {
   "Animations": "Animações",
+  "Alors, on fait quoi à {v} ?": "E aí, o que vamos fazer em {v}?",
+  "Alors, on fait quoi par ici ?": "E aí, o que vamos fazer por aqui?",
   "Bonjour,": "Oi,",
   "t'as pas l'temps": "não tem tempo",
   "Réglages": "Ajustes",

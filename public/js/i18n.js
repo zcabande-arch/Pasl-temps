@@ -13,7 +13,7 @@
 
   const EN = {
     // --- Page ---
-    "Bonjour,": "Hi,", "t'as pas l'temps": "got no time", "Réglages": "Settings",
+    "Bonjour,": "Hi,", "Alors, on fait quoi à {v} ?": "So, what shall we do in {v}?", "Alors, on fait quoi par ici ?": "So, what shall we do around here?", "t'as pas l'temps": "got no time", "Réglages": "Settings",
     "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: your places and history are still here.",
     "✦ Ta pause, tout près": "✦ Your break, close by", "J'ai": "I've got", "On fait quoi ?": "What shall we do?",
     "Temps disponible": "Time available", "Moyen de transport": "Getting there", "Envie de…": "In the mood for…", "Envie": "Mood",

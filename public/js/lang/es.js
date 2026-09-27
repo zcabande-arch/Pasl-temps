@@ -1,6 +1,8 @@
 // Pas l'temps — textes en espagnol (clé = texte français). Chargé par i18n.js si la langue est choisie.
 (window.I18N_DICTS = window.I18N_DICTS || {}).es = {
   "Animations": "Animaciones",
+  "Alors, on fait quoi à {v} ?": "Entonces, ¿qué hacemos en {v}?",
+  "Alors, on fait quoi par ici ?": "Entonces, ¿qué hacemos por aquí?",
   "Bonjour,": "Hola,",
   "t'as pas l'temps": "¿no tienes tiempo",
   "Réglages": "Ajustes",
