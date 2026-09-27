@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "57";
+const APP_VERSION = "58";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -739,8 +739,16 @@ function setPlace(lat, lng, label, remember){
   renderWhere(); renderHistory(); renderSaved(); search(); loadWeather();
 }
 function renderWhere(choices){
-  $("here").innerHTML = pos ? `📍 ${tx("Autour de")} <b></b>` : tx("📍 Où es-tu ?");
-  if(pos) $("here").querySelector("b").textContent = posLabel || tx("ma position");
+  // Sous la barre de recherche : la ville choisie en grand, l'adresse complète en petit
+  $("here").textContent = tx("📍 Où es-tu ?");
+  const sel = $("whereSel"); sel.hidden = !pos;
+  if(pos){
+    sel.innerHTML = `<span class="pin">📍</span><span class="txt"><b></b><small></small></span><span class="ok">✓</span>`;
+    const town = townOf(posLabel), full = posLabel && posLabel !== "ma position" ? posLabel : tx("ma position");
+    sel.querySelector("b").textContent = town || full;
+    sel.querySelector("small").textContent = town && town !== full ? full : "";
+    if(!town && PLACES.townAt){ const at = pos; PLACES.townAt(at).then(t => { if(t && pos === at){ sel.querySelector("b").textContent = t; sel.querySelector("small").textContent = full; } }).catch(() => {}); }
+  }
   const row = $("whereRow"); row.innerHTML = "";
   const list = choices || RECENTS.filter(r => r.label !== posLabel);
   if(!choices && navigator.geolocation){
