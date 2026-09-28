@@ -14,6 +14,7 @@
   "Budget": "Budget",
   "Tous": "Alle",
   "ta pause, tout près ⚡": "deine Pause, ganz nah ⚡",
+  "On fait ça Fissa Fissa, <em></em> ?": "Machen wir's Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "Machen wir's Fissa Fissa?",
   "Bonjour,": "Hallo,",
   "Réglages": "Einstellungen",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: Deine Orte und dein Verlauf sind weiter da.",

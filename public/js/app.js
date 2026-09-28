@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "64";
+const APP_VERSION = "65";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -69,11 +69,12 @@ function saveProfile(){
   catch(e){ try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({...PROFILE, photo:""})); }catch(_){} }
   scheduleBackup();
 }
-// En haut à gauche : « Fissa Fissa, Prénom » (le nom de l'appli n'est pas traduit)
+// En haut à gauche : « On fait ça Fissa Fissa, Prénom ? » (« Fissa Fissa » n'est pas traduit)
 function renderBrand(){
   const b = $("brand"); if(!b) return;
   const n = (PROFILE.name || "").trim();
-  b.innerHTML = n ? "Fissa Fissa, <em></em>" : "Fissa Fissa";
+  // espace insécable avant « ? » : le point d'interrogation ne part jamais seul à la ligne
+  b.innerHTML = (n ? tx("On fait ça Fissa Fissa, <em></em> ?") : tx("On fait ça Fissa Fissa ?")).replace(/ \?/g, "\u00a0?");
   if(n) b.querySelector("em").textContent = n;
 }
 renderBrand();

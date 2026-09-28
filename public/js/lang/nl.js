@@ -14,6 +14,7 @@
   "Budget": "Budget",
   "Tous": "Alle",
   "ta pause, tout près ⚡": "je pauze, vlakbij ⚡",
+  "On fait ça Fissa Fissa, <em></em> ?": "Doen we het Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "Doen we het Fissa Fissa?",
   "Bonjour,": "Hoi,",
   "Réglages": "Instellingen",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: je plekken en geschiedenis blijven beschikbaar.",

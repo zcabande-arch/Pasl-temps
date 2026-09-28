@@ -14,6 +14,7 @@
   "Budget": "Presupuesto",
   "Tous": "Todos",
   "ta pause, tout près ⚡": "tu pausa, muy cerca ⚡",
+  "On fait ça Fissa Fissa, <em></em> ?": "¿Lo hacemos Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "¿Lo hacemos Fissa Fissa?",
   "Bonjour,": "Hola,",
   "Réglages": "Ajustes",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Sin conexión: tus lugares y tu historial siguen aquí.",
