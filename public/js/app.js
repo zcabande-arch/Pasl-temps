@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "61";
+const APP_VERSION = "62";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -687,7 +687,7 @@ const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
-  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Ta pause, tout près");
+  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Fissa fissa, ta pause tout près");
 }
 function setBackBy(value){
   $("atMsg").textContent = "";

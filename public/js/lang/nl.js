@@ -17,7 +17,7 @@
   "t'as juste l'temps": "je hebt net genoeg tijd",
   "Réglages": "Instellingen",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: je plekken en geschiedenis blijven beschikbaar.",
-  "✦ Ta pause, tout près": "✦ Je pauze, vlakbij",
+  "✦ Fissa fissa, ta pause tout près": "✦ Fissa fissa, je pauze vlakbij",
   "J'ai": "Ik heb",
   "On fait quoi ?": "Wat gaan we doen?",
   "Temps disponible": "Beschikbare tijd",

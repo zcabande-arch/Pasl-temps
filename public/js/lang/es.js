@@ -17,7 +17,7 @@
   "t'as juste l'temps": "tienes el tiempo justo",
   "Réglages": "Ajustes",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Sin conexión: tus lugares y tu historial siguen aquí.",
-  "✦ Ta pause, tout près": "✦ Tu pausa, muy cerca",
+  "✦ Fissa fissa, ta pause tout près": "✦ Fissa fissa, tu pausa muy cerca",
   "J'ai": "Tengo",
   "On fait quoi ?": "¿Qué hacemos?",
   "Temps disponible": "Tiempo disponible",

@@ -17,7 +17,7 @@
   "t'as juste l'temps": "hai giusto il tempo",
   "Réglages": "Impostazioni",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: i tuoi luoghi e la tua cronologia restano qui.",
-  "✦ Ta pause, tout près": "✦ La tua pausa, qui vicino",
+  "✦ Fissa fissa, ta pause tout près": "✦ Fissa fissa, la tua pausa qui vicino",
   "J'ai": "Ho",
   "On fait quoi ?": "Cosa facciamo?",
   "Temps disponible": "Tempo disponibile",
