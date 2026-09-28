@@ -13,7 +13,7 @@
   "par personne": "por persona",
   "Budget": "Presupuesto",
   "Tous": "Todos",
-  "sortir, profiter, rentrer à l'heure ⚡": "Sal, disfruta y vuelve a tiempo ⚡",
+  "on te trouve où aller ⚡": "te encontramos adónde ir ⚡",
   "On fait ça Fissa Fissa, <em></em> ?": "¿Lo hacemos Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "¿Lo hacemos Fissa Fissa?",
   "Fermer": "Cerrar",
   "Une ville, un commerce, une adresse…": "Una ciudad, una tienda, una dirección…",

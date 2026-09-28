@@ -13,7 +13,7 @@
   "par personne": "por pessoa",
   "Budget": "Orçamento",
   "Tous": "Todos",
-  "sortir, profiter, rentrer à l'heure ⚡": "Saia, curta e volte na hora ⚡",
+  "on te trouve où aller ⚡": "a gente acha aonde você vai ⚡",
   "On fait ça Fissa Fissa, <em></em> ?": "Vamos nessa, Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "Vamos nessa, Fissa Fissa?",
   "Fermer": "Fechar",
   "Une ville, un commerce, une adresse…": "Uma cidade, uma loja, um endereço…",

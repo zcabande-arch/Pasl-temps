@@ -13,7 +13,7 @@
   "par personne": "per persoon",
   "Budget": "Budget",
   "Tous": "Alle",
-  "sortir, profiter, rentrer à l'heure ⚡": "Eropuit, genieten, op tijd terug ⚡",
+  "on te trouve où aller ⚡": "wij vinden waar je heen kunt ⚡",
   "On fait ça Fissa Fissa, <em></em> ?": "Doen we het Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "Doen we het Fissa Fissa?",
   "Fermer": "Sluiten",
   "Une ville, un commerce, une adresse…": "Een stad, een winkel, een adres…",

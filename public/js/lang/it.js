@@ -13,7 +13,7 @@
   "par personne": "a persona",
   "Budget": "Budget",
   "Tous": "Tutti",
-  "sortir, profiter, rentrer à l'heure ⚡": "Esci, goditela, torna in orario ⚡",
+  "on te trouve où aller ⚡": "ti troviamo dove andare ⚡",
   "On fait ça Fissa Fissa, <em></em> ?": "Lo facciamo Fissa Fissa, <em></em>?", "On fait ça Fissa Fissa ?": "Lo facciamo Fissa Fissa?",
   "Fermer": "Chiudi",
   "Une ville, un commerce, une adresse…": "Una città, un negozio, un indirizzo…",
