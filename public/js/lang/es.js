@@ -11,6 +11,8 @@
   "prix estimé": "precio estimado",
   "prix Google": "precio de Google",
   "par personne": "por persona",
+  "Budget": "Presupuesto",
+  "Tous": "Todos",
   "Bonjour,": "Hola,",
   "t'as pas l'temps": "¿no tienes tiempo",
   "Réglages": "Ajustes",

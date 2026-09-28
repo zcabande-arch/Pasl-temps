@@ -13,7 +13,7 @@
 
   const EN = {
     // --- Page ---
-    "Bonjour,": "Hi,", "prix estimé": "estimated price", "prix Google": "Google price", "par personne": "per person", "← Modifier": "← Edit", "📍 Dis-moi d'abord où tu es": "📍 Tell me where you are first", "Voir les {n} lieux →": "See the {n} places →", "Voir le lieu →": "See the place →", "Voir les propositions →": "See the suggestions →", "Alors, on fait quoi à {v} ?": "So, what shall we do in {v}?", "Alors, on fait quoi par ici ?": "So, what shall we do around here?", "t'as pas l'temps": "got no time", "Réglages": "Settings",
+    "Bonjour,": "Hi,", "Budget": "Budget", "Tous": "All", "prix estimé": "estimated price", "prix Google": "Google price", "par personne": "per person", "← Modifier": "← Edit", "📍 Dis-moi d'abord où tu es": "📍 Tell me where you are first", "Voir les {n} lieux →": "See the {n} places →", "Voir le lieu →": "See the place →", "Voir les propositions →": "See the suggestions →", "Alors, on fait quoi à {v} ?": "So, what shall we do in {v}?", "Alors, on fait quoi par ici ?": "So, what shall we do around here?", "t'as pas l'temps": "got no time", "Réglages": "Settings",
     "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: your places and history are still here.",
     "✦ Ta pause, tout près": "✦ Your break, close by", "J'ai": "I've got", "On fait quoi ?": "What shall we do?",
     "Temps disponible": "Time available", "Moyen de transport": "Getting there", "Envie de…": "In the mood for…", "Envie": "Mood",

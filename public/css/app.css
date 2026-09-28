@@ -738,5 +738,11 @@ body:not(.lay-wide) #viewExplore.steps:not(.step2) .idea{display:none}
 
 /* Prix € / €€ / €€€ */
 .place .eur{display:inline-block;margin-right:6px;font-weight:800;color:var(--ink);letter-spacing:.02em}
-.chip.price{font-weight:800;min-width:52px}
 .prline small{color:var(--soft)}
+.budget{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.budget[hidden]{display:none}
+.budget .lbl{font-weight:800;white-space:nowrap}
+.budget .seg{flex:1;background:var(--card);box-shadow:var(--sh)}
+.budget .seg button{font-weight:800;padding:9px 0;display:flex;align-items:baseline;justify-content:center;gap:4px}
+.budget .seg button small{font-weight:600;font-size:11px;opacity:.7}
+.budget .seg button:disabled{opacity:.35}

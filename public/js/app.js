@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "59";
+const APP_VERSION = "60";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -491,9 +491,17 @@ function renderFilters(){
     chips.push(`<button class="chip" data-f="open" aria-pressed="${openOnlyNow()}">🕐 ${tx("Ouverts à ton arrivée")}</button>`);
   if(list.some(p => p.wheelchair) || SET.wcOnly)
     chips.push(`<button class="chip" data-f="wc" aria-pressed="${!!SET.wcOnly}">${tx("♿ Accessible")}</button>`);
-  // gammes de prix (restaurants, cafés, bars…)
-  if(list.some(p => PRICED.has(p.g)))
-    [1, 2, 3].forEach(n => chips.push(`<button class="chip price" data-pr="${n}" aria-pressed="${FILTER.pr === n}">${euros(n)}</button>`));
+  // Budget : une ligne à part, bien visible (restaurants, cafés, bars…), avec le nombre de lieux par gamme
+  const B = $("budget"), priced = [...new Map(list.filter(p => PRICED.has(p.g)).map(p => [p.id, p])).values()];
+  B.hidden = !priced.length;
+  if(priced.length){
+    const pr0 = FILTER.pr; FILTER.pr = 0;
+    const n = [1, 2, 3].map(l => priced.filter(p => passFilter(p) && priceOf(p).lvl === l).length);
+    FILTER.pr = pr0;
+    B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="seg">` +
+      `<button data-pr="0" aria-pressed="${!FILTER.pr}">${tx("Tous")}</button>` +
+      [1, 2, 3].map(l => `<button data-pr="${l}" aria-pressed="${FILTER.pr === l}"${n[l-1] || FILTER.pr === l ? "" : " disabled"}>${euros(l)}</button>`).join("") + `</div>`;
+  }
   // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
   const count = {};
   new Map(list.filter(p => passFilter(p, true)).map(p => [p.id, p])).forEach(p => cuisinesOf(p).forEach(c => count[c] = (count[c] || 0) + 1));
@@ -507,9 +515,13 @@ $("fchips").addEventListener("click", e => {
   if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
   else if(b.dataset.f === "wc"){ SET.wcOnly = !SET.wcOnly; saveSet(); }
   else if(b.dataset.cu != null) FILTER.cu = FILTER.cu === b.dataset.cu ? "" : b.dataset.cu;
-  else if(b.dataset.pr){ const n = +b.dataset.pr; FILTER.pr = FILTER.pr === n ? 0 : n;
-    // vrais prix Google pour les lieux les plus proches de chaque rubrique
-    if(FILTER.pr) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4))); }
+  renderResults();
+});
+$("budget").addEventListener("click", e => {
+  const b = e.target.closest("button[data-pr]"); if(!b || b.disabled) return;
+  const n = +b.dataset.pr; FILTER.pr = FILTER.pr === n ? 0 : n;
+  // vrais prix Google (si disponibles) pour les lieux les plus proches de chaque rubrique
+  if(FILTER.pr) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4)));
   renderResults();
 });
 $("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); renderResults(); });
