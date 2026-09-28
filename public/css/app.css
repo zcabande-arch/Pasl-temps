@@ -751,7 +751,27 @@ body:not(.lay-wide) #viewExplore.steps:not(.step2) .idea{display:none}
 /* En haut à droite : photo de profil, réglages juste à sa gauche */
 .mebtn{position:absolute;top:22px;right:14px;width:44px;height:44px;border-radius:50%;border:2px solid var(--acc);background:var(--card);box-shadow:var(--sh);padding:0;overflow:hidden;display:grid;place-items:center;z-index:2;color:var(--acc);font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:20px}
 .mebtn img{width:100%;height:100%;object-fit:cover;display:block}
-.gear,.flat .gear{right:66px}
-.lay-tablet .mebtn{right:28px}.lay-tablet .gear{right:80px}
-.lay-wide .mebtn{right:36px}.lay-wide .gear{right:88px}
-.brand{max-width:calc(100% - 116px)}
+.mebtn,.srchbtn,.gear,.flat .gear{width:42px;height:42px}
+.srchbtn{position:absolute;top:22px;right:62px;border-radius:50%;border:0;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;z-index:2;padding:0;color:var(--ink)}
+.gear,.flat .gear{right:110px}
+.lay-tablet .mebtn{right:28px}.lay-tablet .srchbtn{right:76px}.lay-tablet .gear{right:124px}
+.lay-wide .mebtn{right:36px}.lay-wide .srchbtn{right:84px}.lay-wide .gear{right:132px}
+.brand{max-width:calc(100% - 158px)}
+/* Panneau de recherche plein écran */
+.srch{position:fixed;inset:0;z-index:60;background:var(--bg);overflow:auto;padding:calc(16px + env(safe-area-inset-top,0px)) 18px 40px}
+.srch[hidden]{display:none}
+body.srch-on{overflow:hidden}
+.srchtop{display:flex;gap:10px;align-items:center;max-width:620px;margin:0 auto 10px}
+.srchtop form{flex:1}
+.srchtop input{width:100%;box-sizing:border-box;border:2px solid var(--acc);border-radius:999px;padding:13px 18px;font-size:17px;background:var(--card);color:var(--ink)}
+.srchtop .link{font-weight:800}
+#srchBody{max-width:620px;margin:0 auto}
+#srchBody h3{margin:18px 4px 8px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--soft)}
+#srchBody .hint{color:var(--soft);margin:6px 4px}
+.srow{width:100%;display:flex;align-items:center;gap:12px;text-align:left;border:0;background:var(--card);box-shadow:var(--sh);border-radius:18px;padding:12px 14px;margin-bottom:8px;color:var(--ink);font-size:16px}
+.srow .e{flex:none;width:28px;display:grid;place-items:center;font-size:20px}
+.srow .t{flex:1;min-width:0;display:flex;flex-direction:column}
+.srow .t small{color:var(--soft);font-size:13px}
+.srow .w{flex:none;font-weight:800;color:var(--acc)}
+.sitem.open .srow{margin-bottom:0;border-radius:18px 18px 0 0}
+.sact{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);box-shadow:var(--sh);border-radius:0 0 18px 18px;padding:4px 14px 14px;margin-bottom:8px}

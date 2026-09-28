@@ -153,6 +153,31 @@
     return out;
   }
 
+  // Recherche d'un commerce / lieu par son nom autour de pos (toutes catégories des tuiles) → [{id, name, addr, lat, lng, dist, sel}]
+  async function searchNames(pos, q, radius){
+    const idx = await tileIndex(); if(!idx || !idx.cell) return [];
+    const norm = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+    const nq = norm(q); if(nq.length < 2) return [];
+    const words = nq.split(" ");
+    radius = radius || 3000;
+    const c = idx.cell, dLat = radius / 111320, dLng = radius / (111320 * Math.cos(rad(pos.lat)));
+    const keys = [];
+    for(let i = Math.floor((pos.lat - dLat) / c); i <= Math.floor((pos.lat + dLat) / c); i++)
+      for(let j = Math.floor((pos.lng - dLng) / c); j <= Math.floor((pos.lng + dLng) / c); j++) keys.push(i + "_" + j);
+    const files = await Promise.all(keys.map(k => tile(k).catch(() => null)));
+    const out = [], seen = new Set();
+    for(const r of files.flatMap(f => f || [])){
+      const [lat, lng, sel, name, addr, , , , cuisine, , id] = r;
+      const n = norm(name + " " + (cuisine || ""));
+      if(!words.every(w => n.includes(w))) continue;
+      const dist = meters(pos, {lat, lng}); if(dist > radius || seen.has(id)) continue;
+      seen.add(id);
+      out.push({id: "osm:" + id, name, addr: addr || "", lat, lng, dist, sel: (Array.isArray(sel) ? sel : [sel]).map(i => idx.sels[i]),
+        starts: norm(name).startsWith(nq)});
+    }
+    return out.sort((a, b) => (b.starts - a.starts) || a.dist - b.dist).slice(0, 15);
+  }
+
   // Garde les plus proches, puis une sélection répartie jusqu'au bout du rayon (pour proposer aussi plus loin)
   function spread(list, limit){
     if(list.length <= limit) return list;
@@ -387,5 +412,5 @@
     return towns.get(k);
   }
 
-  window.PLACES = {nearby, geocode, townAt, meters, isPostcode: q => /^\s*\d{5}\s*$/.test(q || "")};
+  window.PLACES = {nearby, geocode, townAt, searchNames, meters, isPostcode: q => /^\s*\d{5}\s*$/.test(q || "")};
 })();

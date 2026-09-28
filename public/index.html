@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="66">
+<meta name="app-version" content="67">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -41,6 +41,14 @@
   <p class="brand" id="brand">On fait ça Fissa Fissa ?</p>
   <button class="gear" id="gear" aria-label="Réglages">⚙️</button>
   <button class="mebtn" id="meBtn" aria-label="Profil"></button>
+  <button class="srchbtn" id="srchBtn" aria-label="Chercher"></button>
+  <div class="srch" id="srch" hidden role="dialog" aria-label="Chercher">
+    <div class="srchtop">
+      <form id="srchForm" autocomplete="off"><input id="srchIn" type="search" placeholder="Une ville, un commerce, une adresse…" aria-label="Une ville, un commerce, une adresse…" enterkeyhint="search"></form>
+      <button class="link" id="srchClose">Fermer</button>
+    </div>
+    <div id="srchBody"></div>
+  </div>
   <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
   <div class="pushask" id="pushAsk" hidden>
     <p>🔔 <b>Active les notifications</b> : on te prévient quand il est l'heure de repartir, et on te fait signe tous les 3 jours.</p>

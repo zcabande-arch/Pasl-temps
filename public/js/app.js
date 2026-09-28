@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "66";
+const APP_VERSION = "67";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -85,6 +85,67 @@ function renderBrand(){
 }
 renderBrand();
 $("meBtn").onclick = () => showView("profile");
+
+// ---------- Recherche (en haut à droite) : une ville, une adresse, ou un commerce autour ----------
+// En tapant : les commerces et lieux du coin dont le nom correspond (dans les tuiles, à moins de 3 km).
+// « Rechercher » sur le clavier : les villes et adresses (comme « Où es-tu ? »).
+const emOfSel = sels => { for(const m of Object.values(MOODS)) for(const g of m.groups) if(g.osm.some(o => sels.includes(o))) return g.em; return "📍"; };
+let srchTimer = null, srchSeq = 0, srchPlaces = [], srchTowns = null, srchOpen = -1;
+function openSearch(on){
+  $("srch").hidden = !on; document.body.classList.toggle("srch-on", on);
+  if(on){ $("srchIn").value = ""; srchPlaces = []; srchTowns = null; srchOpen = -1; renderSearch(); setTimeout(() => $("srchIn").focus(), 50); }
+}
+$("srchBtn").innerHTML = ICONS.ico("search", 24);
+$("srchBtn").onclick = () => openSearch(true);
+$("srchClose").onclick = () => openSearch(false);
+$("srchIn").addEventListener("input", () => { srchTowns = null; srchOpen = -1; clearTimeout(srchTimer); srchTimer = setTimeout(searchLocal, 250); renderSearch(); });
+$("srchForm").addEventListener("submit", e => { e.preventDefault(); $("srchIn").blur(); searchTowns(); });
+async function searchLocal(){
+  const q = $("srchIn").value.trim(), seq = ++srchSeq;
+  if(q.length < 2 || !pos){ srchPlaces = []; renderSearch(); return; }
+  const list = await PLACES.searchNames(pos, q, 3000).catch(() => []);
+  if(seq !== srchSeq) return;
+  srchPlaces = list; renderSearch();
+}
+async function searchTowns(){
+  const q = $("srchIn").value.trim(); if(!q) return;
+  srchTowns = "loading"; renderSearch();
+  try{ srchTowns = await PLACES.geocode(q, pos); }catch(e){ srchTowns = []; }
+  renderSearch();
+}
+function renderSearch(){
+  const B = $("srchBody"), q = $("srchIn").value.trim();
+  if(!q){ B.innerHTML = `<p class="hint">${tx("Tape le nom d'un commerce près de toi, ou une ville, puis « Rechercher » sur le clavier.")}</p>`; return; }
+  let h = `<h3>${tx("Villes et adresses")}</h3>`;
+  if(srchTowns === null) h += `<button class="srow ask"><span class="e">🏙️</span><span class="t"><b></b></span></button>`;
+  else if(srchTowns === "loading") h += `<p class="hint">${tx("Je cherche…")}</p>`;
+  else if(!srchTowns.length) h += `<p class="hint">${tx("Aucune ville ou adresse trouvée.")}</p>`;
+  else h += srchTowns.map((t, i) => `<button class="srow town" data-t="${i}"><span class="e">📍</span><span class="t"><b></b></span><span class="w">→</span></button>`).join("");
+  h += `<h3>${tx("Commerces et lieux autour")}</h3>`;
+  if(!pos) h += `<p class="hint">${tx("Choisis d'abord où tu es pour voir les commerces autour.")}</p>`;
+  else if(q.length < 2) h += "";
+  else if(!srchPlaces.length) h += `<p class="hint">${tx("Aucun commerce de ce nom à moins de 3 km.")}</p>`;
+  else h += srchPlaces.map((p, i) => `<div class="sitem${i === srchOpen ? " open" : ""}"><button class="srow place" data-i="${i}"><span class="e">${ICONS.ico(emOfSel(p.sel), 22)}</span><span class="t"><b></b><small></small></span><span class="w">${travelOf(p.dist)} min</span></button>${i === srchOpen ? `<div class="sact"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Y aller")}</a><button class="ghost td">📌 ${tx("À tester")}</button></div>` : ""}</div>`).join("");
+  B.innerHTML = h;
+  const ask = B.querySelector(".ask b"); if(ask) ask.textContent = tx("Chercher « {q} » comme ville ou adresse", {q});
+  B.querySelectorAll(".town").forEach(b => b.querySelector("b").textContent = srchTowns[+b.dataset.t].label);
+  B.querySelectorAll(".place").forEach(b => { const p = srchPlaces[+b.dataset.i]; b.querySelector("b").textContent = p.name; b.querySelector("small").textContent = (p.addr || "").split(",")[0]; });
+}
+$("srchBody").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.classList.contains("ask")) return searchTowns();
+  if(b.classList.contains("town")){
+    const t = srchTowns[+b.dataset.t]; openSearch(false);
+    setPlace(t.lat, t.lng, t.label, true); showView("explore"); goStep(2); return;
+  }
+  if(b.classList.contains("td")){ const p = srchPlaces[srchOpen]; toggleList("todo", {...p, em: emOfSel(p.sel)}); b.textContent = "📌 " + tx("Ajouté ✓"); return; }
+  if(b.classList.contains("place")){
+    const i = +b.dataset.i, p = srchPlaces[i];
+    // déjà dans les propositions : on l'ouvre là-bas ; sinon, itinéraire et « À tester » ici
+    if(allLoaded().some(x => x.id === p.id && passFilter(x))){ openSearch(false); showView("explore"); goStep(2); setTimeout(() => goToPlace(p.id), 60); return; }
+    srchOpen = srchOpen === i ? -1 : i; renderSearch();
+  }
+});
 // Types d'endroits qu'on peut préférer (étiquettes OpenStreetMap correspondantes)
 const PREF_TYPES = [
   {k:"bakery",  l:tx("Boulangeries"),        ico:"baguette", sels:["shop=bakery","shop=pastry"]},

@@ -4,6 +4,7 @@
 (function(){
   // a = trait rouge épais (accent), k = trait noir fin (cadre), f = forme rouge pleine
   const D = {
+    search:    {a:"M29 29 L39 39", k:"M9 21 A12 12 0 1 0 33 21 A12 12 0 1 0 9 21"},
     chair:     {a:"M13 9 L21 25 H35", k:"M15 40 L18 21 H30 L34 40 M16.5 33 H32.5"},
     croissant: {f:"M7 31 C7 18 16 11 24 11 C32 11 41 18 41 31 C37 26 31 23.5 24 23.5 C17 23.5 11 26 7 31 Z", k:"M16 14.5 L18.5 24.5 M24 11 V23.5 M32 14.5 L29.5 24.5 M7 31 C11 26 17 23.5 24 23.5 C31 23.5 37 26 41 31"},
     tree:      {f:"M24 8 A10 10 0 1 1 23.99 8 Z", k:"M24 26 V41 M24 33 L30 28 M16 41 H32"},
