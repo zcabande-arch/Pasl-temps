@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "65";
+const APP_VERSION = "66";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -76,8 +76,15 @@ function renderBrand(){
   // espace insécable avant « ? » : le point d'interrogation ne part jamais seul à la ligne
   b.innerHTML = (n ? tx("On fait ça Fissa Fissa, <em></em> ?") : tx("On fait ça Fissa Fissa ?")).replace(/ \?/g, "\u00a0?");
   if(n) b.querySelector("em").textContent = n;
+  // En haut à droite : la photo de profil (sinon l'initiale du prénom) ; toucher → Profil
+  const me = $("meBtn"); if(!me) return;
+  const ph = PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(PROFILE.photo) ? PROFILE.photo : "";
+  me.innerHTML = ph ? `<img src="${ph}" alt="">` : n ? `<span></span>` : ICONS.ico("user", 24);
+  if(!ph && n) me.querySelector("span").textContent = n[0].toUpperCase();
+  me.classList.toggle("ph", !!ph);
 }
 renderBrand();
+$("meBtn").onclick = () => showView("profile");
 // Types d'endroits qu'on peut préférer (étiquettes OpenStreetMap correspondantes)
 const PREF_TYPES = [
   {k:"bakery",  l:tx("Boulangeries"),        ico:"baguette", sels:["shop=bakery","shop=pastry"]},
@@ -688,7 +695,7 @@ const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
-  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Ta pause, tout près");
+  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Sortir, profiter, rentrer à l'heure");
 }
 function setBackBy(value){
   $("atMsg").textContent = "";

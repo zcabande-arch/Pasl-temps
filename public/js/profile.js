@@ -16,6 +16,7 @@
   function photo(){
     const ph = PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(PROFILE.photo) ? PROFILE.photo : "";
     $("pPhoto").innerHTML = ph ? `<img src="${ph}" alt="${tx("Ta photo de profil")}">` : ICONS.ico("user", 44);
+    renderBrand();
   }
 
   window.renderProfile = function(){

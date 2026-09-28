@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="65">
+<meta name="app-version" content="66">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -23,7 +23,7 @@
 <div id="splash" role="status" aria-live="polite">
   <p class="hello">Bonjour,</p>
   <p class="line">Fissa fissa<span id="splashName"></span> ?</p>
-  <p class="fissa">ta pause, tout près ⚡</p>
+  <p class="fissa">sortir, profiter, rentrer à l'heure ⚡</p>
 </div>
 <script>
 (function(){
@@ -40,6 +40,7 @@
 <main>
   <p class="brand" id="brand">On fait ça Fissa Fissa ?</p>
   <button class="gear" id="gear" aria-label="Réglages">⚙️</button>
+  <button class="mebtn" id="meBtn" aria-label="Profil"></button>
   <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
   <div class="pushask" id="pushAsk" hidden>
     <p>🔔 <b>Active les notifications</b> : on te prévient quand il est l'heure de repartir, et on te fait signe tous les 3 jours.</p>
@@ -48,7 +49,7 @@
   <div id="viewExplore">
   <div class="col-a">
   <header class="hero2">
-    <p class="kicker" id="kicker">✦ Ta pause, tout près</p>
+    <p class="kicker" id="kicker">✦ Sortir, profiter, rentrer à l'heure</p>
     <h1 class="display">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
     <p class="post">On fait quoi ?</p>
   </header>
