@@ -1,4 +1,4 @@
-// Juste l'temps — accès au serveur (compte anonyme par appareil + documents).
+// Fissa Fissa — accès au serveur (compte anonyme par appareil + documents).
 // Expose window.PLT.connect() → {db, user} ou null si le serveur est injoignable.
 (function(){
   const CFG = window.PASLTEMPS_CONFIG || {};

@@ -1,4 +1,4 @@
-// Juste l'temps — l'API sur Cloudflare Workers, avec la base D1 (offre gratuite).
+// Fissa Fissa — l'API sur Cloudflare Workers, avec la base D1 (offre gratuite).
 // L'appli elle-même reste sur GitHub Pages et appelle cette adresse (voir public/config.js).
 import core from "../server/core.js";
 import d1 from "./store-d1.js";
@@ -20,7 +20,7 @@ export default {
   async fetch(request, env){
     const url = new URL(request.url);
     if(request.method === "OPTIONS") return new Response(null, {status: 204, headers: CORS});
-    if(!url.pathname.startsWith("/api/")) return reply(200, {app: "pasltemps", info: "API de Juste l'temps. L'appli : https://zcabande-arch.github.io/Pasl-temps/"});
+    if(!url.pathname.startsWith("/api/")) return reply(200, {app: "pasltemps", info: "API de Fissa Fissa. L'appli : https://zcabande-arch.github.io/Pasl-temps/"});
     if(!api) api = createApi(d1.d1Store(env.DB), {
       adminToken: env.ADMIN_TOKEN, reportThreshold: +env.REPORT_THRESHOLD || 3, rateLimit: env.RATE_LIMIT !== "off",
       sendMail: mail.mailerFrom(env),

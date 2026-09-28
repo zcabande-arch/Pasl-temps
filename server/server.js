@@ -1,4 +1,4 @@
-// Juste l'temps — serveur : fichiers de l'appli + petite base de documents (SQLite).
+// Fissa Fissa — serveur : fichiers de l'appli + petite base de documents (SQLite).
 // Aucune dépendance : Node.js 22.13+ suffit.
 "use strict";
 const http = require("node:http");
@@ -90,7 +90,7 @@ function createServer(store, opts = {}){
 if(require.main === module){
   fs.mkdirSync(DATA_DIR, {recursive:true});
   const store = openStore(path.join(DATA_DIR, "pasltemps.db"));
-  createServer(store).listen(PORT, HOST, () => console.log(`Juste l'temps : http://localhost:${PORT}`));
+  createServer(store).listen(PORT, HOST, () => console.log(`Fissa Fissa : http://localhost:${PORT}`));
   // Notifications (chrono « Je pars », rappel tous les 3 jours) : chaque minute
   const { runReminders } = require("./push");
   setInterval(() => runReminders(store).catch(e => console.error(e)), 60e3);

@@ -1,6 +1,6 @@
-# Juste l'temps ⏱️
+# Fissa Fissa ⏱️
 
-**10, 20, 30 minutes devant vous ? Juste l'temps trouve à pied ce qui tient dans votre pause.**
+**10, 20, 30 minutes devant vous ? Fissa Fissa trouve à pied ce qui tient dans votre pause.**
 
 On choisit son temps (10 à 60 min) et son envie (manger, prendre l'air, shopping, culture, se poser, bouger) :
 l'appli liste les lieux autour dont **l'aller-retour (à pied, à vélo ou en voiture) + le temps sur place** tient dans la pause.

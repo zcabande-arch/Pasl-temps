@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Juste l'temps — réassemble les tuiles calculées continent par continent (scripts/build-places.js) en un seul jeu.
+// Fissa Fissa — réassemble les tuiles calculées continent par continent (scripts/build-places.js) en un seul jeu.
 // Les tuiles d'une même case venues de plusieurs continents (frontières) sont fusionnées, sans doublon.
 // Usage : node scripts/merge-places.js sortie/ partie-europe/ partie-asie/ …
 "use strict";

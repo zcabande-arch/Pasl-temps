@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Juste l'temps — télécharge des régions OpenStreetMap (Geofabrik) et garde les lieux utiles à l'appli.
+# Fissa Fissa — télécharge des régions OpenStreetMap (Geofabrik) et garde les lieux utiles à l'appli.
 # Usage : scripts/extract-places.sh <dossier> "europe/france:fr europe/germany:de asia:" [région obligatoire]
 #   région:code pays (vide pour un continent entier : le pays vient alors de l'adresse de chaque lieu)
 # Écrit <dossier>/<région>.geojsonseq.gz et <dossier>/args.txt (arguments pour scripts/build-places.js).

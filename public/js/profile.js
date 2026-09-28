@@ -1,4 +1,4 @@
-// Juste l'temps — page Profil : photo, prénom, âge, genre, endroits préférés, code de récupération.
+// Fissa Fissa — page Profil : photo, prénom, âge, genre, endroits préférés, code de récupération.
 // Tout est gardé sur l'appareil (PROFILE, saveProfile et PREF_TYPES sont dans app.js).
 (function(){
   let savedTimer = null;
@@ -114,7 +114,7 @@
     };
     $("pcShare").onclick = async () => {
       const url = linkFor(lastCode);
-      try{ if(navigator.share){ await navigator.share({title:tx("Juste l'temps : mon code de récupération"), text:tx("Ouvre ce lien pour retrouver mon profil Juste l'temps :"), url}); return; } }
+      try{ if(navigator.share){ await navigator.share({title:tx("Fissa Fissa : mon code de récupération"), text:tx("Ouvre ce lien pour retrouver mon profil Fissa Fissa :"), url}); return; } }
       catch(e){ if(e && e.name === "AbortError") return; }
       try{ await navigator.clipboard.writeText(url); R.querySelector(".msg").textContent = tx("Lien copié ✓ Envoie-le toi par message ou par mail."); }
       catch(e){ $("pcOut").value = url; $("pcOut").select(); R.querySelector(".msg").textContent = tx("Le lien est sélectionné : copie-le à la main."); }

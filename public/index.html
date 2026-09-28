@@ -2,15 +2,15 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="62">
+<meta name="app-version" content="63">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Juste l'temps</title>
-<meta name="description" content="Juste l'temps, fissa fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
+<title>Fissa Fissa</title>
+<meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
 <meta name="theme-color" content="#F4ECDF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Juste l'temps">
+<meta name="apple-mobile-web-app-title" content="Fissa Fissa">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" type="image/png" sizes="192x192">
@@ -21,16 +21,15 @@
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
-  <p class="hello">Bonjour,</p>
-  <p class="line">t'as juste l'temps<span id="splashName"></span></p>
-  <p class="fissa">fissa fissa ⚡</p>
+  <p class="hello">Bonjour<span id="splashName"></span>,</p>
+  <p class="line">Fissa <em>Fissa</em></p>
+  <p class="fissa">ta pause, tout près ⚡</p>
 </div>
 <script>
 (function(){
   var s = document.getElementById("splash"), n = "";
   try{ n = (JSON.parse(localStorage.getItem("pasltemps.profile") || "{}").name || "").trim(); }catch(e){}
-  var em = document.createElement("em"); em.textContent = n ? " " + n : " ?";
-  document.getElementById("splashName").appendChild(em);
+  if(n) document.getElementById("splashName").textContent = " " + n;
   function hide(){ if(!s || s.classList.contains("out")) return; s.classList.add("out"); setTimeout(function(){ s.remove(); }, 600); }
   s.addEventListener("click", hide);
   setTimeout(hide, 2000);
@@ -38,7 +37,7 @@
 </script>
 <div class="timer" id="timer" hidden></div>
 <main>
-  <p class="brand" id="brand">Juste l'temps</p>
+  <p class="brand" id="brand">Fissa Fissa</p>
   <button class="gear" id="gear" aria-label="Réglages">⚙️</button>
   <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
   <div class="pushask" id="pushAsk" hidden>
@@ -48,7 +47,7 @@
   <div id="viewExplore">
   <div class="col-a">
   <header class="hero2">
-    <p class="kicker" id="kicker">✦ Fissa fissa, ta pause tout près</p>
+    <p class="kicker" id="kicker">✦ Ta pause, tout près</p>
     <h1 class="display">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
     <p class="post">On fait quoi ?</p>
   </header>
@@ -192,7 +191,7 @@
   <div class="rec contactBox"></div>
   <h4>Installer l'appli</h4>
   <div class="rec" id="install"></div>
-  <p class="credits">Juste l'temps · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a><br><a href="legal.html">Mentions légales · Confidentialité · Conditions</a></p>
+  <p class="credits">Fissa Fissa · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a><br><a href="legal.html">Mentions légales · Confidentialité · Conditions</a></p>
   <button class="done" id="sheetDone">Terminé</button>
 </div>
 

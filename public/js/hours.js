@@ -1,4 +1,4 @@
-// Juste l'temps — horaires d'ouverture OpenStreetMap (opening_hours) : « ouvert à telle heure ? »
+// Fissa Fissa — horaires d'ouverture OpenStreetMap (opening_hours) : « ouvert à telle heure ? »
 // Gère la forme courante : « Mo-Fr 07:00-19:30; Sa 08:00-12:00,14:00-18:00; Su off », « 24/7 »,
 // les horaires qui passent minuit (« 18:00-02:00 »). Tout le reste (mois, jours fériés, lever du soleil…)
 // donne « inconnu » plutôt qu'une réponse fausse. Expose window.HOURS.

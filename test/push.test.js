@@ -55,11 +55,11 @@ async function fakeBrowser(){
 test("chiffrement : le téléphone retrouve le message", async () => {
   const br = await fakeBrowser(), store = openStore(":memory:"), keys = await push.vapidKeys(store);
   let req = null;
-  const st = await push.send(keys, {endpoint:"https://push.example/1", keys: br.keys}, {title:"Juste l'temps", body:"C'est l'heure de repartir !"},
+  const st = await push.send(keys, {endpoint:"https://push.example/1", keys: br.keys}, {title:"Fissa Fissa", body:"C'est l'heure de repartir !"},
     {fetchFn: async (url, o) => { req = o; return {status: 201}; }});
   assert.equal(st, 201);
   assert.equal(req.headers["Content-Encoding"], "aes128gcm");
-  assert.deepEqual(await br.decrypt(req.body), {title:"Juste l'temps", body:"C'est l'heure de repartir !"});
+  assert.deepEqual(await br.decrypt(req.body), {title:"Fissa Fissa", body:"C'est l'heure de repartir !"});
 });
 
 test("abonnement, rappel tous les 3 jours et chrono « Je pars »", async () => {
@@ -83,7 +83,7 @@ test("abonnement, rappel tous les 3 jours et chrono « Je pars »", async () => 
 
     // chrono : deux notifications programmées ; un autre compte ne peut pas en poser sur cet appareil
     const now = Date.now();
-    const events = [{at: now + 60e3, title:"Juste l'temps", body:"🏃 C'est l'heure de repartir !"}, {at: now + 5 * 60e3, title:"Juste l'temps", body:"⏰ Temps écoulé"}];
+    const events = [{at: now + 60e3, title:"Fissa Fissa", body:"🏃 C'est l'heure de repartir !"}, {at: now + 5 * 60e3, title:"Fissa Fissa", body:"⏰ Temps écoulé"}];
     assert.equal((await api(other, "/api/push/timer", {endpoint:"https://push.example/ok", events})).status, 403);
     assert.equal((await (await api(a, "/api/push/timer", {endpoint:"https://push.example/ok", events})).json()).count, 2);
     const got = [];

@@ -1,4 +1,4 @@
-# Juste l'temps — API sur Cloudflare Workers (déployée par .github/workflows/deploy-api.yml)
+# Fissa Fissa — API sur Cloudflare Workers (déployée par .github/workflows/deploy-api.yml)
 name = "pasltemps"
 main = "worker/index.js"
 compatibility_date = "2025-09-01"
@@ -7,7 +7,7 @@ workers_dev = true
 [vars]
 REPORT_THRESHOLD = "3"
 # Connexion par e-mail : expéditeur (adresse validée dans Brevo) et adresses où l'appli est servie
-MAIL_FROM = "Juste l'temps <pasltempssav@gmail.com>"
+MAIL_FROM = "Fissa Fissa <pasltempssav@gmail.com>"
 APP_ORIGINS = "https://zcabande-arch.github.io"
 
 # Notifications : chaque minute, on envoie celles arrivées à l'heure (chrono « Je pars », rappel tous les 3 jours)

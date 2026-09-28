@@ -1,7 +1,7 @@
 {
-  "name": "Juste l'temps",
-  "short_name": "Juste l'temps",
-  "description": "Juste l'temps, fissa fissa : 10, 20, 30 minutes devant vous ? Trouvez à pied ce qui tient dans votre pause : boulangerie, café, parc, librairie…",
+  "name": "Fissa Fissa",
+  "short_name": "Fissa Fissa",
+  "description": "Fissa Fissa : 10, 20, 30 minutes devant vous ? Trouvez à pied ce qui tient dans votre pause : boulangerie, café, parc, librairie…",
   "lang": "fr",
   "id": "./",
   "start_url": "./",

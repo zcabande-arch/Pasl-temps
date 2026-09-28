@@ -28,7 +28,7 @@ test("envoie un lien vers l'appli et refuse une autre adresse de retour", async 
   const m = sent[sent.length - 1];
   assert.equal(m.to, "zoe@mail.fr");
   assert.match(m.text, /^[\s\S]*https:\/\/app\.example\/Pasl-temps\/#login=/);
-  assert.match(m.subject, /Juste l'temps/);
+  assert.match(m.subject, /Fissa Fissa/);
 });
 
 test("le lien ne sert qu'une fois ; le compte garde les données de l'appareil", async () => {

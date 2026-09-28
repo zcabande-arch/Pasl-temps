@@ -1,4 +1,4 @@
-// Juste l'temps — gamme de prix d'un lieu, lue chez Google (Places API officielle, payante au-delà d'un quota gratuit).
+// Fissa Fissa — gamme de prix d'un lieu, lue chez Google (Places API officielle, payante au-delà d'un quota gratuit).
 // Rien n'est gardé côté serveur (conditions de Google) : l'appli redemande à chaque session.
 // Sans clé GOOGLE_PLACES_KEY, le service est coupé et l'appli garde ses prix estimés.
 "use strict";
