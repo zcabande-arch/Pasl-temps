@@ -1,4 +1,4 @@
--- Pas l'temps : schéma de la base (SQLite en local, Cloudflare D1 en ligne)
+-- Juste l'temps : schéma de la base (SQLite en local, Cloudflare D1 en ligne)
 CREATE TABLE IF NOT EXISTS docs (
   path    TEXT PRIMARY KEY,
   parent  TEXT NOT NULL,

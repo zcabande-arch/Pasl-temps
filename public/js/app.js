@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "60";
+const APP_VERSION = "61";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -69,11 +69,11 @@ function saveProfile(){
   catch(e){ try{ localStorage.setItem(PROFILE_KEY, JSON.stringify({...PROFILE, photo:""})); }catch(_){} }
   scheduleBackup();
 }
-// En haut à gauche : « On n'a pas l'temps Prénom ? »
+// En haut à gauche : « Juste l'temps, Prénom » (le nom de l'appli n'est pas traduit)
 function renderBrand(){
   const b = $("brand"); if(!b) return;
   const n = (PROFILE.name || "").trim();
-  b.innerHTML = n ? tx("On n'a pas l'temps <em></em> ?") : tx("On n'a pas l'temps ?");
+  b.innerHTML = n ? "Juste l'temps, <em></em>" : "Juste l'temps";
   if(n) b.querySelector("em").textContent = n;
 }
 renderBrand();
@@ -337,7 +337,7 @@ function openReport(p){
     });
   } else {
     const why = tx(WHY[done.why] || WHY.gone), osm = osmLink(p);
-    const body = `${tx("Lieu")} : ${p.name}\n${tx("Adresse")} : ${p.addr || "—"}\n${tx("Problème")} : ${why}\n${osm || `${p.lat}, ${p.lng}`}\n\n(Pas l'temps, version ${APP_VERSION})`;
+    const body = `${tx("Lieu")} : ${p.name}\n${tx("Adresse")} : ${p.addr || "—"}\n${tx("Problème")} : ${why}\n${osm || `${p.lat}, ${p.lng}`}\n\n(Juste l'temps, version ${APP_VERSION})`;
     S.innerHTML = `<div class="grab"></div><h2 id="repTitle">${tx("Merci !")}</h2>
       <p class="setnote">${done.why === "hours" ? tx("Noté : pour toi, ce lieu est affiché fermé pendant 30 jours.") : tx("Noté : ce lieu n'apparaît plus dans tes résultats.")}</p>
       <p class="setnote">${tx("Pour corriger pour tout le monde :")}</p>
@@ -370,10 +370,10 @@ function renderContact(){
       B.innerHTML = `<p>${tx("Une question, un bug, une idée ? Écris-nous sur la page du projet.")}</p><div class="btns"><a class="go" target="_blank" rel="noopener" href="${ISSUES}">✉️ ${tx("Nous écrire")}</a></div>`;
       return;
     }
-    const body = `\n\n—\nPas l'temps, version ${APP_VERSION} · ${navigator.userAgent}`;
+    const body = `\n\n—\nJuste l'temps, version ${APP_VERSION} · ${navigator.userAgent}`;
     B.innerHTML = `<p>${tx("Une question, un bug, une idée ? On lit tous les messages.")}</p>
       <p class="cmail"><span class="addr"></span> <button class="link cp">${tx("Copier")}</button></p>
-      <div class="ctopics">${topics.map(([e, t]) => `<a class="chip" href="${esc(mailto(`Pas l'temps · ${tx(t)}`, body))}">${e} ${esc(tx(t))}</a>`).join("")}</div>`;
+      <div class="ctopics">${topics.map(([e, t]) => `<a class="chip" href="${esc(mailto(`Juste l'temps · ${tx(t)}`, body))}">${e} ${esc(tx(t))}</a>`).join("")}</div>`;
     B.querySelector(".addr").textContent = CONTACT;
     B.querySelector(".cp").onclick = async e => {
       try{ await navigator.clipboard.writeText(CONTACT); e.target.textContent = tx("Copié ✓"); }
@@ -382,7 +382,7 @@ function renderContact(){
   });
 }
 
-// ---------- Notifications : « T'as pas l'temps ? » tous les 3 jours, et le chrono « Je pars » ----------
+// ---------- Notifications : « T'as 20 minutes ? » tous les 3 jours, et le chrono « Je pars » ----------
 // Autorisation demandée par l'appli elle-même ; le serveur envoie les notifications à l'heure (même appli fermée).
 const pushOk = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -431,8 +431,8 @@ async function scheduleTimerPush(){
     const events = [];
     if(TIMER){
       const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, back = TIMER.start + (TIMER.T - TIMER.walk) * 60000, end = TIMER.start + TIMER.T * 60000;
-      if(back > Date.now() + 30e3) events.push({at: back, title: "Pas l'temps", body: tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
-      events.push({at: end, title: "Pas l'temps", body: tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
+      if(back > Date.now() + 30e3) events.push({at: back, title: "Juste l'temps", body: tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
+      events.push({at: end, title: "Juste l'temps", body: tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
     }
     await PLT.push.timer(sub.endpoint, events);
   }catch(e){}
@@ -1206,7 +1206,7 @@ function renderBlog(){
   const me = myWall();
   // Profil
   const M = $("blogMe");
-  if(!DB || !UID){ M.innerHTML = `<div class="card"><p class="small" style="margin:0">${dbState === "wait" ? "Connexion au serveur…" : "Le blog a besoin du serveur de Pas l'temps, injoignable pour l'instant. Réessayez plus tard."}</p></div>`; ["blogFriends","blogCompose","blogFeed"].forEach(i => $(i).innerHTML = ""); return; }
+  if(!DB || !UID){ M.innerHTML = `<div class="card"><p class="small" style="margin:0">${dbState === "wait" ? "Connexion au serveur…" : "Le blog a besoin du serveur de Juste l'temps, injoignable pour l'instant. Réessayez plus tard."}</p></div>`; ["blogFriends","blogCompose","blogFeed"].forEach(i => $(i).innerHTML = ""); return; }
   if(!blogReady){ M.innerHTML = `<div class="card"><p class="small" style="margin:0">Chargement…</p></div>`; return; }
   // Le profil du blog, c'est le profil de l'appli : prénom et photo repris, code ami créé tout seul
   if(!me || !me.code){
@@ -1233,7 +1233,7 @@ function renderBlog(){
   $("meMsg").textContent = blogMsg;
   $("meAva").onclick = $("editProf").onclick = () => showView("profile");
   $("shareProf").onclick = async () => {
-    const txt = `Ajoute-moi sur « Pas l'temps » ! Mon code ami : ${me.code}`;
+    const txt = `Ajoute-moi sur « Juste l'temps » ! Mon code ami : ${me.code}`;
     try{ if(navigator.share){ await navigator.share({text:txt}); return; } }catch(e){ if(e && e.name === "AbortError") return; }
     try{ await navigator.clipboard.writeText(txt); blogMsg = "Copié ✓ Colle-le à tes potes."; }
     catch(e){ blogMsg = `Donne ce code à tes potes : ${me.code}`; }
@@ -1743,7 +1743,7 @@ function renderReviews(){
   document.querySelectorAll("#rvScope button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === rvScope)));
   document.querySelectorAll("#rvSort button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === rvSort)));
   const L = $("rvList"); L.innerHTML = "";
-  if(!DB || !UID){ L.innerHTML = `<div class="emptyfeed"><div>⭐</div><p>${dbState === "wait" ? "Connexion au serveur…" : "Les avis ont besoin du serveur de Pas l'temps, injoignable pour l'instant."}</p></div>`; return; }
+  if(!DB || !UID){ L.innerHTML = `<div class="emptyfeed"><div>⭐</div><p>${dbState === "wait" ? "Connexion au serveur…" : "Les avis ont besoin du serveur de Juste l'temps, injoignable pour l'instant."}</p></div>`; return; }
   if(!blogReady){ L.innerHTML = `<p class="status">Chargement…</p>`; return; }
   const q = norm($("rvQ").value);
   let gs = reviewGroups(rvScope).filter(g => !q || g.key.includes(q) || norm(g.addr).includes(q));
@@ -1975,9 +1975,9 @@ addEventListener("appinstalled", () => { installEvt = null; renderInstall(); });
 function renderInstall(){
   const B = $("install"); if(!B) return;
   const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
-  if(standalone){ B.innerHTML = `<p style="margin:0">${tx("C'est installé ✓ Pas l'temps s'ouvre depuis votre écran d'accueil.")}</p>`; return; }
+  if(standalone){ B.innerHTML = `<p style="margin:0">${tx("C'est installé ✓ Juste l'temps s'ouvre depuis votre écran d'accueil.")}</p>`; return; }
   if(installEvt){
-    B.innerHTML = `<p>${tx("Ajoutez Pas l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.")}</p><div class="btns"><button class="go" id="installGo">${tx("📲 Installer")}</button></div>`;
+    B.innerHTML = `<p>${tx("Ajoutez Juste l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.")}</p><div class="btns"><button class="go" id="installGo">${tx("📲 Installer")}</button></div>`;
     $("installGo").onclick = async () => { installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt = null; renderInstall(); };
     return;
   }

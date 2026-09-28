@@ -1,4 +1,4 @@
-// Pas l'temps — premier lancement : 3 écrans pour comprendre l'appli, puis le prénom (facultatif).
+// Juste l'temps — premier lancement : 3 écrans pour comprendre l'appli, puis le prénom (facultatif).
 // Ne s'affiche qu'une fois, et jamais pour quelqu'un qui a déjà un prénom ou un historique.
 (function(){
   const KEY = "pasltemps.onboarded";

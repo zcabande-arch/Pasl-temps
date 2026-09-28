@@ -1,4 +1,4 @@
-// Pas l'temps — petits dessins au trait, dans le style de l'icône (trait rouge épais + cadre noir fin).
+// Juste l'temps — petits dessins au trait, dans le style de l'icône (trait rouge épais + cadre noir fin).
 // Les données gardent leurs emojis (historique, posts…) : l'affichage les remplace par ces dessins.
 // Expose window.ICONS : ico(nom ou emoji, taille) → <svg>, ou l'emoji tel quel s'il n'a pas de dessin.
 (function(){

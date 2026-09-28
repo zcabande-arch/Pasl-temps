@@ -1,4 +1,4 @@
-// Pas l'temps — recherche de lieux et d'adresses avec OpenStreetMap (Overpass + Nominatim).
+// Juste l'temps — recherche de lieux et d'adresses avec OpenStreetMap (Overpass + Nominatim).
 // Gratuit, sans clé. Expose window.PLACES.
 (function(){
   const CFG = window.PASLTEMPS_CONFIG || {};

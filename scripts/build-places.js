@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Pas l'temps — fabrique les « tuiles » de lieux à partir d'un export OpenStreetMap.
+// Juste l'temps — fabrique les « tuiles » de lieux à partir d'un export OpenStreetMap.
 // Entrée : un ou plusieurs fichiers GeoJSON « seq » (une entité par ligne, éventuellement .gz), produits par
 // `osmium export`, chacun avec le code de son pays (les codes postaux en ont besoin : 75011 existe en France et ailleurs).
 // Sortie : <dossier>/t/<ligne>_<colonne>.json (une tuile par case de CELL degrés), <dossier>/index.json,

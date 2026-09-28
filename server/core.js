@@ -1,4 +1,4 @@
-// Pas l'temps — l'API, indépendante de la plateforme.
+// Juste l'temps — l'API, indépendante de la plateforme.
 // Utilisée par le serveur Node (server/server.js) et par Cloudflare Workers (worker/index.js).
 // Le stockage peut être synchrone (SQLite) ou asynchrone (D1) : on attend toujours ses réponses.
 "use strict";
@@ -210,7 +210,7 @@ function createApi(store, opts = {}){
       const b = await body(req); if(b.error) return b.error;
       const target = b.value && b.value.target;
       if(path === "/api/admin/push"){
-        const title = String(b.value && b.value.title || "Pas l'temps").slice(0, 80), text = String(b.value && b.value.body || "").slice(0, 200);
+        const title = String(b.value && b.value.title || "Juste l'temps").slice(0, 80), text = String(b.value && b.value.body || "").slice(0, 200);
         if(!text) return fail(400, "bad_request");
         return ok(await push.broadcast(store, {title, body: text, tag: "pasltemps-annonce", url: "./"}));
       }
@@ -251,7 +251,7 @@ function createApi(store, opts = {}){
       if(typeof v.endpoint !== "string" || (await store.pushOwner(v.endpoint)) !== uid) return fail(403, "forbidden");
       const now = Date.now(), list = (Array.isArray(v.events) ? v.events : []).slice(0, 4)
         .filter(e => isObj(e) && Number.isFinite(+e.at) && +e.at > now - 60e3 && +e.at < now + 6 * 3600e3)
-        .map(e => ({at: +e.at, payload: JSON.stringify({title: String(e.title || "Pas l'temps").slice(0, 80), body: String(e.body || "").slice(0, 200), tag: "pasltemps-chrono", url: "./"})}));
+        .map(e => ({at: +e.at, payload: JSON.stringify({title: String(e.title || "Juste l'temps").slice(0, 80), body: String(e.body || "").slice(0, 200), tag: "pasltemps-chrono", url: "./"})}));
       await store.timersSet(v.endpoint, list);
       return ok({ok:true, count: list.length});
     }

@@ -1,4 +1,4 @@
-// Pas l'temps — langues. Le français est la langue de référence : chaque texte de l'appli est écrit en français
+// Juste l'temps — langues. Le français est la langue de référence : chaque texte de l'appli est écrit en français
 // et traduit à l'affichage avec tx("texte", {variables}). Réglage « Langue » : auto (langue de l'appareil) ou une des LANGS.
 // L'anglais est ici ; les autres langues sont dans js/lang/<code>.js, chargé seulement si besoin.
 // Les textes fixes de la page (index.html) sont traduits au chargement par translateDom().
@@ -13,7 +13,7 @@
 
   const EN = {
     // --- Page ---
-    "Bonjour,": "Hi,", "Budget": "Budget", "Tous": "All", "prix estimé": "estimated price", "prix Google": "Google price", "par personne": "per person", "← Modifier": "← Edit", "📍 Dis-moi d'abord où tu es": "📍 Tell me where you are first", "Voir les {n} lieux →": "See the {n} places →", "Voir le lieu →": "See the place →", "Voir les propositions →": "See the suggestions →", "Alors, on fait quoi à {v} ?": "So, what shall we do in {v}?", "Alors, on fait quoi par ici ?": "So, what shall we do around here?", "t'as pas l'temps": "got no time", "Réglages": "Settings",
+    "Bonjour,": "Hi,", "Budget": "Budget", "Tous": "All", "prix estimé": "estimated price", "prix Google": "Google price", "par personne": "per person", "← Modifier": "← Edit", "📍 Dis-moi d'abord où tu es": "📍 Tell me where you are first", "Voir les {n} lieux →": "See the {n} places →", "Voir le lieu →": "See the place →", "Voir les propositions →": "See the suggestions →", "Alors, on fait quoi à {v} ?": "So, what shall we do in {v}?", "Alors, on fait quoi par ici ?": "So, what shall we do around here?", "t'as juste l'temps": "you've got just enough time", "Réglages": "Settings",
     "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: your places and history are still here.",
     "✦ Ta pause, tout près": "✦ Your break, close by", "J'ai": "I've got", "On fait quoi ?": "What shall we do?",
     "Temps disponible": "Time available", "Moyen de transport": "Getting there", "Envie de…": "In the mood for…", "Envie": "Mood",
@@ -29,7 +29,7 @@
     "Explorer": "Explore", "Avis": "Reviews", "Profil": "Profile",
     "Couleurs": "Colours", "Apparence": "Appearance", "☀️ Clair": "☀️ Light", "🌙 Sombre": "🌙 Dark", "Format d'affichage": "Display size",
     "Tablette": "Tablet", "Ordi": "Computer", "Activées": "On", "Désactivées": "Off", "Installer l'appli": "Install the app",
-    "Langue": "Language", "Pas l'temps · Données des lieux ©": "Pas l'temps · Place data ©", "les contributeurs d'OpenStreetMap": "OpenStreetMap contributors",
+    "Langue": "Language", "Juste l'temps · Données des lieux ©": "Juste l'temps · Place data ©", "les contributeurs d'OpenStreetMap": "OpenStreetMap contributors",
     "Mentions légales · Confidentialité · Conditions": "Legal · Privacy · Terms", "Terminé": "Done",
     // --- Envies, rubriques, recherches ---
     "Manger": "Eat", "Prendre l'air": "Get some air", "Galerie marchande": "Shopping", "Culture": "Culture",
@@ -90,8 +90,8 @@
     "Mobile": "Mobile", "Ordi (grand écran)": "Computer (large screen)",
     "Choisi selon la taille de l'écran : {l} en ce moment.": "Chosen from the screen size: {l} right now.",
     "Cet écran est trop petit : l'affichage reste en format mobile.": "This screen is too small: the display stays in mobile size.",
-    "C'est installé ✓ Pas l'temps s'ouvre depuis votre écran d'accueil.": "Installed ✓ Pas l'temps opens from your home screen.",
-    "Ajoutez Pas l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.": "Add Pas l'temps to your home screen: it opens full screen, like a real app.",
+    "C'est installé ✓ Juste l'temps s'ouvre depuis votre écran d'accueil.": "Installed ✓ Juste l'temps opens from your home screen.",
+    "Ajoutez Juste l'temps à votre écran d'accueil : elle s'ouvre en plein écran, comme une vraie appli.": "Add Juste l'temps to your home screen: it opens full screen, like a real app.",
     "📲 Installer": "📲 Install",
     "<li>Touchez le bouton <b>Partager</b> de Safari</li><li>Puis <b>Sur l'écran d'accueil</b></li>": "<li>Tap Safari's <b>Share</b> button</li><li>Then <b>Add to Home Screen</b></li>",
     "<li>Ouvrez le menu du navigateur (⋮)</li><li>Puis <b>Installer l'application</b> ou <b>Ajouter à l'écran d'accueil</b></li>": "<li>Open the browser menu (⋮)</li><li>Then <b>Install app</b> or <b>Add to Home screen</b></li>",
@@ -129,13 +129,13 @@
     "Création…": "Creating…", "Envoyer le lien": "Send the link", "Copier le code": "Copy the code", "J'ai un code": "I have a code",
     "Code copié ✓ Garde-le dans tes notes.": "Code copied ✓ Keep it in your notes.",
     "Le code est sélectionné : copie-le à la main.": "The code is selected: copy it by hand.",
-    "Pas l'temps : mon code de récupération": "Pas l'temps: my recovery code",
-    "Ouvre ce lien pour retrouver mon profil Pas l'temps :": "Open this link to restore my Pas l'temps profile:",
+    "Juste l'temps : mon code de récupération": "Juste l'temps: my recovery code",
+    "Ouvre ce lien pour retrouver mon profil Juste l'temps :": "Open this link to restore my Juste l'temps profile:",
     "Lien copié ✓ Envoie-le toi par message ou par mail.": "Link copied ✓ Send it to yourself by message or email.",
     "Le lien est sélectionné : copie-le à la main.": "The link is selected: copy it by hand.",
     "Récupérer le profil, les favoris et l'historique contenus dans ce lien ?": "Restore the profile, favourites and history in this link?",
     "Ce lien de récupération n'est pas reconnu.": "This recovery link isn't recognised.",
-    "On n'a pas l'temps ?": "No time?", "On n'a pas l'temps <em></em> ?": "No time, <em></em>?",
+
     // --- Filtres, partage, retour à heure fixe, météo, premier lancement ---
     "{s} sur place": "{s} on site", "🌙 ouvert tard": "🌙 open late", "Envoyer à un pote": "Send to a friend",
     "On va là ? {n} ({a}), à {w} min {way}.": "Shall we go? {n} ({a}), {w} min {way}.", "voir la carte": "see map",
@@ -207,10 +207,10 @@
     "C'est celui de ton profil : tes potes le verront. Tu pourras ajouter une photo dans Profil.": "It's the one from your profile: your friends will see it. You can add a photo in Profile.",
     "Modifier dans Profil": "Edit in Profile",
     "Rappels": "Reminders",
-    "Sur iPhone et iPad : ajoute d'abord Pas l'temps à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis l'icône pour activer les rappels.": "On iPhone and iPad: first add Pas l'temps to your Home Screen (Share → Add to Home Screen), then open it from the icon to turn on reminders.",
+    "Sur iPhone et iPad : ajoute d'abord Juste l'temps à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis l'icône pour activer les rappels.": "On iPhone and iPad: first add Juste l'temps to your Home Screen (Share → Add to Home Screen), then open it from the icon to turn on reminders.",
     "Ce navigateur ne permet pas les notifications.": "This browser doesn't support notifications.",
-    "Les notifications sont bloquées pour Pas l'temps. Autorise-les dans les réglages du téléphone, puis reviens ici.": "Notifications are blocked for Pas l'temps. Allow them in your phone's settings, then come back here.",
-    "Une petite notification si tu n'as pas ouvert l'appli depuis 3 jours : « T'as pas l'temps ? »": "A little notification if you haven't opened the app for 3 days: “No time?”",
+    "Les notifications sont bloquées pour Juste l'temps. Autorise-les dans les réglages du téléphone, puis reviens ici.": "Notifications are blocked for Juste l'temps. Allow them in your phone's settings, then come back here.",
+    "Une petite notification si tu n'as pas ouvert l'appli depuis 3 jours : « T'as 20 minutes ? »": "A little notification if you haven't opened the app for 3 days: “Got 20 minutes?”",
     "Non merci": "No thanks", "Tous les 3 jours": "Every 3 days", "vers {h} h": "around {h}:00",
     "Sans autorisation, pas de rappel.": "Without permission, no reminders.",
     "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Done ✓ First reminder in 3 days if you don't open the app before then.",

@@ -1,4 +1,4 @@
-// Configuration de Pas l'temps.
+// Configuration de Juste l'temps.
 // apiBase : adresse du serveur (blog, avis, sauvegardes). Vide = même adresse que l'appli.
 // Exemple si l'appli est publiée sur GitHub Pages et le serveur ailleurs :
 //   apiBase: "https://pasltemps.example.com"

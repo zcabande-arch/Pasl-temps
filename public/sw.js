@@ -1,5 +1,5 @@
-/* Pas l'temps — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v60";
+/* Juste l'temps — service worker : l'appli s'ouvre même hors connexion */
+const VERSION = "pasltemps-v61";
 const CORE = [
   "./",
   "./index.html",
@@ -101,34 +101,34 @@ self.addEventListener("fetch", e => {
 // ---------- Rappels « T'as l'temps ? » ----------
 // Le serveur envoie une notification vide ; on choisit ici le message (dans la langue du téléphone).
 const RAPPELS = {
-  fr: ["T'as pas l'temps ? 20 minutes suffisent pour une vraie pause.", "Une pause café ? On te trouve un endroit juste à côté.",
+  fr: ["T'as 20 minutes ? C'est juste l'temps d'une vraie pause.", "Une pause café ? On te trouve un endroit juste à côté.",
        "Et si tu prenais l'air 20 minutes ?", "T'as une demi-heure ? Il y a sûrement un truc sympa près de toi.",
-       "Petite pause aujourd'hui ? Ouvre Pas l'temps, on s'occupe du reste."],
-  en: ["No time? 20 minutes is enough for a real break.", "Coffee break? We'll find a spot right around the corner.",
+       "Petite pause aujourd'hui ? Ouvre Juste l'temps, on s'occupe du reste."],
+  en: ["Got 20 minutes? That's just enough time for a real break.", "Coffee break? We'll find a spot right around the corner.",
        "How about 20 minutes of fresh air?", "Got half an hour? There's surely something nice near you.",
-       "A little break today? Open Pas l'temps, we'll handle the rest."],
-  es: ["¿No tienes tiempo? 20 minutos bastan para una pausa de verdad.", "¿Una pausa para un café? Te encontramos un sitio justo al lado.",
+       "A little break today? Open Juste l'temps, we'll handle the rest."],
+  es: ["¿Tienes 20 minutos? Justo el tiempo para una pausa de verdad.", "¿Una pausa para un café? Te encontramos un sitio justo al lado.",
        "¿Y si tomas el aire 20 minutos?", "¿Tienes media hora? Seguro que hay algo chulo cerca de ti.",
-       "¿Una pausita hoy? Abre Pas l'temps, nosotros nos encargamos del resto."],
-  de: ["Keine Zeit? 20 Minuten reichen für eine echte Pause.", "Kaffeepause? Wir finden dir einen Ort gleich um die Ecke.",
+       "¿Una pausita hoy? Abre Juste l'temps, nosotros nos encargamos del resto."],
+  de: ["20 Minuten frei? Genau genug für eine echte Pause.", "Kaffeepause? Wir finden dir einen Ort gleich um die Ecke.",
        "Wie wär's mit 20 Minuten frischer Luft?", "Eine halbe Stunde Zeit? In deiner Nähe gibt's bestimmt was Schönes.",
-       "Kleine Pause heute? Öffne Pas l'temps, wir kümmern uns um den Rest."],
-  it: ["Non hai tempo? Bastano 20 minuti per una vera pausa.", "Pausa caffè? Ti troviamo un posto proprio qui vicino.",
+       "Kleine Pause heute? Öffne Juste l'temps, wir kümmern uns um den Rest."],
+  it: ["Hai 20 minuti? Giusto il tempo di una vera pausa.", "Pausa caffè? Ti troviamo un posto proprio qui vicino.",
        "E se prendessi un po' d'aria per 20 minuti?", "Hai mezz'ora? Di sicuro c'è qualcosa di bello vicino a te.",
-       "Una pausa oggi? Apri Pas l'temps, al resto pensiamo noi."],
-  pt: ["Sem tempo? 20 minutos bastam para uma pausa de verdade.", "Pausa pro café? A gente acha um lugar bem pertinho.",
+       "Una pausa oggi? Apri Juste l'temps, al resto pensiamo noi."],
+  pt: ["Tem 20 minutos? É o tempo certo para uma pausa de verdade.", "Pausa pro café? A gente acha um lugar bem pertinho.",
        "Que tal 20 minutos de ar livre?", "Tem meia hora? Com certeza tem algo legal perto de você.",
-       "Uma pausinha hoje? Abra Pas l'temps, a gente cuida do resto."],
-  nl: ["Geen tijd? 20 minuten is genoeg voor een echte pauze.", "Koffiepauze? We vinden een plekje vlak om de hoek.",
+       "Uma pausinha hoje? Abra Juste l'temps, a gente cuida do resto."],
+  nl: ["20 minuten? Net genoeg tijd voor een echte pauze.", "Koffiepauze? We vinden een plekje vlak om de hoek.",
        "Wat dacht je van 20 minuten frisse lucht?", "Half uurtje? Er is vast iets leuks bij jou in de buurt.",
-       "Even pauze vandaag? Open Pas l'temps, wij regelen de rest."]
+       "Even pauze vandaag? Open Juste l'temps, wij regelen de rest."]
 };
 self.addEventListener("push", e => {
   // le serveur envoie {title, body, tag, url} (chiffré, déchiffré par le navigateur) ; sinon, message au hasard
   let m = null; try{ m = e.data ? e.data.json() : null; }catch(err){}
   const code = String(self.navigator.language || "fr").slice(0, 2).toLowerCase(), list = RAPPELS[code] || RAPPELS.en;
-  if(!m || !m.body) m = {title: "Pas l'temps", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"};
-  e.waitUntil(self.registration.showNotification(m.title || "Pas l'temps", {
+  if(!m || !m.body) m = {title: "Juste l'temps", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"};
+  e.waitUntil(self.registration.showNotification(m.title || "Juste l'temps", {
     body: m.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: m.tag || "pasltemps", renotify: true,
     vibrate: [200, 100, 200], data: {url: m.url || "./"}
   }));

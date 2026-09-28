@@ -2,7 +2,7 @@
   "name": "pas-ltemps",
   "version": "1.0.0",
   "private": true,
-  "description": "Pas l'temps : trouver à pied ce qui tient dans sa pause.",
+  "description": "Juste l'temps : trouver à pied ce qui tient dans sa pause.",
   "license": "UNLICENSED",
   "engines": { "node": ">=22.13" },
   "scripts": {

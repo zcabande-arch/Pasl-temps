@@ -23,7 +23,7 @@ const doc = p => "/api/doc?path=" + encodeURIComponent(p);
 test("sert l'appli et répond à /api/health", {skip: !!process.env.API_BASE}, async () => {
   const r = await fetch(base + "/");
   assert.equal(r.status, 200);
-  assert.match(await r.text(), /Pas l'temps/);
+  assert.match(await r.text(), /Juste l'temps/);
   assert.deepEqual(await (await fetch(base + "/api/health")).json(), {ok:true, app:"pasltemps"});
   assert.equal((await fetch(base + "/../server/server.js")).status, 404);
 });
