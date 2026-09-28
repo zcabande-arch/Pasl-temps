@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="63">
+<meta name="app-version" content="64">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -21,15 +21,16 @@
 </head>
 <body>
 <div id="splash" role="status" aria-live="polite">
-  <p class="hello">Bonjour<span id="splashName"></span>,</p>
-  <p class="line">Fissa <em>Fissa</em></p>
+  <p class="hello">Bonjour,</p>
+  <p class="line">Fissa fissa<span id="splashName"></span> ?</p>
   <p class="fissa">ta pause, tout près ⚡</p>
 </div>
 <script>
 (function(){
   var s = document.getElementById("splash"), n = "";
   try{ n = (JSON.parse(localStorage.getItem("pasltemps.profile") || "{}").name || "").trim(); }catch(e){}
-  if(n) document.getElementById("splashName").textContent = " " + n;
+  // « Fissa fissa, Zoé ? » : le prénom en grand, en rouge
+  if(n){ var sp = document.getElementById("splashName"), em = document.createElement("em"); em.textContent = n; sp.append(", ", em); }
   function hide(){ if(!s || s.classList.contains("out")) return; s.classList.add("out"); setTimeout(function(){ s.remove(); }, 600); }
   s.addEventListener("click", hide);
   setTimeout(hide, 2000);
