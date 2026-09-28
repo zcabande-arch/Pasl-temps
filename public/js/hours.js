@@ -28,10 +28,11 @@
   function parseTimes(s){
     const out = [];
     for(const part of s.split(",")){
-      const m = /^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})$/.exec(part);
+      const m = /^(\d{1,2})[:h.](\d{2})\s*-\s*(\d{1,2})[:h.](\d{2})$/.exec(part.trim());
       if(!m) return null;
       const a = +m[1] * 60 + +m[2];
       let b = +m[3] * 60 + +m[4];
+      if(b === 1439) b = 1440;           // « 23:59 » = jusqu'à minuit
       if(a >= 1440 || b > 1440 + 720) return null;
       if(b <= a) b += 1440;             // passe minuit
       out.push([a, b]);
@@ -48,22 +49,39 @@
     if(/^24\/7$/.test(src)) week = Array.from({length:7}, () => [[0, 1440]]);
     else {
       week = Array.from({length:7}, () => []);
-      let ok = true, any = false;
-      for(let rule of src.split(/\s*(?:;|\|\|)\s*/)){
+      let ok = true, any = false, prevDays = null;
+      // « Temporarily closed », « fermé temporairement » (commentaire seul) : fermé
+      if(/^"?[^"]*\b(temporar\w* closed|closed temporar\w*|ferm[ée]e?s? (temporairement|définitivement|pour travaux)|permanently closed)\b[^"]*"?$/i.test(src)){
+        week = Array.from({length:7}, () => []); cache.set(oh, week); return week;
+      }
+      const DAY = "(?:Mo|Tu|We|Th|Fr|Sa|Su|PH|SH)";
+      const norm = src
+        .replace(new RegExp("(" + DAY + ")\\s*,\\s*(?=" + DAY + "\\b)", "g"), "$1,")          // « Mo-Th, Su » → « Mo-Th,Su »
+        .replace(new RegExp("(\\d)\\s*,\\s*(?=" + DAY + "\\b)", "g"), "$1\u0001");        // « 20:30, Su 09:00… » : règle en plus
+      // « ; » : la règle remplace les horaires de ses jours ; « , » entre deux règles : elle s'y ajoute
+      const parts = norm.split(/\s*(;|\|\||\u0001)\s*/);
+      for(let i = 0; i < parts.length; i += 2){
+        let rule = parts[i]; const add = parts[i - 1] === "\u0001";
         rule = rule.trim().replace(/\s+/g, " ");
         if(!rule) continue;
-        if(/^PH\b/.test(rule) || /^"/.test(rule)) continue;          // jours fériés, commentaires : ignorés
-        rule = rule.replace(/,PH\b|\bPH,/g, "");
+        if(/^"/.test(rule)) continue;                                   // commentaire : ignoré
+        // jours fériés (PH) : on les retire de la liste des jours ; une règle « PH … » seule est ignorée
+        rule = rule.replace(/^PH,|,PH\b/g, "");
+        if(/^(PH|SH)\b/.test(rule)) continue;
         let m = /^((?:Mo|Tu|We|Th|Fr|Sa|Su)[A-Za-z,\-]*)?\s*(.*)$/.exec(rule);
-        const days = m[1] ? parseDays(m[1]) : [0,1,2,3,4,5,6];
-        const rest = m[2].trim();
-        if(!days){ ok = false; break; }
-        if(/^(off|closed)$/i.test(rest)){ days.forEach(d => week[d] = []); any = true; continue; }
-        if(rest === "24/7" || rest === "00:00-24:00"){ days.forEach(d => week[d] = [[0, 1440]]); any = true; continue; }
+        let days = m[1] ? parseDays(m[1]) : null;
+        const rest = m[2].trim().replace(/\s*"[^"]*"$/, "");         // commentaire en fin de règle
+        if(m[1] && !days){ ok = false; break; }
+        // horaires sans jour juste après une règle avec jours (« Mo-Fr 12:00-14:30; 19:00-22:00 ») :
+        // c'est la suite des mêmes jours (service du soir), pas une règle pour toute la semaine
+        const cont = !days && prevDays && /^\d/.test(rest);
+        if(!days) days = cont ? prevDays : [0,1,2,3,4,5,6];
+        if(/^(off|closed)$/i.test(rest)){ days.forEach(d => week[d] = []); any = true; prevDays = days; continue; }
+        if(rest === "24/7" || rest === "00:00-24:00"){ days.forEach(d => week[d] = [[0, 1440]]); any = true; prevDays = days; continue; }
         const times = parseTimes(rest);
         if(!times){ ok = false; break; }
-        days.forEach(d => week[d] = times.map(t => t.slice()));
-        any = true;
+        days.forEach(d => week[d] = cont || add ? week[d].concat(times.map(t => t.slice())) : times.map(t => t.slice()));
+        any = true; prevDays = days;
       }
       if(!ok || !any) week = null;
     }
@@ -106,7 +124,8 @@
     now = now || new Date();
     const arrive = new Date(now.getTime() + walkMin * 60000);
     const s = at(oh, arrive), n = at(oh, now);
-    if(s.state === "unknown") return {state:"unknown", level:"unknown", text:""};
+    // pas d'horaires sur la carte, ou dans une forme qu'on ne sait pas lire : on le dit, sans deviner
+    if(s.state === "unknown") return {state:"unknown", level:"unknown", text: oh ? tx("Horaires à vérifier") : tx("Horaires non indiqués")};
     if(s.state === "open"){
       // late : encore ouvert à 22 h ou plus tard (mis en avant le soir)
       const late = s.allDay || s.closesAt >= 22 * 60;

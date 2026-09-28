@@ -26,6 +26,8 @@
   "Chercher « {q} » comme ville ou adresse": "Buscar «{q}» como ciudad o dirección",
   "Y aller": "Ir",
   "Ajouté ✓": "Añadido ✓",
+  "Horaires non indiqués": "Horario no indicado",
+  "Horaires à vérifier": "Horario por confirmar",
   "Bonjour,": "Hola,",
   "Réglages": "Ajustes",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Sin conexión: tus lugares y tu historial siguen aquí.",

@@ -402,6 +402,7 @@ body.lay-wide main{max-width:1240px;padding-left:36px;padding-right:36px}
 .oh-ok{color:var(--leaf)}
 .oh-warn{color:#B76E00}
 .oh-closed{color:var(--warn)}
+.oh-unknown{color:var(--soft);font-weight:500}
 .place.closed{opacity:.6}
 .place.closed .ticket{filter:grayscale(1)}
 .openrow{align-items:center;margin-bottom:12px}

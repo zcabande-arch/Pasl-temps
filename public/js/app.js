@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "70";
+const APP_VERSION = "71";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -630,7 +630,8 @@ function renderResults(){
     // Ouvert / fermé à l'arrivée : les lieux fermés passent en bas (ou disparaissent avec le filtre)
     const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
     const items = all.filter(p => passFilter(p))
-      .sort((a, b) => (a.open.level === "closed") - (b.open.level === "closed") || a.dist - b.dist);
+      // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
+      .sort((a, b) => rankOpen(a) - rankOpen(b) || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -697,6 +698,7 @@ function whereTitle(){
   return h;
 }
 
+const rankOpen = p => p.open.level === "closed" ? 2 : p.open.level === "unknown" ? 1 : 0;
 const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []).filter(p => !reportHidden(p)); }
 

@@ -26,6 +26,8 @@
   "Chercher « {q} » comme ville ou adresse": "Zoek “{q}” als stad of adres",
   "Y aller": "Ga erheen",
   "Ajouté ✓": "Toegevoegd ✓",
+  "Horaires non indiqués": "Openingstijden niet vermeld",
+  "Horaires à vérifier": "Openingstijden controleren",
   "Bonjour,": "Hoi,",
   "Réglages": "Instellingen",
   "📴 Hors connexion : vos lieux et votre historique restent accessibles.": "📴 Offline: je plekken en geschiedenis blijven beschikbaar.",

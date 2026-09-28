@@ -42,3 +42,39 @@ test("texte pour une visite : à l'arrivée et pendant le temps sur place", () =
   assert.equal(H.forVisit("24/7", 5, 10, t(3, 7)).text, "Ouvert 24h/24");
   assert.equal(H.forVisit(undefined, 5, 10, t(3, 7)).level, "unknown");
 });
+
+// Cas trouvés en comparant avec l'outil officiel OpenStreetMap sur ~40 000 commerces réels
+test("jours fériés dans la liste des jours : le week-end reste ouvert", () => {
+  const oh = "Mo-Fr 07:00-20:00; PH,Sa,Su 08:00-20:00";
+  assert.equal(H.at(oh, t(5, 10)).state, "open");      // samedi
+  assert.equal(H.at(oh, t(6, 10)).state, "open");      // dimanche
+  assert.equal(H.at("14:00-19:00; PH,Su,Mo off", t(0, 15)).state, "closed");   // lundi fermé
+  assert.equal(H.at("14:00-19:00; PH,Su,Mo off", t(1, 15)).state, "open");
+});
+
+test("service du soir sans jour : il s'ajoute au midi des mêmes jours", () => {
+  const oh = "Mo-Fr 12:00-14:30; 19:00-22:00";
+  assert.equal(H.at(oh, t(0, 13)).state, "open");
+  assert.equal(H.at(oh, t(0, 20)).state, "open");
+  assert.equal(H.at(oh, t(5, 20)).state, "closed");    // samedi : rien
+  assert.equal(H.at("Mo-Su 12:00-14:30; 19:00-22:00", t(6, 13)).state, "open");
+  assert.equal(H.at("Mo-Su 12:00-14:30; 19:00-22:00", t(6, 20)).state, "open");
+});
+
+test("virgules : espaces, jours séparés, règles en plus", () => {
+  assert.equal(H.at("Mo-Sa 12:00-14:30, 19:00-22:30", t(0, 20)).state, "open");
+  assert.equal(H.at("Mo-Sa 09:00-20:30, Su 09:00-12:45", t(6, 10)).state, "open");
+  assert.equal(H.at("Mo-Sa 09:00-20:30, Su 09:00-12:45", t(6, 14)).state, "closed");
+  assert.equal(H.at("Mo-Th, Su 11:00-22:00; Fr, Sa 11:00-23:00", t(6, 21)).state, "open");
+  const plus = "Mo-Sa 11:30-14:30, Mo-Su 18:30-22:30";
+  assert.equal(H.at(plus, t(0, 12)).state, "open");    // le midi n'est pas effacé
+  assert.equal(H.at(plus, t(6, 19)).state, "open");
+  assert.equal(H.at(plus, t(6, 12)).state, "closed");
+});
+
+test("23:59 = minuit, fermeture temporaire, formats non gérés → inconnu", () => {
+  assert.equal(H.at("Mo-Su 00:00-02:00, 07:00-23:59", t(2, 23, 59)).state, "open");
+  assert.equal(H.at('"Temporarily closed"', t(2, 12)).state, "closed");
+  assert.equal(H.at("sunrise-sunset", t(2, 12)).state, "unknown");
+  assert.equal(H.at("Mo-Su 18:00+", t(2, 19)).state, "unknown");
+});
