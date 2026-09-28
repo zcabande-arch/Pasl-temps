@@ -24,6 +24,7 @@ export default {
     if(!api) api = createApi(d1.d1Store(env.DB), {
       adminToken: env.ADMIN_TOKEN, reportThreshold: +env.REPORT_THRESHOLD || 3, rateLimit: env.RATE_LIMIT !== "off",
       sendMail: mail.mailerFrom(env),
+      googleKey: env.GOOGLE_PLACES_KEY || "", googleDailyMax: +env.GOOGLE_DAILY_MAX || 30,
       appOrigins: String(env.APP_ORIGINS || "https://zcabande-arch.github.io").split(",").map(s => s.trim())
     });
     try{

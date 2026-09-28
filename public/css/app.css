@@ -735,3 +735,8 @@ body:not(.lay-wide) #viewExplore.steps:not(.step2) .idea{display:none}
 .wheresel small{color:var(--soft);font-size:14px;margin-top:2px}
 .wheresel small:empty{display:none}
 .wheresel .ok{width:30px;height:30px;border-radius:50%;background:var(--acc);color:var(--accink);display:grid;place-items:center;font-weight:800;flex:none}
+
+/* Prix € / €€ / €€€ */
+.place .eur{display:inline-block;margin-right:6px;font-weight:800;color:var(--ink);letter-spacing:.02em}
+.chip.price{font-weight:800;min-width:52px}
+.prline small{color:var(--soft)}

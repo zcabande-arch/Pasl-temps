@@ -71,6 +71,7 @@ const fail = (status, error) => ({status, body:{error}});
 
 const { loginMail } = require("./mail");
 const push = require("./push");
+const { googlePrice } = require("./prices");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
@@ -166,6 +167,29 @@ function createApi(store, opts = {}){
     }
 
     // Clé publique des notifications (créée à la première demande)
+    // ---------- Prix (Google) ----------
+    // {items:[{id, name, lat, lng}]} (12 au plus) → {prices:{id: {level, from, to, cur}}} ; {off:true} sans clé ou quota du jour atteint
+    if(path === "/api/price" && method === "POST"){
+      if(!opts.googleKey) return ok({off: true});
+      const b = await body(req); if(b.error) return b.error;
+      const items = (Array.isArray(b.value && b.value.items) ? b.value.items : []).slice(0, 12)
+        .filter(x => isObj(x) && typeof x.id === "string" && x.id.length <= 80 && typeof x.name === "string" && x.name.length <= 120 && isFinite(x.lat) && isFinite(x.lng));
+      if(!items.length) return fail(400, "bad_items");
+      if(!limited("price:" + req.ip, items.length, 60, 0.2)) return fail(429, "rate_limited");
+      // plafond quotidien pour la facture Google (défaut 30/jour ≈ le quota gratuit mensuel)
+      const day = "gprice:" + new Date().toISOString().slice(0, 10), used = +(await store.kvGet(day)) || 0, max = opts.googleDailyMax || 30;
+      if(used >= max) return ok({off: true, quota: true});
+      const todo = items.slice(0, max - used);
+      await store.kvSet(day, String(used + todo.length));
+      const lang = typeof (b.value && b.value.lang) === "string" && /^[a-z]{2}$/.test(b.value.lang) ? b.value.lang : "fr";
+      const prices = {};
+      await Promise.all(todo.map(async x => {
+        try{ prices[x.id] = await googlePrice({name: x.name, lat: +x.lat, lng: +x.lng}, {key: opts.googleKey, fetchFn: opts.fetchFn, lang}); }
+        catch(e){ prices[x.id] = null; }
+      }));
+      return ok({prices});
+    }
+
     if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
 
     // Contenus masqués par la modération (public)

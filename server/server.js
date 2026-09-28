@@ -45,6 +45,7 @@ function createServer(store, opts = {}){
     rateLimit: opts.rateLimit,
     // E-mails de connexion : MAIL_WEBHOOK_URL + MAIL_WEBHOOK_KEY (Gmail) ou BREVO_API_KEY ; APP_ORIGINS = adresses de l'appli
     sendMail: opts.sendMail || mailerFrom(process.env),
+    googleKey: opts.googleKey ?? process.env.GOOGLE_PLACES_KEY, googleDailyMax: opts.googleDailyMax || +process.env.GOOGLE_DAILY_MAX || 30, fetchFn: opts.fetchFn,
     appOrigins: opts.appOrigins || (process.env.APP_ORIGINS ? process.env.APP_ORIGINS.split(",").map(s => s.trim()) : [`http://localhost:${PORT}`, "https://zcabande-arch.github.io"])
   });
 

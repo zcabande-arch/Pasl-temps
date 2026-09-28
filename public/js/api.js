@@ -120,5 +120,13 @@
     timer: (endpoint, events) => call("POST", "/api/push/timer", {endpoint, events})
   };
 
-  window.PLT = {connect, account, push: pushApi};
+  // Prix Google des lieux (sans compte) : {id: {level, from, to, cur} | null}, ou null si le service est coupé
+  async function prices(items, lang){
+    if(!BASE) return null;
+    try{
+      const r = await fetch(BASE + "/api/price", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({items, lang})});
+      const j = await r.json(); return r.ok && j && j.prices ? j.prices : null;
+    }catch(e){ return null; }
+  }
+  window.PLT = {connect, account, push: pushApi, prices};
 })();

@@ -3,6 +3,7 @@ name: Publier l'API (Cloudflare, gratuit)
 # Publie le serveur (blog, avis, modération, sauvegardes) sur Cloudflare Workers + D1.
 # Il faut une seule fois les secrets du dépôt : CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
 # MAIL_WEBHOOK_URL + MAIL_WEBHOOK_KEY (e-mails de connexion par Gmail, voir scripts/gmail-envoi.gs) ou BREVO_API_KEY et, pour la page de modération, ADMIN_TOKEN (voir le README).
+# Facultatif : GOOGLE_PLACES_KEY (prix des restaurants et bars, Google Places API).
 on:
   push:
     branches: [main, claude/pas-ltemps-web-app-i23p2m]
@@ -27,6 +28,7 @@ jobs:
       BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
       MAIL_WEBHOOK_URL: ${{ secrets.MAIL_WEBHOOK_URL }}
       MAIL_WEBHOOK_KEY: ${{ secrets.MAIL_WEBHOOK_KEY }}
+      GOOGLE_PLACES_KEY: ${{ secrets.GOOGLE_PLACES_KEY }}
       WRANGLER_SEND_METRICS: "false"
     steps:
       - uses: actions/checkout@v4
@@ -75,6 +77,10 @@ jobs:
       - name: Clé d'envoi des e-mails de connexion (Brevo)
         if: steps.check.outputs.ok == 'true' && env.BREVO_API_KEY != ''
         run: printf '%s' "$BREVO_API_KEY" | wrangler secret put BREVO_API_KEY
+
+      - name: Prix des restaurants et bars (Google Places, facultatif)
+        if: steps.check.outputs.ok == 'true' && env.GOOGLE_PLACES_KEY != ''
+        run: printf '%s' "$GOOGLE_PLACES_KEY" | wrangler secret put GOOGLE_PLACES_KEY
 
       - name: Brancher l'appli sur l'API
         if: steps.check.outputs.ok == 'true'

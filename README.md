@@ -93,6 +93,7 @@ L'appli est sur **https://zcabande-arch.github.io/Pasl-temps/** (la page d'accue
   → **Déployer** → autoriser l'accès à Gmail → copier l'**URL de l'application Web**.
 - Secrets GitHub : `MAIL_WEBHOOK_URL` (cette URL) et `MAIL_WEBHOOK_KEY` (la clé).
 - Autre possibilité : Brevo (`BREVO_API_KEY`, expéditeur `MAIL_FROM` dans `wrangler.toml`).
+- Prix des restaurants et bars (facultatif) : secret `GOOGLE_PLACES_KEY` (Google Places API (New)). Au plus `GOOGLE_DAILY_MAX` lieux par jour (30 par défaut, environ le quota gratuit de Google) ; sans clé, l'appli affiche des prix estimés.
 
 Le workflow crée la base, publie le serveur, puis **branche l'appli dessus tout seul**
 (il écrit l'adresse dans `public/config.js`). Il se relance à chaque modification du serveur.

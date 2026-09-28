@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "58";
+const APP_VERSION = "59";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -231,21 +231,23 @@ function placeEl(p){
   const free = Math.max(0, T - total);
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
-  const grp = findGroup(p), avg = grp && grp.avg;
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+  const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur" title="${pr.est ? tx("prix estimé") : tx("prix Google")}">${euros(pr.lvl)}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       <p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
+      ${pr?`<p class="legend prline">💶 <b>${euros(pr.lvl)}</b>${pr.g && pr.g.from != null ? ` · ${pr.g.from}${pr.g.to ? "–" + pr.g.to : "+"} ${pr.g.cur === "EUR" || !pr.g.cur ? "€" : esc(pr.g.cur)} ${tx("par personne")}` : ""} · <small>${pr.est ? tx("prix estimé") : tx("prix Google")}</small></p>`:""}
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
       <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
     </div>`;
   const head = el.querySelector("button");
-  head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open"))); };
+  head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open")));
+    if(el.classList.contains("open") && pr && pr.est) loadPrices([p]); };
   el.querySelector(".go").addEventListener("click", () => { const h = logVisit(p); startTimer(p, h); });
   el.querySelector(".shr").onclick = e => sharePlace(p, e.currentTarget);
   el.querySelector(".rep").onclick = () => openReport(p);
@@ -437,20 +439,49 @@ async function scheduleTimerPush(){
 }
 
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
-const FILTER = {q:"", cu:""};
+const FILTER = {q:"", cu:"", pr:0};
 const isNight = () => { const h = new Date().getHours(); return h >= 20 || h < 7; };
 // Pas de choix fait : « Ouverts seulement » s'active tout seul le soir et la nuit
 const openOnlyNow = () => SET.openOnly === true || (SET.openOnly == null && isNight());
 const cuisinesOf = p => p.cat ? p.cat.split(", ") : [];
+
+// ---------- Prix : € / €€ / €€€ ----------
+// Google (si le serveur a une clé) quand on filtre par prix ou qu'on ouvre un lieu ; sinon une estimation
+// d'après le type de lieu et la cuisine. Les prix Google ne sont gardés que le temps de la session.
+const PRICED = new Set(["Boulangeries", "Cafés, salons de thé", "Sur le pouce", "Glaciers", "Restaurants", "Bars", "Pubs, brasseries", "Cafés", "Salons de thé, cafés"]);
+const GPRICE = new Map();
+let gpriceOff = false;
+function priceOf(p){
+  if(!PRICED.has(p.g)) return null;
+  const g = GPRICE.get(p.id);
+  if(g && g.level) return {lvl: Math.min(g.level, 3), g};
+  if(p.g !== "Restaurants" && !/^(Bars|Pubs)/.test(p.g)) return {lvl: 1, est: true};
+  const t = ((p.cat || "") + " " + p.name).toLowerCase();
+  if(/fine.?dining|gastronom|étoilé|etoile|michelin/.test(t)) return {lvl: 3, est: true};
+  if(p.g === "Restaurants" && /kebab|sandwich|burger|falafel|tacos|bagel|cr[eê]pe|snack|fast|pizza|bubble/.test(t)) return {lvl: 1, est: true};
+  return {lvl: 2, est: true};
+}
+const euros = n => "€".repeat(n);
+async function loadPrices(list){
+  if(gpriceOff || !window.PLT || !PLT.prices) return;
+  const want = list.filter(p => PRICED.has(p.g) && !GPRICE.has(p.id)).slice(0, 12);
+  if(!want.length) return;
+  want.forEach(p => GPRICE.set(p.id, null));          // pas deux fois la même demande
+  const r = await PLT.prices(want.map(p => ({id: p.id, name: p.name, lat: p.lat, lng: p.lng})), I18N.lang);
+  if(!r){ gpriceOff = true; return; }
+  Object.entries(r).forEach(([id, v]) => GPRICE.set(id, v));
+  renderResults();
+}
 function passFilter(p, anyCuisine){
   const o = p.open || HOURS.forVisit(p.oh, p.walk, p.stay);
   if(openOnlyNow() && o.level === "closed") return false;
   if(SET.wcOnly && !p.wheelchair) return false;
   if(FILTER.cu && !anyCuisine && !cuisinesOf(p).includes(FILTER.cu)) return false;
+  if(FILTER.pr && PRICED.has(p.g) && priceOf(p).lvl !== FILTER.pr) return false;
   if(FILTER.q && !norm(p.name).includes(norm(FILTER.q))) return false;
   return true;
 }
-const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q);
+const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q || FILTER.pr);
 function renderFilters(){
   const F = $("filters"), list = allLoaded();
   F.hidden = !pos || !list.length && !filtering();
@@ -460,6 +491,9 @@ function renderFilters(){
     chips.push(`<button class="chip" data-f="open" aria-pressed="${openOnlyNow()}">🕐 ${tx("Ouverts à ton arrivée")}</button>`);
   if(list.some(p => p.wheelchair) || SET.wcOnly)
     chips.push(`<button class="chip" data-f="wc" aria-pressed="${!!SET.wcOnly}">${tx("♿ Accessible")}</button>`);
+  // gammes de prix (restaurants, cafés, bars…)
+  if(list.some(p => PRICED.has(p.g)))
+    [1, 2, 3].forEach(n => chips.push(`<button class="chip price" data-pr="${n}" aria-pressed="${FILTER.pr === n}">${euros(n)}</button>`));
   // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
   const count = {};
   new Map(list.filter(p => passFilter(p, true)).map(p => [p.id, p])).forEach(p => cuisinesOf(p).forEach(c => count[c] = (count[c] || 0) + 1));
@@ -473,6 +507,9 @@ $("fchips").addEventListener("click", e => {
   if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
   else if(b.dataset.f === "wc"){ SET.wcOnly = !SET.wcOnly; saveSet(); }
   else if(b.dataset.cu != null) FILTER.cu = FILTER.cu === b.dataset.cu ? "" : b.dataset.cu;
+  else if(b.dataset.pr){ const n = +b.dataset.pr; FILTER.pr = FILTER.pr === n ? 0 : n;
+    // vrais prix Google pour les lieux les plus proches de chaque rubrique
+    if(FILTER.pr) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4))); }
   renderResults();
 });
 $("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); renderResults(); });
