@@ -481,7 +481,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .moods button.photo small{position:relative;display:block;padding:0 16px 16px;font-size:12.5px;font-weight:600;opacity:.88}
 .moods button.photo .ok{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:800;
   background:rgba(255,255,255,.26);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
-.moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc),0 18px 36px -20px rgba(225,20,10,.55)}
+.moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 3px var(--acc),0 18px 36px -20px color-mix(in srgb, var(--acc) 55%, transparent)}
 .moods button.photo[aria-pressed="true"] .ok{background:var(--acc);box-shadow:none}
 .moods button.photo[aria-pressed="true"] b::before{content:none}
 .moods button:not(.photo){aspect-ratio:4/5}
@@ -570,7 +570,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .travel,.flat .travel{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:5px;margin:0 0 34px;max-width:none;
   background:var(--card)!important;border:0!important;border-radius:999px;box-shadow:var(--sh)}
 .travel .thumb{position:absolute;top:5px;bottom:5px;left:5px;width:calc((100% - 10px) / 3);border-radius:999px;background:var(--acc);
-  box-shadow:0 8px 18px -10px rgba(225,20,10,.7);transform:translateX(calc(var(--i, 0) * 100%));transition:transform .38s cubic-bezier(.3,1.25,.45,1)}
+  box-shadow:0 8px 18px -10px color-mix(in srgb, var(--acc) 70%, transparent);transform:translateX(calc(var(--i, 0) * 100%));transition:transform .38s cubic-bezier(.3,1.25,.45,1)}
 .travel button,.flat .travel button,.travel button[aria-pressed="true"]{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;
   padding:11px 4px;border:0;border-radius:999px;background:transparent!important;box-shadow:none!important;color:var(--ink);font-weight:700;font-size:15px;white-space:nowrap;transition:color .25s}
 .travel button[aria-pressed="true"]{color:var(--accink)}
