@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "72";
+const APP_VERSION = "73";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -921,7 +921,8 @@ function applyTheme(){
   const vals = THEMES[SET.theme][dark ? "D" : "L"];
   K.forEach((k,i) => root.style.setProperty("--" + k, vals[i]));
   document.body.classList.toggle("no-motion", SET.motion === "off");
-  document.body.classList.toggle("flat", !!THEMES[SET.theme].flat);
+  // même typo et même style pour tous les thèmes : seules les couleurs changent
+  document.body.classList.add("flat");
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
