@@ -4,6 +4,45 @@
 (function(){
   // a = trait rouge épais (accent), k = trait noir fin (cadre), f = forme rouge pleine
   const D = {
+    gear:      {a:"M24 6 V11 M24 37 V42 M6 24 H11 M37 24 H42 M11.3 11.3 L14.8 14.8 M33.2 33.2 L36.7 36.7 M11.3 36.7 L14.8 33.2 M33.2 14.8 L36.7 11.3", k:"M12 24 A12 12 0 1 0 36 24 A12 12 0 1 0 12 24 M19.5 24 A4.5 4.5 0 1 0 28.5 24 A4.5 4.5 0 1 0 19.5 24"},
+    clock:     {a:"M24 15 V24 L31 29", k:"M8 24 A16 16 0 1 0 40 24 A16 16 0 1 0 8 24"},
+    alarm:     {a:"M24 17 V26 L30 30", k:"M10 26 A14 14 0 1 0 38 26 A14 14 0 1 0 10 26 M8 13 L14 8 M40 13 L34 8 M14 38 L11 42 M34 38 L37 42"},
+    timer:     {a:"M24 18 V27 L29 31", k:"M10 27 A14 14 0 1 0 38 27 A14 14 0 1 0 10 27 M19 6 H29 M24 6 V13 M37 13 L39 11"},
+    ban:       {a:"M13 13 L35 35", k:"M8 24 A16 16 0 1 0 40 24 A16 16 0 1 0 8 24"},
+    thumbtack: {f:"M17 7 H31 L29 20 L35 27 H13 L19 20 Z", k:"M24 27 V42"},
+    people:    {f:"M12 15 A6 6 0 1 0 24 15 A6 6 0 1 0 12 15 Z M27 17 A5 5 0 1 0 37 17 A5 5 0 1 0 27 17 Z", k:"M6 40 C6 31 11 26 18 26 C25 26 30 31 30 40 M30 27 C37 27 42 31 42 40"},
+    bolt:      {f:"M27 5 L12 27 H23 L20 43 L36 20 H25 Z", k:""},
+    moon:      {f:"M29 7 A17 17 0 1 0 41 30 A14 14 0 0 1 29 7 Z", k:""},
+    mail:      {a:"M9 15 L24 27 L39 15", k:"M8 12 H40 V36 H8 Z"},
+    fire:      {f:"M24 5 C26 14 35 18 35 29 A11 11 0 0 1 13 29 C13 22 17 20 18 14 C21 19 23 19 24 5 Z", k:"M24 27 C25 31 28 32 28 35 A4 4 0 0 1 20 35 C20 32 23 31 24 27"},
+    globe:     {a:"M24 8 C16 16 16 32 24 40", k:"M8 24 A16 16 0 1 0 40 24 A16 16 0 1 0 8 24 M8 24 H40 M24 8 C32 16 32 32 24 40 M11 15 H37 M11 33 H37"},
+    trophy:    {f:"M16 8 H32 V18 A8 8 0 0 1 16 18 Z", k:"M16 11 H10 C10 18 13 21 17 21 M32 11 H38 C38 18 35 21 31 21 M24 26 V34 M16 41 H32 M19 34 H29 V41 H19 Z"},
+    sun:       {f:"M16 24 A8 8 0 1 0 32 24 A8 8 0 1 0 16 24 Z", k:"M24 5 V10 M24 38 V43 M5 24 H10 M38 24 H43 M10.6 10.6 L14 14 M34 34 L37.4 37.4 M10.6 37.4 L14 34 M34 14 L37.4 10.6"},
+    smile:     {a:"M16 27 C19 33 29 33 32 27", k:"M7 24 A17 17 0 1 0 41 24 A17 17 0 1 0 7 24 M18 18 V20 M30 18 V20"},
+    euro:      {a:"M34 13 A13 13 0 1 0 34 35", k:"M9 21 H27 M9 27 H25"},
+    wheelchair:{a:"M16 25 A10 10 0 1 0 30 36", k:"M18.5 9 A3.5 3.5 0 1 0 25.5 9 A3.5 3.5 0 1 0 18.5 9 M22 15 V29 H32 L36 39 M22 21 H31"},
+    rain:      {a:"M16 35 L13 42 M25 35 L22 42 M34 35 L31 42", k:"M13 29 A7 7 0 0 1 15 15 A10 10 0 0 1 34 14 A7.5 7.5 0 0 1 35 29 Z"},
+    handshake: {a:"M5 20 L13 14 L22 18 M43 20 L35 14 L26 16 L18 23 C16 26 20 28 22 26 L27 22", k:"M11 26 L20 35 C22 37 24 35 23 33 M16 24 L25 33 C27 35 29 33 28 31 M24 24 L31 31 C33 33 35 31 33 29 L27 22 M35 14 L41 28"},
+    heart:     {f:"M24 41 C12 32 6 26 6 18 A9 9 0 0 1 24 14 A9 9 0 0 1 42 18 C42 26 36 32 24 41 Z", k:""},
+    offline:   {a:"M9 9 L39 39", k:"M16 6 H32 V42 H16 Z M22 37 H26"},
+    bell:      {a:"M24 6 V10 M20 40 A4 4 0 0 0 28 40", k:"M13 34 V23 A11 11 0 0 1 35 23 V34 L38 37 H10 Z"},
+    dice:      {f:"M12.3 16.5 A4.2 4.2 0 1 0 20.7 16.5 A4.2 4.2 0 1 0 12.3 16.5 Z M19.8 24 A4.2 4.2 0 1 0 28.2 24 A4.2 4.2 0 1 0 19.8 24 Z M27.3 31.5 A4.2 4.2 0 1 0 35.7 31.5 A4.2 4.2 0 1 0 27.3 31.5 Z", k:"M13 8 H35 A5 5 0 0 1 40 13 V35 A5 5 0 0 1 35 40 H13 A5 5 0 0 1 8 35 V13 A5 5 0 0 1 13 8 Z"},
+    speech:    {a:"M15 18 H33 M15 25 H27", k:"M8 10 H40 V32 H22 L13 40 V32 H8 Z"},
+    city:      {a:"M22 15 V17 M27 15 V17 M22 22 V24 M27 22 V24 M22 29 V31 M27 29 V31", k:"M8 41 V22 H17 M17 41 V9 H32 V41 M32 25 H40 V41 M5 41 H43"},
+    map:       {a:"M10 31 C15 24 21 31 27 23 C31 18 35 21 38 16", k:"M6 12 L17 8 L31 12 L42 8 V36 L31 40 L17 36 L6 40 Z M17 8 V36 M31 12 V40"},
+    bug:       {a:"M24 18 V40", k:"M14 29 A10 11 0 0 1 34 29 A10 11 0 0 1 14 29 M18 19 A6 6 0 0 1 30 19 M8 24 L14 26 M40 24 L34 26 M8 34 L14 33 M40 34 L34 33 M19 12 L16 8 M29 12 L32 8"},
+    bulb:      {a:"M24 20 V30", k:"M18 31 C11 25 12 9 24 9 C36 9 37 25 30 31 V35 H18 Z M19 39 H29 M21 43 H27"},
+    lock:      {a:"M24 29 V34", k:"M11 22 H37 V41 H11 Z M17 22 V16 A7 7 0 0 1 31 16 V22"},
+    locate:    {f:"M19.5 24 A4.5 4.5 0 1 0 28.5 24 A4.5 4.5 0 1 0 19.5 24 Z", a:"M24 4 V11 M24 37 V44 M4 24 H11 M37 24 H44", k:"M12 24 A12 12 0 1 0 36 24 A12 12 0 1 0 12 24"},
+    arrow:     {a:"M7 24 H37 M28 15 L37 24 L28 33", k:""},
+    camera:    {a:"M17 27 A7 7 0 1 0 31 27 A7 7 0 1 0 17 27", k:"M7 16 H15 L19 10 H29 L33 16 H41 V38 H7 Z"},
+    sprout:    {f:"M24 28 C14 28 9 21 10 13 C18 13 24 18 24 28 Z M24 24 C24 16 30 10 38 10 C39 18 33 24 24 24 Z", k:"M24 22 V41 M16 41 H32"},
+    party:     {f:"M8 40 L16 16 L32 32 Z", a:"M27 8 L29 13 M36 14 L41 12 M34 23 L40 25", k:"M20 10 L21 13 M40 32 L37 33"},
+    gem:       {a:"M14 10 L6 20", k:"M14 10 H34 L42 20 L24 40 L6 20 Z M6 20 H42 M19 10 L24 20 L29 10 M24 20 V40"},
+    plane:     {f:"M22 7 C22 4 26 4 26 7 V19 L41 27 V31 L26 27 V36 L31 40 V42 L24 40 L17 42 V40 L22 36 V27 L7 31 V27 L22 19 Z", k:""},
+    install:   {a:"M5 21 H21 M16 16 L21 21 L16 26", k:"M24 6 H38 V42 H24 Z M29 37 H33"},
+    question:  {a:"M17 17 A7 7 0 1 1 27 23 C25 24 24 26 24 30", k:"M24 36 V37"},
+    check:     {a:"M11 25 L20 34 L37 15", k:""},
     search:    {a:"M29 29 L39 39", k:"M9 21 A12 12 0 1 0 33 21 A12 12 0 1 0 9 21"},
     chair:     {a:"M13 9 L21 25 H35", k:"M15 40 L18 21 H30 L34 40 M16.5 33 H32.5"},
     croissant: {f:"M7 31 C7 18 16 11 24 11 C32 11 41 18 41 31 C37 26 31 23.5 24 23.5 C17 23.5 11 26 7 31 Z", k:"M16 14.5 L18.5 24.5 M24 11 V23.5 M32 14.5 L29.5 24.5 M7 31 C11 26 17 23.5 24 23.5 C31 23.5 37 26 41 31"},
@@ -46,7 +85,14 @@
     "🥐":"plate", "🌳":"tree", "🛍️":"bag", "📚":"books", "🛋️":"chair", "🏃":"shoe",
     "🥖":"baguette", "☕":"cup", "🫖":"cup", "🌯":"sandwich", "🍦":"icecream", "🍝":"plate",
     "🌲":"forest", "🧺":"market", "🎁":"gift", "📖":"openbook", "🏛️":"monument", "🖼️":"frame", "🏺":"vase", "🍸":"cocktail", "🛒":"cart", "🏪":"mall", "🥕":"carrot", "🧀":"cheese", "🍷":"wine", "🍺":"beer",
-    "👟":"shoe", "🏋️":"dumbbell", "🧭":"compass", "⭐":"star", "📝":"pencil", "📍":"pin"
+    "👟":"shoe", "🏋️":"dumbbell", "🧭":"compass", "⭐":"star", "📝":"pencil", "📍":"pin",
+    // pictos de l'interface (boutons, messages…)
+    "⚙️":"gear", "🕐":"clock", "🕘":"clock", "⏰":"alarm", "⏱️":"timer", "🚫":"ban", "📌":"thumbtack", "👥":"people",
+    "⚡":"bolt", "🌙":"moon", "✉️":"mail", "✍️":"pencil", "✏️":"pencil", "🔥":"fire", "🔎":"search", "🔍":"search", "🌍":"globe",
+    "🏆":"trophy", "☀️":"sun", "😋":"smile", "😄":"smile", "💶":"euro", "♿":"wheelchair", "🌧️":"rain", "🤝":"handshake",
+    "❤️":"heart", "💛":"heart", "♥":"heart", "📴":"offline", "🔔":"bell", "🎲":"dice", "💬":"speech", "🏙️":"city", "🍽️":"plate",
+    "🗺️":"map", "🐞":"bug", "💡":"bulb", "🔒":"lock", "🛰️":"locate", "👉":"arrow", "📷":"camera", "🌱":"sprout", "🎉":"party",
+    "💎":"gem", "✈️":"plane", "📲":"install", "❔":"question", "🚶":"walk", "🚗":"car", "🚲":"bike", "🌟":"star", "🏃":"shoe"
   };
   function ico(name, size){
     const d = D[name] || D[FROM_EMOJI[name]];
@@ -58,5 +104,43 @@
       `<path d="${d.k}" fill="none" stroke="var(--ico-k, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
   const has = name => !!(D[name] || D[FROM_EMOJI[name]]);
-  window.ICONS = {ico, has, names: Object.keys(D)};
+
+  // ---------- Emojis de l'interface → pictos dessinés ----------
+  // Les textes de l'appli gardent leurs emojis (traductions…) : à l'affichage, chaque emoji connu devient
+  // son picto. Les contenus écrits par les gens (posts, avis, pseudos, avatars, noms de lieux) ne sont pas touchés.
+  const SKIP = "textarea,input,select,option,script,style,svg,title,[data-raw],.ava,.nm,.tx,.cm .t,.cm b,.rv1 .c p,.rv1 .h b,.quote,.pl,.note-u,#srchIn,.hours";
+  const keys = Object.keys(FROM_EMOJI).flatMap(k => [k, k.replace(/\uFE0F/g, "")]).filter((k, i, a) => k && a.indexOf(k) === i).sort((a, b) => b.length - a.length);
+  const RE = new RegExp("(" + keys.map(k => k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")\uFE0F?", "g");
+  const nameOf = e => FROM_EMOJI[e] || FROM_EMOJI[e + "\uFE0F"] || FROM_EMOJI[e.replace(/\uFE0F/g, "")];
+  function decorate(root){
+    if(!root) return;
+    if(root.nodeType === 3){ swap(root); return; }
+    if(root.nodeType !== 1 || root.closest(SKIP)) return;
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {acceptNode: n => {
+      const p = n.parentElement; if(!p || p.closest(SKIP)) return NodeFilter.FILTER_REJECT;
+      RE.lastIndex = 0; return RE.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP; }});
+    const list = []; while(w.nextNode()) list.push(w.currentNode);
+    list.forEach(swap);
+  }
+  function swap(n){
+    const p = n.parentElement; if(!p || p.closest(SKIP)) return;
+    const t = n.nodeValue; RE.lastIndex = 0; if(!RE.test(t)) return;
+    const frag = document.createDocumentFragment(); let last = 0; RE.lastIndex = 0; let m;
+    while((m = RE.exec(t))){
+      if(m.index > last) frag.appendChild(document.createTextNode(t.slice(last, m.index)));
+      const sp = document.createElement("span"); sp.className = "ei"; sp.innerHTML = ico(nameOf(m[1])); frag.appendChild(sp);
+      last = m.index + m[0].length;
+    }
+    if(last < t.length) frag.appendChild(document.createTextNode(t.slice(last)));
+    n.replaceWith(frag);
+  }
+  if(typeof document !== "undefined" && typeof MutationObserver !== "undefined"){
+    const start = () => {
+      decorate(document.body);
+      new MutationObserver(ms => ms.forEach(m => { if(m.type === "characterData") swap(m.target); else m.addedNodes.forEach(decorate); }))
+        .observe(document.body, {childList: true, subtree: true, characterData: true});
+    };
+    if(document.body) start(); else document.addEventListener("DOMContentLoaded", start);
+  }
+  window.ICONS = {ico, has, names: Object.keys(D), decorate};
 })();

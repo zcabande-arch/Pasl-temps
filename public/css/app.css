@@ -778,3 +778,9 @@ body.srch-on{overflow:hidden}
 .srow .w{flex:none;font-weight:800;color:var(--acc)}
 .sitem.open .srow{margin-bottom:0;border-radius:18px 18px 0 0}
 .sact{display:flex;gap:8px;flex-wrap:wrap;background:var(--card);box-shadow:var(--sh);border-radius:0 0 18px 18px;padding:4px 14px 14px;margin-bottom:8px}
+
+/* Emojis de l'interface remplacés par les pictos dessinés */
+.ei{display:inline-flex;vertical-align:-.22em;line-height:1}
+.ei svg{width:1.25em;height:1.25em}
+/* sur fond rouge ou foncé : picto de la couleur du texte */
+.idea > button .ei,.go .ei,.see .ei,.seg [aria-pressed="true"] .ei,.chip[aria-pressed="true"] .ei,.sticker .ei,.done .ei{--ico-a:currentColor}
