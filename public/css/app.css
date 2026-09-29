@@ -787,3 +787,7 @@ body.srch-on{overflow:hidden}
 /* cœur « envie préférée » sur les photos d'envies : petit, au centre de la pastille */
 .moods button.photo .ok .ei{vertical-align:middle}
 .moods button.photo .ok .ei svg{width:18px;height:18px}
+
+/* Présentation : le logo à la place du picto sur la première page */
+#onb .art.logo{background:#F5EEE6}
+#onb .art.logo img{width:132px;height:auto;display:block}

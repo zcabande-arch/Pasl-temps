@@ -8,7 +8,7 @@
   if(PROFILE.name || HIST.length){ mark(); return; }
 
   const STEPS = [
-    {ico:"chair", t:tx("Un peu de temps devant toi ?"), p:tx("Dis combien : 10 minutes, 2 heures, ou l'heure à laquelle tu dois être rentré·e.")},
+    {img:"icons/logo.png", t:tx("Un peu de temps devant toi ?"), p:tx("Dis combien : 10 minutes, 2 heures, ou l'heure à laquelle tu dois être rentré·e.")},
     {ico:"pin",   t:tx("On trouve ce qui tient dedans"), p:tx("Boulangerie, parc, musée… autour de toi, avec l'aller, le temps sur place et le retour.")},
     {ico:"walk",  t:tx("Tu pars, on chronomètre"), p:tx("Touche « Je pars » : l'appli te prévient quand il faut repartir pour être à l'heure.")},
     {ico:"user",  t:tx("Et toi, c'est quoi ton prénom ?"), p:tx("Il reste sur ton appareil. Tu peux aussi le laisser vide."), name:true}
@@ -19,7 +19,7 @@
   function render(){
     const s = STEPS[i], last = i === STEPS.length - 1;
     box.innerHTML = `<button class="skip link">${tx("Passer")}</button>
-      <div class="art">${ICONS.ico(s.ico, 120)}</div>
+      <div class="art${s.img ? " logo" : ""}">${s.img ? `<img src="${s.img}" alt="Fissa Fissa">` : ICONS.ico(s.ico, 120)}</div>
       <h2 id="onbT"></h2><p></p>
       ${s.name ? `<input class="field" id="onbName" maxlength="30" autocomplete="given-name" placeholder="${tx("Ton prénom")}" enterkeyhint="done">` : ""}
       <div class="dots">${STEPS.map((_, k) => `<i class="${k === i ? "on" : ""}"></i>`).join("")}</div>
