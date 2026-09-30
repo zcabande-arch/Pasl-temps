@@ -1,5 +1,5 @@
 /* Fissa Fissa — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v77";
+const VERSION = "pasltemps-v78";
 const CORE = [
   "./",
   "./index.html",
@@ -9,6 +9,8 @@ const CORE = [
   "./fonts/fraunces.woff2",
   "./fonts/fraunces-italic.woff2",
   "./fonts/bricolage.woff2",
+  "./fonts/anton.woff2",
+  "./fonts/archivo.woff2",
   "./js/i18n.js",
   "./js/api.js",
   "./js/places.js",

@@ -809,3 +809,82 @@ body.srch-on{overflow:hidden}
 [data-style="neon"] .place,[data-style="neon"] .radar{border-radius:30px}
 /* Fraîcheur : cartes blanches aérées, gros arrondis */
 [data-style="fraicheur"] .place,[data-style="fraicheur"] .card,[data-style="fraicheur"] .radar,[data-style="fraicheur"] .srow{border-radius:32px;box-shadow:0 14px 34px -22px rgba(17,20,18,.45)}
+
+/* =====================================================================
+   NOUVEAU DESIGN (v2) — inspiré des références : titres en capitales
+   grasses et condensées (Anton), texte Archivo, grandes cartes très
+   arrondies, pastilles à contour, boutons pilule foncés avec rond fléché,
+   barres en verre dépoli, barre d'onglets flottante.
+   ===================================================================== */
+@font-face{font-family:"Anton";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/anton.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Anton";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/anton-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url(../fonts/archivo.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url(../fonts/archivo-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+:root{--disp:"Anton",Impact,"Arial Narrow",sans-serif;--txt:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;--r:28px}
+
+/* texte */
+body,.flat body,button,input,select,textarea{font-family:var(--txt)}
+/* titres : capitales condensées */
+.flat h1,.flat h2,.flat .serif,.flat .group h3,.flat .brand,.flat .bloghead,.hero2 .display,.banner h3,.moods button.photo b,
+.radar h3,#splash .line,.phead .display,#onb h2,#whereAt .whereat,.wheresel b,.flat .hist h2 span,.flat .group h3 small{
+  font-family:var(--disp);font-weight:400;text-transform:uppercase;letter-spacing:.005em}
+.flat .group h3 small,.flat .hist h2 span{font-family:var(--txt);text-transform:none;font-weight:700}
+.hero2 .display{font-size:clamp(58px,17vw,92px);line-height:.9}
+.hero2 .display em,.brand em,#splash .line em,#whereAt .whereat em,.phead .display em{font-style:normal;color:var(--acc)}
+.flat .brand{font-size:25px;line-height:1.02;letter-spacing:.01em}
+#splash .line{font-size:clamp(52px,15vw,84px);line-height:.92}
+#whereAt .whereat{font-size:44px;line-height:.95}
+.flat h2{font-size:34px;line-height:.95;margin-bottom:18px}
+.flat h2::before{content:none}
+.flat .group h3{font-size:30px;line-height:1}
+.banner h3{font-size:52px;line-height:.9}
+.radar h3{font-size:24px}
+.wheresel b{font-size:30px}
+#onb h2{font-size:40px;line-height:.95}
+.kicker,.flat .kicker{font-family:var(--txt);font-weight:800;letter-spacing:.12em}
+.post{font-family:var(--txt)}
+
+/* grandes cartes très arrondies, à plat, fin contour */
+.flat .place,.flat .card,.flat .radar,.flat .entry,.flat .rvp,.flat .srow{border-radius:var(--r);box-shadow:none;border:1.5px solid var(--line)}
+.flat .place .emo{border-radius:22px}
+.flat .place.picked{box-shadow:0 0 0 3px var(--acc)}
+.moods button.photo,.flat .moods button{border-radius:var(--r);box-shadow:none}
+.moods button.photo b{font-size:30px;line-height:.95}
+.moods button.photo .ok{background:color-mix(in srgb,#fff 28%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.55)}
+.banner{border-radius:var(--r)}
+
+/* pastilles (temps, filtres, transports) : contour net ; choisie = foncée */
+.dial button,.flat .chip,.chip{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);background:var(--card)}
+.dial button[aria-pressed="true"],.flat .chip[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.dial button{font-family:var(--txt);font-weight:800}
+.travel,.flat .travel,.flat .seg{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+.flat .where form{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent)}
+.wheresel{box-shadow:none}
+
+/* boutons principaux : pilule foncée + rond fléché de la couleur d'accent */
+.seebar .see,.flat .idea > button{background:var(--ink);color:var(--bg);box-shadow:0 18px 34px -16px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 10px 10px 26px;min-height:62px;font-weight:800;letter-spacing:.01em}
+.seebar .see::after{content:"";flex:none;width:44px;height:44px;border-radius:50%;margin-left:auto;background:var(--acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat}
+.seebar .see{justify-content:space-between;text-align:left}
+.flat .idea > button{padding:12px 24px;min-height:0}
+.flat .go{background:var(--ink);color:var(--bg)}
+.flat .ghost{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 30%,transparent);color:var(--ink)}
+.resbar .back,.mebtn,.srchbtn,.gear,.flat .gear{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+.mebtn{border-color:var(--acc)}
+
+/* barres en verre dépoli */
+.resbar{background:color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+
+/* barre d'onglets flottante, foncée */
+.tabs,.flat .tabs{left:16px;right:16px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:6px;border-radius:999px;background:color-mix(in srgb,var(--ink) 92%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 16px 40px -18px rgba(0,0,0,.6);max-width:520px;margin:0 auto}
+.tabs button,.flat .tabs button{color:color-mix(in srgb,var(--bg) 70%,transparent);border-radius:999px;padding:7px 0}
+.tabs button[aria-selected="true"],.flat .tabs button[aria-selected="true"]{background:var(--acc);color:var(--accink)}
+.tabs .ico{--ico-k:currentColor;--ico-a:currentColor}
+.seebar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+.idea{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+
+/* petites étiquettes (le plus proche, ouvert tard…) : pastilles pastel */
+.flat .sticker{background:var(--accsoft);color:var(--ink);border-radius:999px}
+/* Archivo : espaces un peu plus larges en petit texte */
+body{word-spacing:.06em}
+.place .tot b{font-weight:700}
+b,strong,.place .tot b{word-spacing:.16em}

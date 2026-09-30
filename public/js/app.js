@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "77";
+const APP_VERSION = "78";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -823,8 +823,8 @@ $("seeBtn").addEventListener("click", () => {
   goStep(2);
 });
 function renderSee(total, loading){
-  $("seeBtn").textContent = !pos ? tx("📍 Dis-moi d'abord où tu es") : loading && !total ? tx("Je cherche autour de toi…")
-    : total > 1 ? tx("Voir les {n} lieux →", {n: total}) : total === 1 ? tx("Voir le lieu →") : tx("Voir les propositions →");
+  $("seeBtn").textContent = (!pos ? tx("📍 Dis-moi d'abord où tu es") : loading && !total ? tx("Je cherche autour de toi…")
+    : total > 1 ? tx("Voir les {n} lieux →", {n: total}) : total === 1 ? tx("Voir le lieu →") : tx("Voir les propositions →")).replace(/\s*→\s*$/, "");
   $("resSum").textContent = `${fmtDur(T)} · ${TR().way}`;
 }
 
