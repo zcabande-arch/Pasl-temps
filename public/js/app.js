@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "83";
+const APP_VERSION = "84";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -924,7 +924,7 @@ const THEMES = {
   retro:{n:"Rétro", L:["#F6EEDD","#F6EEDD","#1A1714","#6B5E52","#FFF9EF","#1A1714","#E0704F","#FFF9EF","#F6CF63"], D:["#1D1812","#1D1812","#F6EEDD","#C4B3A2","#2A231B","#F6EEDD","#EE8061","#1D1812","#D9A93B"]},
   rose:{n:"Rose désert", L:["#E9AEBB","#F3C9D2","#1E1E1E","#6F5A60","#FFF6F8","#F2D2DA","#1E1E1E","#FFFFFF","#F6D3DB"], D:["#1C1316","#3A1E27","#FBEFF2","#C8A8B1","#2A1D22","#46313A","#FBEFF2","#1C1316","#4A2C37"]},
   studio:{n:"Studio", L:["#D9D0C6","#EDE6DE","#1A1411","#74675C","#EEE9E3","#CFC4B8","#16110E","#F2ECE6","#E2D9CF"], D:["#15100D","#3A2819","#F2ECE6","#A89A8E","#241C17","#3A2F28","#EDE6DF","#16110E","#3A2F28"]},
-  neon:{n:"Néon", L:["#E9E5DC","#E6F3B8","#1A1A1A","#6A675F","#F7F4EE","#D9D4C8","#B98BD6","#1A1A1A","#E3F2A8"], D:["#111111","#2A3320","#F1EEE6","#A4A097","#1E2219","#343A2B","#C9E86A","#111111","#3A4724"]},
+  neon:{n:"Néon", L:["#EFE6DC","#F7C9A6","#1B1411","#8C7D72","#F7F1EB","#E4D8CC","#FF6A1A","#FFFFFF","#FFD9C2"], D:["#0E0B0A","#5A2410","#F7EDE6","#B39C8E","#1C1512","#33261F","#FF6A1A","#FFFFFF","#3A1E12"]},
   fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}
 };
 const SET_KEY = "pasltemps.settings";

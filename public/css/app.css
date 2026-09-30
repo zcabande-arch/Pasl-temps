@@ -1162,3 +1162,88 @@ body[data-style="studio"] .saved .seg button{color:#6F655D}
 body[data-style="studio"] .saved .seg button[aria-pressed="true"]{background:var(--dark);color:#F2ECE6}
 body[data-style="studio"] .saved .empty,body[data-style="studio"] .hist .empty{color:#8A7F76}
 :root[data-theme="dark"] body[data-style="studio"] .resbar{background:rgba(20,15,12,.55)}
+
+/* ===== Néon : reprise des références « lueur orange » (Cannabis Lab, Meditation, Projector) ===== */
+body[data-style="neon"]{--disp:"Poppins",system-ui,sans-serif;--dispW:300;--dispT:none;--dispLS:-.035em;--ds:.95;--txt:"Poppins",system-ui,sans-serif;--r:30px;
+  --glass:rgba(255,255,255,.07);--glassB:rgba(255,255,255,.10);--orange:#FF6A1A;
+  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:none;--blur:blur(20px) saturate(1.2);
+  --pill:var(--glass);--pillB:1px solid var(--glassB);--pillOn:#fff;--pillOnInk:#1B1411;
+  --btn:#fff;--btnInk:#1B1411;--btnDot:#1B1411;
+  --tabBg:rgba(255,255,255,.06);--tabInk:var(--ink);--tabOn:#fff;--tabOnInk:#1B1411;
+  background:transparent!important;word-spacing:0}
+html:has(body[data-style="neon"]){background:#0E0B0A}
+/* sombre : halos orange et rouges sur noir (Projector / Meditation) */
+body[data-style="neon"]::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:radial-gradient(70% 45% at 95% 5%,rgba(255,106,26,.55),rgba(255,106,26,0) 70%),radial-gradient(60% 40% at 0% 55%,rgba(200,50,30,.35),rgba(200,50,30,0) 70%),
+    radial-gradient(80% 35% at 70% 105%,rgba(255,140,60,.35),rgba(255,140,60,0) 70%),linear-gradient(180deg,#171110,#0B0908)}
+/* clair : sable avec une boule orange lumineuse (Cannabis Lab) */
+:root[data-theme="light"] body[data-style="neon"]{--glass:rgba(255,255,255,.55);--glassB:rgba(255,255,255,.7);--pillOn:#1B1411;--pillOnInk:#fff;--btn:#1B1411;--btnInk:#fff;--btnDot:#1B1411;--tabBg:rgba(255,255,255,.5);--tabOn:#1B1411;--tabOnInk:#fff}
+:root[data-theme="light"] html:has(body[data-style="neon"]),:root[data-theme="light"]:has(body[data-style="neon"]){background:#EFE6DC}
+:root[data-theme="light"] body[data-style="neon"]::before{background:radial-gradient(circle at 88% 78%,#FF6A1A 0,#FF8A3D 9%,rgba(255,138,61,.55) 17%,rgba(255,138,61,0) 32%),
+    radial-gradient(60% 35% at 10% 0%,rgba(255,255,255,.9),rgba(255,255,255,0) 70%),linear-gradient(180deg,#F3ECE4,#E9DED2)}
+/* titres fins en deux tons (« Thu / 24th », « Configure / Your Resolution ») */
+body[data-style="neon"] .hero2 .display{font-weight:300;font-size:clamp(50px,14vw,70px);line-height:1;letter-spacing:-.05em}
+body[data-style="neon"] .hero2 .display em{color:var(--orange);font-style:normal;font-weight:200}
+body[data-style="neon"] .brand em,body[data-style="neon"] #whereAt .whereat em{color:var(--soft);font-style:normal}
+body[data-style="neon"] .brand{font-weight:400;font-size:20px}
+body[data-style="neon"] .kicker{text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--soft);text-align:right}
+body[data-style="neon"] .kicker::first-letter{color:transparent}
+body[data-style="neon"] .flat h2,body[data-style="neon"] h2{font-weight:300;font-size:30px;letter-spacing:-.04em}
+body[data-style="neon"] .flat h2::before{content:none}
+body[data-style="neon"] .flat .group h3{font-weight:300;font-size:25px;text-transform:none}
+body[data-style="neon"] #whereAt .whereat{font-weight:300;font-size:34px;letter-spacing:-.045em}
+body[data-style="neon"] .post{color:var(--soft);font-weight:300}
+/* ronds en verre (boutons du haut) */
+body[data-style="neon"] .gear,body[data-style="neon"] .srchbtn,body[data-style="neon"] .mebtn,body[data-style="neon"] .resbar .back{background:var(--glass);border:1px solid var(--glassB);box-shadow:none;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink)}
+body[data-style="neon"] .mebtn{border-color:var(--orange)}
+/* pastilles en verre */
+body[data-style="neon"] .dial button,body[data-style="neon"] .flat .chip,body[data-style="neon"] .chip{font-weight:400;box-shadow:none;border:var(--pillB);background:var(--pill);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+body[data-style="neon"] .dial button[aria-pressed="true"],body[data-style="neon"] .chip[aria-pressed="true"]{background:var(--pillOn);color:var(--pillOnInk)}
+body[data-style="neon"] .flat .travel,body[data-style="neon"] .flat .seg{background:var(--glass);border:1px solid var(--glassB);box-shadow:none}
+body[data-style="neon"] .travel button[aria-pressed="true"]{color:var(--pillOnInk)}
+body[data-style="neon"] .flat .where form{border-radius:999px}
+body[data-style="neon"] .where .go{background:var(--pillOn);color:var(--pillOnInk);font-weight:500}
+body[data-style="neon"] .wheresel{border:1px solid var(--glassB);background:var(--glass)}
+body[data-style="neon"] .wheresel .ok{background:var(--orange);color:#fff}
+/* envies : photos teintées orange (comme « Breath Awareness ») */
+body[data-style="neon"] .moods button.photo{border-radius:30px;border:0!important;box-shadow:none!important}
+body[data-style="neon"] .moods button.photo::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(255,106,26,.0) 30%,rgba(255,90,20,.55));mix-blend-mode:multiply;pointer-events:none;border-radius:inherit}
+body[data-style="neon"] .moods button.photo b{font-weight:300;font-size:24px;letter-spacing:-.03em;text-transform:none;position:relative;z-index:1}
+body[data-style="neon"] .moods button.photo small{position:relative;z-index:1}
+body[data-style="neon"] .moods button.photo .ok{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);z-index:2}
+body[data-style="neon"] .moods button.photo[aria-pressed="true"] .ok{background:#fff;color:#1B1411}
+body[data-style="neon"] .moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 2px var(--orange),0 0 40px -6px rgba(255,106,26,.8)!important}
+/* bouton principal : pilule blanche (sombre) / noire (clair) avec rond fléché ; lueur orange dessous */
+body[data-style="neon"] .seebar .see{font-family:var(--txt);text-transform:none;font-weight:500;font-size:16px;letter-spacing:0;box-shadow:0 18px 40px -14px rgba(255,106,26,.75)}
+:root[data-theme="dark"] body[data-style="neon"] .seebar .see::after{background-color:var(--orange)}
+body[data-style="neon"] .flat .idea > button{font-weight:500;box-shadow:0 14px 34px -14px rgba(255,106,26,.75)}
+body[data-style="neon"] .flat .go{background:var(--btn);color:var(--btnInk)}
+/* étiquettes « Recommended » : pastilles en verre */
+body[data-style="neon"] .flat .sticker,body[data-style="neon"] .sticker{background:var(--glass);color:var(--ink);border:1px solid var(--glassB);font-weight:400;border-radius:999px}
+body[data-style="neon"] .group h3 .gi{background:var(--glass);border:1px solid var(--glassB);border-radius:50%}
+body[data-style="neon"] .flat .place .emo,body[data-style="neon"] .place .emo{background:rgba(255,106,26,.14);border-radius:50%}
+/* propositions : photo teintée orange + titre fin + « ▶ Listen » (Meditation) */
+body[data-style="neon"] .banner{border-radius:34px;min-height:300px;padding:22px;box-shadow:0 30px 60px -30px rgba(255,90,20,.6);border:0;overflow:hidden}
+body[data-style="neon"] .banner::before{background:linear-gradient(180deg,rgba(120,30,10,.15),rgba(170,50,15,.55) 55%,rgba(90,20,8,.85));mix-blend-mode:normal}
+body[data-style="neon"] .banner::after{content:"";position:absolute;inset:0;background:rgba(255,95,25,.35);mix-blend-mode:multiply;pointer-events:none}
+body[data-style="neon"] .banner > *{position:relative;z-index:1}
+body[data-style="neon"] .banner .k{align-self:flex-start;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 12px;font-size:11px;letter-spacing:0;text-transform:none;font-weight:400;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);margin-bottom:10px}
+body[data-style="neon"] .banner h3{font-weight:300;font-size:46px;letter-spacing:-.05em;text-transform:none;line-height:1}
+body[data-style="neon"] .banner p{font-weight:300;opacity:.9}
+body[data-style="neon"] .banner p::after{content:"▶  " attr(data-go);display:none}
+body[data-style="neon"] .banner .wx{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* Mes lieux / Déjà fait : carte noire (« New in / Discover ») en clair, verre en sombre */
+body[data-style="neon"] .saved,body[data-style="neon"] .hist{border-radius:30px;padding:22px 18px;margin-top:22px;background:var(--glass);border:1px solid var(--glassB);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px)}
+:root[data-theme="light"] body[data-style="neon"] .saved,:root[data-theme="light"] body[data-style="neon"] .hist{background:#1E1A18;color:#F3ECE4;border:0}
+:root[data-theme="light"] body[data-style="neon"] .saved h2,:root[data-theme="light"] body[data-style="neon"] .hist h2{color:#fff}
+:root[data-theme="light"] body[data-style="neon"] .saved .seg{background:rgba(255,255,255,.08)}
+:root[data-theme="light"] body[data-style="neon"] .saved .seg button{color:rgba(255,255,255,.7)}
+:root[data-theme="light"] body[data-style="neon"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1B1411}
+:root[data-theme="light"] body[data-style="neon"] .saved .empty,:root[data-theme="light"] body[data-style="neon"] .hist .empty{color:rgba(255,255,255,.6)}
+/* barre du bas : des ronds (comme la barre de Meditation), l'actif en blanc */
+body[data-style="neon"] .tabs{justify-content:center;gap:10px;max-width:300px;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body[data-style="neon"] .tabs button{flex:none;width:56px;height:56px;max-width:none;border-radius:50%!important;padding:0!important;justify-content:center;background:var(--glass);border:1px solid var(--glassB);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body[data-style="neon"] .tabs button span{display:none}
+body[data-style="neon"] .tabs button[aria-selected="true"]{background:var(--tabOn);color:var(--tabOnInk)}
+body[data-style="neon"] .resbar{background:color-mix(in srgb,var(--bg) 55%,transparent)}
+body[data-style="neon"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1B1411}
