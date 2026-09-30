@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "79";
+const APP_VERSION = "80";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -82,6 +82,20 @@ function renderBrand(){
   me.innerHTML = ph ? `<img src="${ph}" alt="">` : n ? `<span></span>` : ICONS.ico("user", 24);
   if(!ph && n) me.querySelector("span").textContent = n[0].toUpperCase();
   me.classList.toggle("ph", !!ph);
+  renderMeStrip();
+}
+// Bandeau profil (thème Fraîcheur) : photo, prénom et 3 compteurs, comme « FOLLOW · LIKE · BUY »
+function renderMeStrip(){
+  const el = $("meStrip"); if(!el) return;
+  const n = (PROFILE.name || "").trim(), ph = PROFILE.photo && /^data:image\/(jpeg|png|webp);base64,/.test(PROFILE.photo) ? PROFILE.photo : "";
+  // (appelée tôt, avant que l'historique et les listes soient chargés : 0 en attendant)
+  let done = 0, fav = 0, todo = 0;
+  try{ done = HIST.filter(h => h.done).length; fav = Object.keys(LISTS.fav || {}).length; todo = Object.keys(LISTS.todo || {}).length; }catch(e){}
+  el.innerHTML = `<button class="av" aria-label="${tx("Profil")}">${ph ? `<img src="${ph}" alt="">` : `<span></span>`}</button><div class="nm2"><b></b><small>${tx("Ton profil")}</small></div>` +
+    [[done, tx("Sorties")], [fav, tx("Favoris")], [todo, tx("À tester")]].map(([v, l]) => `<div class="st"><b>${v}</b><small>${l}</small></div>`).join("");
+  el.querySelector(".nm2 b").textContent = n || "Fissa Fissa";
+  if(!ph) el.querySelector(".av span").textContent = (n || "F")[0].toUpperCase();
+  el.querySelector(".av").onclick = () => showView("profile");
 }
 renderBrand();
 $("meBtn").onclick = () => showView("profile");
@@ -666,6 +680,10 @@ function renderResults(){
     const wl = wxLine();
     bn.innerHTML = `${wl ? `<span class="wx">${esc(wl)}</span>` : ""}<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
+    // photo ronde avec le nom de l'envie écrit en cercle autour (thème Fraîcheur)
+    const ring = `${MOODS[M].l} · ${tx("{d} {way}, retour compris", {d:fmtDur(T), way:TR().way})} · `;
+    bn.insertAdjacentHTML("afterbegin", `<div class="circ" style="background-image:url('${moodImg(M, true)}'), url('${moodImg(M)}')"><svg viewBox="0 0 300 300" aria-hidden="true"><path id="ringPath" d="M150 150 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0" fill="none"/><text><textPath href="#ringPath" textLength="800"></textPath></text></svg></div>`);
+    bn.querySelector("textPath").textContent = (ring + ring).slice(0, 90);
     if(MOODS[M].adult) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
     $("bannerBox").appendChild(bn);
   }
@@ -907,7 +925,7 @@ const THEMES = {
   rose:{n:"Rose désert", L:["#F2D5DA","#E79CAD","#1F1C1D","#7B5E64","#FBF0F2","#EBCBD2","#1F1C1D","#FFFFFF","#F6C3CE"], D:["#1C1719","#4A2330","#F8E6EB","#B99AA3","#2A2226","#43343A","#F2A7B8","#1C1719","#4A2A35"]},
   studio:{n:"Studio", L:["#D8DCD9","#C7E4DF","#151515","#5E625F","#F0F0EC","#C9CECB","#FF6A13","#FFFFFF","#CFE6E1"], D:["#0F0F0F","#1F2B29","#F2F2F0","#9EA3A0","#1C1C1C","#2E2E2E","#FF7A26","#0F0F0F","#263634"]},
   neon:{n:"Néon", L:["#E9E5DC","#E6F3B8","#1A1A1A","#6A675F","#F7F4EE","#D9D4C8","#B98BD6","#1A1A1A","#E3F2A8"], D:["#111111","#2A3320","#F1EEE6","#A4A097","#1E2219","#343A2B","#C9E86A","#111111","#3A4724"]},
-  fraicheur:{n:"Fraîcheur", L:["#D5EFE5","#B8EBD6","#111412","#56665F","#FFFFFF","#C3E3D6","#2FBF71","#FFFFFF","#C9F0DC"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}
+  fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}
 };
 const SET_KEY = "pasltemps.settings";
 let SET = {theme:"creme", mode:"auto", motion:"on", layout:"auto"};
@@ -1540,6 +1558,7 @@ function toggleList(k, p){
   saveLists();
 }
 function renderSaved(){
+  renderMeStrip();
   const L = $("savedList"); if(!L) return;
   document.querySelectorAll("#savedSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === savedTab)));
   const items = Object.values(LISTS[savedTab]).sort((a,b) => b.at - a.at);
@@ -1994,6 +2013,7 @@ function whenTxt(t){
   return d.toLocaleDateString(I18N.locale, {day:"numeric", month:"short"}) + " " + h;
 }
 function renderHistory(){
+  renderMeStrip();
   const L = $("histList"); L.innerHTML = "";
   const done = HIST.filter(h => h.done).length;
   $("histCount").textContent = HIST.length ? tx(done > 1 ? "{n} pauses faites" : "{n} pause faite", {n:done}) : "";

@@ -901,3 +901,54 @@ body[data-style="fraicheur"]{--disp:"Archivo",system-ui,sans-serif;--dispW:800;-
   --cardSh:0 14px 34px -22px rgba(17,20,18,.45);--pill:var(--card);--pillOn:var(--ink);--pillOnInk:var(--bg);
   --tabBg:var(--ink);--tabInk:color-mix(in srgb,var(--bg) 70%,transparent);--tabOn:var(--acc);--tabOnInk:#fff}
 body[data-style="fraicheur"] .flat .place .emo,body[data-style="fraicheur"] .place .emo{border-radius:50%}
+
+/* ===== Fraîcheur : reprise de l'interface de référence (appli mode menthe) ===== */
+.mestrip,.banner .circ{display:none}
+body[data-style="fraicheur"]{--disp:"Fraunces",Georgia,serif;--dispW:400;--dispLS:-.02em;--ds:1;--txt:"Archivo",system-ui,sans-serif;--r:26px;
+  --cardSh:0 10px 30px -22px rgba(17,20,18,.5);--cardB:0;--pill:var(--card);--pillB:1.5px solid color-mix(in srgb,var(--ink) 14%,transparent);--pillOn:var(--acc);--pillOnInk:#fff;
+  --btn:var(--acc);--btnInk:#fff;--tabBg:#111;--tabInk:rgba(255,255,255,.6);--tabOn:#fff;--tabOnInk:#111}
+/* en-tête : réglages à gauche (comme le menu ☰), titre centré, recherche + profil à droite */
+body[data-style="fraicheur"] .gear{left:14px;right:auto;background:transparent;border:0;box-shadow:none}
+body[data-style="fraicheur"] .brand{text-align:center;margin:0 auto 6px;max-width:calc(100% - 200px);font-size:22px}
+body[data-style="fraicheur"] .mebtn{display:none}
+body[data-style="fraicheur"] .srchbtn{right:14px;background:transparent;border:0;box-shadow:none}
+/* bandeau noir : photo, prénom, compteurs */
+body[data-style="fraicheur"] #meStrip{display:flex}
+body[data-style="fraicheur"] .mestrip{align-items:center;gap:12px;background:#111;color:#fff;border-radius:999px;padding:8px 18px 8px 8px;margin:14px 0 18px}
+body[data-style="fraicheur"] .mestrip .av{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--acc);padding:0;overflow:hidden;background:#222;color:#fff;font-family:"Fraunces",serif;font-size:20px}
+body[data-style="fraicheur"] .mestrip .av img{width:100%;height:100%;object-fit:cover}
+body[data-style="fraicheur"] .mestrip .nm2{flex:1;min-width:0;display:flex;flex-direction:column}
+body[data-style="fraicheur"] .mestrip .nm2 b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body[data-style="fraicheur"] .mestrip small{font-size:10px;letter-spacing:.08em;text-transform:uppercase;opacity:.65}
+body[data-style="fraicheur"] .mestrip .st{display:flex;flex-direction:column;align-items:center;min-width:44px}
+body[data-style="fraicheur"] .mestrip .st b{font-size:16px}
+/* titres fins et élégants, centrés */
+body[data-style="fraicheur"] .hero2{text-align:center}
+body[data-style="fraicheur"] .kicker{display:none}
+body[data-style="fraicheur"] .hero2 .display{font-size:clamp(40px,11vw,56px);line-height:1.02}
+body[data-style="fraicheur"] .flat h2::before{content:none}
+body[data-style="fraicheur"] .flat h2{font-size:26px}
+/* pastilles : petites, contour fin, la choisie en vert */
+body[data-style="fraicheur"] .dial button[aria-pressed="true"]::after{opacity:.85}
+body[data-style="fraicheur"] .travel button[aria-pressed="true"]{color:#fff}
+/* envies : grandes photos hautes arrondies, cœur en haut à droite, nom discret en bas */
+body[data-style="fraicheur"] .moods button.photo{aspect-ratio:3/4;min-height:0}
+body[data-style="fraicheur"] .moods button.photo b{font-size:20px}
+body[data-style="fraicheur"] .moods button.photo .ok{background:rgba(255,255,255,.9);color:#111;border:0}
+body[data-style="fraicheur"] .moods button.photo[aria-pressed="true"] .ok{background:var(--acc);color:#fff}
+/* bouton principal : grande pilule verte */
+body[data-style="fraicheur"] .seebar .see{border-radius:999px;min-height:58px;font-size:17px}
+/* barre d'onglets : noire flottante, pictos seuls, pastille blanche sur l'onglet actif */
+body[data-style="fraicheur"] .tabs button span{display:none}
+body[data-style="fraicheur"] .tabs button{padding:10px 0;max-width:64px;border-radius:999px}
+body[data-style="fraicheur"] .tabs{justify-content:space-around;max-width:300px}
+/* page des propositions : photo ronde + texte courbé, puis nom et nombre de lieux sur une ligne */
+body[data-style="fraicheur"] .banner{background:none!important;min-height:0;padding:6px 0 0;color:var(--ink);box-shadow:none;display:grid;grid-template-columns:1fr auto;align-items:end;gap:0 12px}
+body[data-style="fraicheur"] .banner::before,body[data-style="fraicheur"] .banner::after{content:none}
+body[data-style="fraicheur"] .banner .circ{display:block;grid-column:1/-1;position:relative;width:min(300px,80vw);aspect-ratio:1;margin:0 auto 14px;border-radius:50%;background-size:auto,cover;background-position:center;background-clip:content-box;padding:34px;box-sizing:border-box}
+body[data-style="fraicheur"] .banner .circ svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+body[data-style="fraicheur"] .banner .circ text{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:19px;fill:var(--ink);letter-spacing:.04em}
+body[data-style="fraicheur"] .banner .wx,body[data-style="fraicheur"] .banner .k{display:none}
+body[data-style="fraicheur"] .banner h3{grid-column:1;margin:0;font-size:26px;color:var(--ink);text-shadow:none}
+body[data-style="fraicheur"] .banner p{grid-column:2;margin:0;font-weight:800;color:var(--acc);text-shadow:none;white-space:nowrap}
+body[data-style="fraicheur"] .banner .evin{grid-column:1/-1;color:var(--soft)}
