@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "86";
+const APP_VERSION = "87";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -611,6 +611,7 @@ $("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); rende
 $("fq").addEventListener("keydown", e => { if(e.key === "Enter") $("fq").blur(); });
 
 function renderResults(){
+  if(MOODS[M] && MOODS[M].img) document.body.style.setProperty("--catbg", `url('${new URL(moodImg(M, true), location.href).href}')`);
   // « J'ai 20 minutes. » / « J'ai 1 heure. » / « J'ai 1 h 30. » / « J'ai 2 heures. »
   const [num, unit] = T < 60 ? [T, tx(" minutes")] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? tx(" heure") : tx(" heures")];
   const h1 = document.querySelector(".hero2 .display, .hero .display");
@@ -927,7 +928,8 @@ const THEMES = {
   rose:{n:"Rose", L:["#D9C6CB","#E6C3C3","#2B2024","#6A555B","#F4E9EA","#E6D3D6","#6E4A55","#FFFFFF","#EBD5D8"], D:["#221719","#4A3036","#F8EEEE","#C9B1B5","#3A2A2E","#4A383C","#F2C4BE","#2B2024","#4E363B"]},
   studio:{n:"Studio", L:["#D9D0C6","#EDE6DE","#1A1411","#74675C","#EEE9E3","#CFC4B8","#16110E","#F2ECE6","#E2D9CF"], D:["#15100D","#3A2819","#F2ECE6","#A89A8E","#241C17","#3A2F28","#EDE6DF","#16110E","#3A2F28"]},
   neon:{n:"Néon", L:["#EFE6DC","#F7C9A6","#1B1411","#8C7D72","#F7F1EB","#E4D8CC","#FF6A1A","#FFFFFF","#FFD9C2"], D:["#0E0B0A","#5A2410","#F7EDE6","#B39C8E","#1C1512","#33261F","#FF6A1A","#FFFFFF","#3A1E12"]},
-  fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}
+  fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]},
+  clear:{n:"Clear", L:["#3A382F","#B9A36A","#FFFFFF","#ECE8DE","#4A473D","#6A665A","#FFFFFF","#1E1D18","#5A564A"], D:["#1A1914","#8C7A48","#FFFFFF","#D9D4C8","#2E2C25","#4A473D","#FFFFFF","#1E1D18","#3E3B32"]}
 };
 const SET_KEY = "pasltemps.settings";
 let SET = {theme:"creme", mode:"auto", motion:"on", layout:"auto"};
@@ -946,7 +948,7 @@ function applyTheme(){
   document.body.classList.add("flat");
   document.body.dataset.style = SET.theme;           // chaque thème a sa propre interface (css)
   document.body.classList.toggle("arrowbtn", ["studio", "neon", "rose"].includes(SET.theme));
-  document.body.classList.toggle("floattabs", ["studio", "neon", "rose", "fraicheur"].includes(SET.theme));
+  document.body.classList.toggle("floattabs", ["studio", "neon", "rose", "fraicheur", "clear"].includes(SET.theme));
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }

@@ -1289,3 +1289,74 @@ body[data-style="neon"] .tabs button span{display:none}
 body[data-style="neon"] .tabs button[aria-selected="true"]{background:var(--tabOn);color:var(--tabOnInk)}
 body[data-style="neon"] .resbar{background:color-mix(in srgb,var(--bg) 55%,transparent)}
 body[data-style="neon"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1B1411}
+
+/* ===== Clear : verre liquide transparent posé sur la photo de l'envie (référence « Liquid Glass ») ===== */
+body[data-style="clear"]{--disp:"Poppins",system-ui,sans-serif;--dispW:400;--dispT:none;--dispS:normal;--dispLS:-.02em;--ds:.95;--txt:"Poppins",system-ui,sans-serif;--r:30px;
+  --glass:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05));--glassB:rgba(255,255,255,.5);--field:rgba(255,255,255,.2);
+  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:inset 0 1px 0 rgba(255,255,255,.35),0 24px 50px -30px rgba(0,0,0,.55);--blur:blur(7px) brightness(.82) saturate(1.1);
+  --pill:transparent;--pillB:1px solid rgba(255,255,255,.75);--pillOn:rgba(255,255,255,.92);--pillOnInk:#1E1D18;
+  --btn:transparent;--btnInk:#fff;--btnDot:transparent;
+  --tabBg:rgba(255,255,255,.1);--tabInk:rgba(255,255,255,.8);--tabOn:rgba(255,255,255,.92);--tabOnInk:#1E1D18;
+  --soft:rgba(255,255,255,.8);--line:rgba(255,255,255,.3);
+  background:transparent!important;word-spacing:0;color:#fff}
+html:has(body[data-style="clear"]){background:#2A2821}
+/* fond : la photo de l'envie choisie, nette, juste un peu assombrie */
+body[data-style="clear"]::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(0,0,0,.34),rgba(0,0,0,.22) 40%,rgba(0,0,0,.46)),var(--catbg,none) center/cover no-repeat,#3A382F}
+:root[data-theme="dark"] body[data-style="clear"]::before{background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.45) 40%,rgba(0,0,0,.65)),var(--catbg,none) center/cover no-repeat,#1A1914}
+/* textes posés sur la photo : une légère ombre pour rester lisibles */
+body[data-style="clear"] .hero2,body[data-style="clear"] .brand,body[data-style="clear"] .kicker,body[data-style="clear"] h2,body[data-style="clear"] .group h3,
+body[data-style="clear"] #whereAt,body[data-style="clear"] .where label,body[data-style="clear"] .note,body[data-style="clear"] .moodhint{text-shadow:0 1px 14px rgba(0,0,0,.45)}
+body[data-style="clear"] .hero2 .display{font-weight:400;font-size:clamp(46px,13vw,64px);line-height:1.04;letter-spacing:-.03em}
+body[data-style="clear"] .hero2 .display em,body[data-style="clear"] .brand em,body[data-style="clear"] #whereAt .whereat em{color:rgba(255,255,255,.72);font-style:normal}
+body[data-style="clear"] .kicker{text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;color:#fff}
+body[data-style="clear"] .flat h2,body[data-style="clear"] h2,body[data-style="clear"].flat h2{font-weight:400;font-size:28px}
+body[data-style="clear"] .brand{font-weight:400;font-size:19px}
+body[data-style="clear"] #whereAt .whereat{font-weight:400;font-size:36px}
+/* boutons ronds du haut : verre clair à liseré blanc */
+body[data-style="clear"] .gear,body[data-style="clear"] .srchbtn,body[data-style="clear"] .mebtn,body[data-style="clear"] .resbar .back{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.55);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:none}
+body[data-style="clear"] .mebtn{border-color:#fff}
+body[data-style="clear"] .resbar{background:rgba(20,18,14,.25);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+/* champs : rectangles gris translucides (comme « E-mail address ») */
+body[data-style="clear"].flat .where form{background:var(--field);border:0;border-radius:12px;box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+body[data-style="clear"] .where input,body[data-style="clear"] .rvsearch input{color:#fff}
+body[data-style="clear"] .where input::placeholder,body[data-style="clear"] .rvsearch input::placeholder{color:rgba(255,255,255,.78)}
+body[data-style="clear"] .rvsearch{background:var(--field);border-radius:12px;box-shadow:none;color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+body[data-style="clear"] .where .go{background:transparent;border:1px solid #fff;color:#fff;border-radius:999px;font-weight:500}
+body[data-style="clear"] .wheresel{background:var(--glass);border:1px solid var(--glassB);-webkit-backdrop-filter:blur(8px) brightness(.85);backdrop-filter:blur(8px) brightness(.85)}
+body[data-style="clear"] .wheresel .ok{background:#fff;color:#1E1D18}
+/* pastilles : contour blanc fin ; l'active est blanche */
+body[data-style="clear"] .chip,body[data-style="clear"] .dial button{color:#fff;box-shadow:none;font-weight:400;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+body[data-style="clear"] .chip[aria-pressed="true"],body[data-style="clear"] .dial button[aria-pressed="true"]{color:#1E1D18}
+body[data-style="clear"].flat .travel,body[data-style="clear"].flat .seg,body[data-style="clear"] .budget .seg{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.5);box-shadow:none;-webkit-backdrop-filter:blur(8px) brightness(.85);backdrop-filter:blur(8px) brightness(.85)}
+body[data-style="clear"] .travel button,body[data-style="clear"] .seg button{color:#fff}
+body[data-style="clear"] .travel button[aria-pressed="true"],body[data-style="clear"] .seg button[aria-pressed="true"]{background:#fff;color:#1E1D18}
+/* bouton principal : pilule transparente à contour blanc (comme « Log In ») */
+body[data-style="clear"] .seebar .see,body[data-style="clear"].flat .idea > button{background:rgba(255,255,255,.06);border:1.3px solid #fff;color:#fff;font-weight:500;box-shadow:0 18px 40px -22px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(10px) brightness(.8);backdrop-filter:blur(10px) brightness(.8)}
+/* envies : photos à liseré blanc, texte fin */
+body[data-style="clear"] .moods button.photo{border:1px solid rgba(255,255,255,.6)!important;box-shadow:0 20px 40px -26px rgba(0,0,0,.7)!important;border-radius:26px}
+body[data-style="clear"] .moods button.photo b{font-weight:500;letter-spacing:-.02em}
+body[data-style="clear"] .moods button.photo .ok{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.7);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+/* Mes lieux / Déjà fait : grandes cartes de verre (comme la carte « Log In ») */
+body[data-style="clear"] .saved,body[data-style="clear"] .hist{background:var(--glass);border:1px solid var(--glassB);box-shadow:var(--cardSh);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-radius:36px;padding:24px 22px;margin-top:22px}
+body[data-style="clear"] .saved .empty,body[data-style="clear"] .hist .empty{background:var(--field);border:0;border-radius:12px;color:#fff}
+body[data-style="clear"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1E1D18}
+/* lieux et carte : verre, texte blanc */
+body[data-style="clear"].flat .place .emo{background:rgba(255,255,255,.14)}
+body[data-style="clear"] .place,body[data-style="clear"] .radar{color:#fff}
+/* bandeau des propositions : carte de verre sur la photo, petite ligne en haut (« Liquid Glass · Tutorial »), grand titre */
+body[data-style="clear"] .banner{background:var(--glass)!important;border:1px solid var(--glassB);box-shadow:var(--cardSh);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  display:grid;grid-template-columns:1fr auto;gap:0 12px;align-content:start;min-height:0;padding:22px 24px 26px;border-radius:36px}
+body[data-style="clear"] .banner::before,body[data-style="clear"] .banner::after,body[data-style="clear"] .banner .circ{display:none}
+body[data-style="clear"] .banner .k{grid-row:1;grid-column:1;order:0;font-size:13px;font-weight:400;letter-spacing:0;text-transform:none;opacity:1;text-shadow:none}
+body[data-style="clear"] .banner .wx{grid-row:1;grid-column:2;margin:0;background:none;color:#fff;padding:0;font-size:13px;font-weight:400;box-shadow:none;text-align:right;white-space:normal;max-width:48vw}
+body[data-style="clear"] .banner h3{grid-row:2;grid-column:1/-1;margin:34px 0 8px;font-weight:400;font-size:46px;letter-spacing:-.025em;text-shadow:none}
+body[data-style="clear"] .banner p{grid-row:3;grid-column:1/-1;margin:0;font-size:15px;text-shadow:none;opacity:1}
+body[data-style="clear"] .banner .evin{grid-row:4;grid-column:1/-1;margin-top:10px}
+/* barre du bas : pilule de verre */
+body[data-style="clear"] .tabs{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.5);-webkit-backdrop-filter:blur(10px) brightness(.8)!important;backdrop-filter:blur(10px) brightness(.8)!important}
+/* réglages : panneau de verre sombre */
+body[data-style="clear"] .sheet{background:rgba(34,32,26,.62);color:#fff;border:1px solid rgba(255,255,255,.35);border-bottom:0;-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px)}
+body[data-style="clear"] .sheet h2{color:#fff}
+body[data-style="clear"] .sheet .done{background:transparent;border:1.3px solid #fff;color:#fff}
+body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;border:1px solid rgba(255,255,255,.7)!important;color:#fff!important}
