@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "84";
+const APP_VERSION = "85";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -434,7 +434,7 @@ function openReport(p){
     S.querySelector(".undo").onclick = () => { delete REPORTS[p.id]; saveReports(); renderResults(); renderReported(); close(); };
   }
   S.querySelector(".done").onclick = close;
-  S.classList.add("on"); $("repBg").classList.add("on");
+  S.scrollTop = 0; S.classList.add("on"); $("repBg").classList.add("on");
 }
 function renderReported(){
   const R = $("reported"); if(!R) return;
@@ -965,8 +965,27 @@ function renderSettings(){
 }
 function openSheet(on){
   $("sheet").classList.toggle("on", on); $("sheetBg").classList.toggle("on", on);
-  if(on){ renderSettings(); recView = "main"; renderRec(); $("sheetDone").focus(); } else $("gear").focus();
+  if(on){ renderSettings(); recView = "main"; renderRec(); $("sheet").scrollTop = 0; $("sheetDone").focus({preventScroll:true}); } else $("gear").focus({preventScroll:true});
 }
+// Balayer un panneau vers le bas pour le fermer (quand il est déjà en haut de son contenu).
+function swipeClose(el, close){
+  let y0 = null, dy = 0, t0 = 0;
+  el.addEventListener("touchstart", e => { if(el.scrollTop > 0 || e.touches.length > 1) { y0 = null; return; } y0 = e.touches[0].clientY; dy = 0; t0 = Date.now(); }, {passive:true});
+  el.addEventListener("touchmove", e => {
+    if(y0 == null) return;
+    dy = e.touches[0].clientY - y0;
+    if(dy <= 0 || el.scrollTop > 0){ if(dy < 0) y0 = null; el.style.transform = ""; return; }
+    e.preventDefault(); el.style.transition = "none"; el.style.transform = "translateY(" + dy + "px)";
+  }, {passive:false});
+  const end = () => {
+    if(y0 == null) return; y0 = null; el.style.transition = "";
+    const fast = dy > 40 && dy / Math.max(1, Date.now() - t0) > .5;
+    if(dy > 110 || fast){ el.style.transform = ""; close(); } else el.style.transform = "";
+  };
+  el.addEventListener("touchend", end); el.addEventListener("touchcancel", end);
+}
+swipeClose($("sheet"), () => openSheet(false));
+swipeClose($("repSheet"), () => { $("repSheet").classList.remove("on"); $("repBg").classList.remove("on"); });
 $("gear").onclick = () => openSheet(true);
 $("sheetBg").onclick = $("sheetDone").onclick = () => openSheet(false);
 document.addEventListener("keydown", e => { if(e.key === "Escape" && $("sheet").classList.contains("on")) openSheet(false); });

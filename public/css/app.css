@@ -142,7 +142,7 @@ main{position:relative}
 .gear{position:absolute;top:22px;right:14px;width:44px;height:44px;border-radius:50%;border:0;background:var(--card);box-shadow:var(--sh);font-size:20px;display:grid;place-items:center;z-index:2}
 .sheet-bg{position:fixed;inset:0;background:rgba(10,8,25,.45);z-index:20;display:none}
 .sheet-bg.on{display:block}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;padding:10px 20px calc(22px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;box-shadow:0 -20px 50px -20px rgba(10,8,25,.5);transform:translateY(110%);transition:transform .32s cubic-bezier(.2,.9,.3,1);max-height:88vh;overflow-y:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--card);color:var(--ink);border-radius:28px 28px 0 0;padding:10px 20px calc(22px + env(safe-area-inset-bottom,0px));max-width:560px;margin:0 auto;box-shadow:0 -20px 50px -20px rgba(10,8,25,.5);transform:translateY(110%);transition:transform .32s cubic-bezier(.2,.9,.3,1);max-height:88vh;overflow-y:auto;overscroll-behavior:contain}
 .sheet.on{transform:none}
 .sheet .grab{width:44px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 14px}
 .sheet h2{font-size:22px;color:var(--ink);margin:0 0 18px}
