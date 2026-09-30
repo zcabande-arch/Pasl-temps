@@ -29,6 +29,7 @@
   "Horaires non indiqués": "Horario no indicado",
   "Horaires à vérifier": "Horario por confirmar",
   "Rétro": "Retro",
+  "Rose": "Rosa",
   "Rose désert": "Rosa desierto",
   "Studio": "Estudio",
   "Néon": "Neón",

@@ -29,6 +29,7 @@
   "Horaires non indiqués": "Openingstijden niet vermeld",
   "Horaires à vérifier": "Openingstijden controleren",
   "Rétro": "Retro",
+  "Rose": "Roze",
   "Rose désert": "Woestijnroos",
   "Studio": "Studio",
   "Néon": "Neon",

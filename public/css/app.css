@@ -961,59 +961,101 @@ body[data-style="fraicheur"] .banner .evin{grid-column:1/-1;color:var(--soft)}
 @font-face{font-family:"Poppins";font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-600.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
 @font-face{font-family:"Poppins";font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-600-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
 
-/* ===== Rose désert : reprise de l'interface de référence (paysage rose, verre dépoli, Poppins) ===== */
-body[data-style="rose"]{--disp:"Poppins",system-ui,sans-serif;--dispW:400;--dispLS:-.025em;--ds:.92;--txt:"Poppins",system-ui,sans-serif;--r:34px;
-  --glass:rgba(255,238,243,.42);--glassB:rgba(255,255,255,.55);--glassIn:rgba(255,255,255,.62);
-  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:0 20px 44px -30px rgba(80,20,40,.45);--blur:blur(22px) saturate(1.15);
-  --pill:var(--glassIn);--pillB:0;--pillOn:#1E1E1E;--pillOnInk:#fff;--btn:#1E1E1E;--btnInk:#fff;--btnDot:#1E1E1E;
-  --tabBg:rgba(255,238,243,.5);--tabInk:#1E1E1E;--tabOn:#1E1E1E;--tabOnInk:#fff;
+/* ===== Rose : verre dépoli mauve (références « Booking », météo « Cupertino », « Glass morphism ») ===== */
+body[data-style="rose"]{--disp:"Poppins",system-ui,sans-serif;--dispW:300;--dispT:none;--dispLS:-.035em;--ds:.95;--txt:"Poppins",system-ui,sans-serif;--r:32px;
+  --glass:rgba(118,86,94,.36);--glassB:rgba(255,255,255,.28);--glassHi:rgba(255,255,255,.34);--glassDk:rgba(56,38,43,.62);
+  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:0 24px 48px -30px rgba(60,30,40,.55);--blur:blur(26px) saturate(1.15);
+  --pill:var(--glassHi);--pillB:1px solid rgba(255,255,255,.45);--pillOn:var(--glassDk);--pillOnInk:#fff;
+  --btn:var(--glassDk);--btnInk:#fff;--btnDot:rgba(255,255,255,.14);
+  --tabBg:rgba(56,38,43,.55);--tabInk:rgba(255,255,255,.7);--tabOn:rgba(255,255,255,.9);--tabOnInk:#2B2024;
   background:transparent!important;word-spacing:0}
-html:has(body[data-style="rose"]){background:#E9AEBB}
-/* le paysage en fond, fixe (y compris sur iPhone) */
-body[data-style="rose"]::before{content:"";position:fixed;inset:0;z-index:-1;
-  background:url(../img/themes/desert-rose-fond.jpg) center/cover no-repeat,#E7A3B2}
-:root[data-theme="dark"] body[data-style="rose"]{--glass:rgba(40,22,29,.55);--glassB:rgba(255,255,255,.12);--glassIn:rgba(255,255,255,.1);--tabBg:rgba(40,22,29,.6);--tabInk:#FBEFF2;--tabOn:#FBEFF2;--tabOnInk:#1C1316;--btn:#FBEFF2;--btnInk:#1C1316;--btnDot:#FBEFF2}
-:root[data-theme="dark"] body[data-style="rose"]::before{background:linear-gradient(180deg,rgba(20,8,13,.62),rgba(20,8,13,.72)),url(../img/themes/desert-rose-fond.jpg) center/cover no-repeat,#1C1316}
-:root[data-theme="dark"] body[data-style="rose"] .seebar .see::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C1316' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E")}
-/* textes : gros titres fins, le deuxième mot en gris (comme « Jan / 2025 ») */
-body[data-style="rose"] .hero2 .display{font-size:clamp(50px,14.5vw,72px);line-height:1;font-weight:400;letter-spacing:-.04em}
+html:has(body[data-style="rose"]){background:#D9C6CB}
+/* fond : dégradé lavande → rose poudré → mauve, avec des bulles de couleur floues */
+body[data-style="rose"]::before{content:"";position:fixed;inset:0;z-index:-1;transition:filter .5s,transform .5s;
+  background:radial-gradient(38% 26% at 8% 20%,rgba(226,80,106,.55),transparent 70%),
+    radial-gradient(40% 30% at 100% 48%,rgba(150,120,140,.55),transparent 70%),
+    radial-gradient(34% 22% at 22% 82%,rgba(245,150,140,.5),transparent 70%),
+    linear-gradient(180deg,#D8CDD5 0%,#E6C3C3 42%,#E2ADA7 68%,#B98D8C 100%)}
+:root[data-theme="dark"] body[data-style="rose"]{--glass:rgba(120,86,94,.26);--glassB:rgba(255,255,255,.14);--glassHi:rgba(255,255,255,.1);--pillB:1px solid rgba(255,255,255,.18);--glassDk:rgba(250,236,236,.9);--pillOnInk:#2B2024;--btnInk:#2B2024;--btnDot:rgba(43,32,36,.12);--tabBg:rgba(40,26,30,.6)}
+:root[data-theme="dark"]:has(body[data-style="rose"]){background:#221719}
+:root[data-theme="dark"] body[data-style="rose"]::before{
+  background:radial-gradient(38% 26% at 8% 20%,rgba(200,60,90,.35),transparent 70%),
+    radial-gradient(40% 30% at 100% 48%,rgba(120,90,110,.4),transparent 70%),
+    radial-gradient(34% 22% at 22% 82%,rgba(210,120,110,.28),transparent 70%),
+    linear-gradient(180deg,#3A2A31 0%,#4A3036 45%,#3A2427 70%,#1E1416 100%)}
+:root[data-theme="dark"] body[data-style="rose"] .seebar .see::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232B2024' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E")}
+/* page des propositions : la photo de l'envie choisie, floutée, en fond */
+body[data-style="rose"].onres::before{background:linear-gradient(180deg,rgba(120,86,94,.25),rgba(60,36,42,.45)),var(--catbg,none) center/cover no-repeat,#B98D8C;filter:blur(34px) saturate(1.1);transform:scale(1.25)}
+:root[data-theme="dark"] body[data-style="rose"].onres::before{background:linear-gradient(180deg,rgba(30,18,22,.55),rgba(20,12,15,.7)),var(--catbg,none) center/cover no-repeat,#221719}
+body[data-style="rose"].onres{--ink:#fff;--soft:rgba(255,255,255,.75)}
+/* dans le verre, le texte est blanc (comme les cartes des références) */
+body[data-style="rose"].flat .place,body[data-style="rose"].flat .radar,body[data-style="rose"].flat .card,body[data-style="rose"].flat .entry,
+body[data-style="rose"].flat .rvp,body[data-style="rose"].flat .srow,body[data-style="rose"] .saved,body[data-style="rose"] .hist,body[data-style="rose"] .banner{
+  --ink:#fff;--soft:rgba(255,255,255,.72);--line:rgba(255,255,255,.22);--card:rgba(255,255,255,.12);color:var(--ink)}
+/* titres : Poppins fine, comme les autres thèmes */
+body[data-style="rose"] .hero2 .display{font-weight:300;font-size:clamp(48px,13.5vw,66px);line-height:1.02;letter-spacing:-.045em}
 body[data-style="rose"] .hero2 .display em,body[data-style="rose"] .brand em,body[data-style="rose"] #whereAt .whereat em{color:var(--soft);font-style:normal}
-body[data-style="rose"] .kicker{text-align:right;text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;color:var(--ink);margin-bottom:10px}
-body[data-style="rose"] .kicker::first-letter{color:transparent}
-body[data-style="rose"] .flat h2,body[data-style="rose"] h2{font-size:30px;font-weight:400}
-body[data-style="rose"] .brand{font-weight:500;font-size:21px}
-/* boutons ronds du haut : blancs translucides */
-body[data-style="rose"] .gear,body[data-style="rose"] .srchbtn,body[data-style="rose"] .mebtn,body[data-style="rose"] .resbar .back{background:var(--glassIn);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--glassB);box-shadow:none}
-body[data-style="rose"] .mebtn{border-color:#1E1E1E}
-/* champ d'adresse : pilule blanche avec le picto dans un rond blanc (comme « @ e-mail address ») */
-body[data-style="rose"] .where form{position:relative;background:var(--glassIn);padding:6px 6px 6px 56px;border-radius:999px}
-body[data-style="rose"] .where form::before{content:"";position:absolute;left:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E1E1E' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E") center/18px no-repeat}
-body[data-style="rose"] .where .go{background:#fff;color:#1E1E1E;border-radius:999px;font-weight:500}
-/* pastilles : fines, à contour (comme « Pinterest ») */
-body[data-style="rose"] .flat .chip,body[data-style="rose"] .chip{background:transparent;border:1.2px solid color-mix(in srgb,var(--ink) 45%,transparent);box-shadow:none;font-weight:400}
-body[data-style="rose"] .chip[aria-pressed="true"]{background:#1E1E1E;color:#fff;border-color:#1E1E1E}
-body[data-style="rose"] .dial button{font-weight:500}
-/* envies : photos très arrondies, noms en Poppins */
-body[data-style="rose"] .moods button.photo b{font-weight:500;letter-spacing:-.02em}
-/* Mes lieux et Déjà fait : carte noire (comme « References / Discover ») */
-body[data-style="rose"] .saved,body[data-style="rose"] .hist{background:#1E1E1E;color:#F4ECEE;border-radius:34px;padding:24px 20px;margin-top:22px}
-body[data-style="rose"] .saved h2,body[data-style="rose"] .hist h2{color:#fff}
-body[data-style="rose"] .saved .seg{background:rgba(255,255,255,.08);border:0}
-body[data-style="rose"] .saved .seg button{color:rgba(255,255,255,.7)}
-body[data-style="rose"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1E1E1E}
-body[data-style="rose"] .saved .empty,body[data-style="rose"] .hist .empty{color:rgba(255,255,255,.6)}
-/* page des propositions : carte blanche avec grand titre et la photo en boule (comme « Jan 2025 ») */
-body[data-style="rose"] .banner{background:#fff!important;color:#1E1E1E;box-shadow:0 24px 50px -34px rgba(80,20,40,.5);display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:0 12px;min-height:220px;padding:24px 20px;overflow:hidden}
-:root[data-theme="dark"] body[data-style="rose"] .banner{background:#2A1D22!important;color:#FBEFF2}
+body[data-style="rose"] .kicker{text-align:right;text-transform:none;letter-spacing:0;font-weight:400;font-size:13px;color:var(--soft)}
+body[data-style="rose"].flat h2,body[data-style="rose"] h2{font-weight:300;font-size:30px}
+body[data-style="rose"] .brand{font-weight:400;font-size:20px}
+body[data-style="rose"].flat .group h3{font-weight:300}
+body[data-style="rose"] #whereAt .whereat{font-weight:300;font-size:38px}
+/* boutons du haut : carrés arrondis clairs (comme le bouton retour) */
+body[data-style="rose"] .gear,body[data-style="rose"] .srchbtn,body[data-style="rose"] .resbar .back{background:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.6);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:none;color:#2B2024}
+body[data-style="rose"] .gear,body[data-style="rose"] .srchbtn{border-radius:16px}
+:root[data-theme="dark"] body[data-style="rose"] .gear,:root[data-theme="dark"] body[data-style="rose"] .srchbtn,:root[data-theme="dark"] body[data-style="rose"] .resbar .back{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16);color:#fff}
+body[data-style="rose"] .resbar{background:rgba(118,86,94,.28);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px)}
+/* pastilles en verre clair, l'active en verre sombre (comme « More Details ») */
+body[data-style="rose"].flat .chip,body[data-style="rose"] .chip,body[data-style="rose"] .dial button{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:none;font-weight:400}
+body[data-style="rose"].flat .travel,body[data-style="rose"].flat .seg{background:var(--glassHi);border:1px solid rgba(255,255,255,.4);box-shadow:none;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+body[data-style="rose"] .travel button[aria-pressed="true"],body[data-style="rose"] .seg button[aria-pressed="true"]{background:var(--pillOn);color:var(--pillOnInk)}
+body[data-style="rose"].flat .where form{border-radius:999px;background:var(--glassHi);border:1px solid rgba(255,255,255,.45);--ink:#2B2024}
+:root[data-theme="dark"] body[data-style="rose"].flat .where form{--ink:#fff}
+body[data-style="rose"] .where .go{background:var(--pillOn);color:var(--pillOnInk);font-weight:500}
+body[data-style="rose"] .wheresel{background:var(--glass);border:1px solid var(--glassB);--ink:#fff;color:#fff}
+body[data-style="rose"] .wheresel .ok{background:rgba(255,255,255,.9);color:#2B2024}
+/* envies : photo avec une bande de verre en bas (comme « GLASS MORPHISM ») */
+body[data-style="rose"] .moods button.photo{border-radius:30px;border:1px solid rgba(255,255,255,.35)!important;box-shadow:0 20px 40px -28px rgba(60,30,40,.6)!important;padding:8px}
+body[data-style="rose"] .moods button.photo::before{background:linear-gradient(to top,rgba(90,60,68,.35),transparent 55%)}
+body[data-style="rose"] .moods button.photo b,body[data-style="rose"] .moods button.photo small{position:relative;z-index:1;background:rgba(255,255,255,.2);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:0 12px;text-shadow:none}
+body[data-style="rose"] .moods button.photo b{font-weight:400;font-size:21px;letter-spacing:-.03em;border-radius:18px 18px 0 0;padding-top:10px}
+body[data-style="rose"] .moods button.photo small{border-radius:0 0 18px 18px;padding-bottom:10px;margin:0!important}
+body[data-style="rose"] .moods button.photo .ok{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.45);color:#fff;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);z-index:2}
+/* Mes lieux / Déjà fait : cartes de verre */
+body[data-style="rose"] .saved,body[data-style="rose"] .hist{background:var(--glass);border:1px solid var(--glassB);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);border-radius:32px;padding:22px 20px;margin-top:22px}
+body[data-style="rose"] .saved .seg{background:rgba(0,0,0,.14);border:0}
+body[data-style="rose"] .saved .seg button{color:rgba(255,255,255,.75)}
+body[data-style="rose"] .saved .seg button[aria-pressed="true"]{background:rgba(255,255,255,.9);color:#2B2024}
+body[data-style="rose"] .saved .empty,body[data-style="rose"] .hist .empty{color:rgba(255,255,255,.7);background:rgba(255,255,255,.08);border:0}
+/* bandeau des propositions : carte de verre, photo arrondie en haut avec étiquettes de verre (comme « Booking Details ») */
+body[data-style="rose"] .banner{background:var(--glass)!important;border:1px solid var(--glassB);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);box-shadow:0 30px 60px -36px rgba(40,20,28,.7);
+  display:grid;grid-template-columns:1fr;grid-template-rows:110px 110px auto auto auto;padding:10px 10px 22px;min-height:0;border-radius:36px;overflow:hidden}
 body[data-style="rose"] .banner::before,body[data-style="rose"] .banner::after{content:none}
-body[data-style="rose"] .banner .circ{display:block;grid-column:2;grid-row:1/span 4;width:100%;aspect-ratio:1;border-radius:50%;background-size:cover;background-position:center;box-shadow:0 0 0 10px rgba(246,211,219,.55),0 0 60px 20px rgba(233,150,170,.45)}
+body[data-style="rose"] .banner .circ{display:block;grid-column:1;grid-row:1/3;border-radius:28px;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
 body[data-style="rose"] .banner .circ svg{display:none}
-body[data-style="rose"] .banner h3{grid-column:1;margin:0;font-size:40px;font-weight:400;letter-spacing:-.04em;color:inherit;text-shadow:none;line-height:1}
-body[data-style="rose"] .banner p{grid-column:1;margin:6px 0 0;color:var(--soft);text-shadow:none}
-body[data-style="rose"] .banner .k{grid-column:1;order:-1;color:var(--soft);text-shadow:none;letter-spacing:0;text-transform:none;font-size:13px;margin-bottom:6px}
-body[data-style="rose"] .banner .wx{grid-column:1;justify-self:start;white-space:normal;margin-bottom:12px;background:rgba(246,211,219,.6);color:#1E1E1E;box-shadow:none}
-body[data-style="rose"] .banner .evin{grid-column:1/-1;color:var(--soft)}
-body[data-style="rose"] #whereAt .whereat{font-weight:400;letter-spacing:-.035em;font-size:38px}
+body[data-style="rose"] .banner .wx,body[data-style="rose"] .banner .k{grid-column:1;justify-self:start;margin:14px;background:rgba(255,255,255,.22);color:#fff;-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-radius:14px;padding:7px 12px;font-size:12.5px;font-weight:400;letter-spacing:0;text-transform:none;text-shadow:none;box-shadow:none;white-space:normal;opacity:1}
+body[data-style="rose"] .banner .wx{grid-row:1;align-self:start}
+body[data-style="rose"] .banner .k{grid-row:2;align-self:end}
+body[data-style="rose"] .banner h3{grid-row:3;margin:18px 14px 0;font-weight:300;font-size:38px;letter-spacing:-.04em;line-height:1;text-shadow:none}
+body[data-style="rose"] .banner p{grid-row:4;margin:10px 14px 0;padding-top:10px;border-top:1px solid rgba(255,255,255,.25);color:rgba(255,255,255,.8);text-shadow:none}
+body[data-style="rose"] .banner .evin{grid-row:5;margin:8px 14px 0;color:rgba(255,255,255,.7)}
+/* lieux : cartes de verre, ligne fine, chiffre fin (comme « 47 °F ») */
+body[data-style="rose"].flat .place .emo{background:rgba(255,255,255,.16);border-radius:20px}
+body[data-style="rose"] .place .walk b,body[data-style="rose"] .place .mins b{font-weight:300}
+
+/* sur la photo floutée, les filtres passent en verre (texte blanc lisible) */
+body[data-style="rose"].onres{--pill:rgba(255,255,255,.14);--pillB:1px solid rgba(255,255,255,.3)}
+body[data-style="rose"].flat.onres .seg,body[data-style="rose"].onres .budget .seg,body[data-style="rose"].onres .rvsearch{background:rgba(255,255,255,.14)!important;border:1px solid rgba(255,255,255,.3)!important;color:#fff;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+body[data-style="rose"].onres .rvsearch input{color:#fff}
+body[data-style="rose"].onres .rvsearch input::placeholder{color:rgba(255,255,255,.7)}
+body[data-style="rose"].onres .budget button{color:#fff}
+/* barre du bas : un rond de verre par onglet */
+body[data-style="rose"] .tabs{justify-content:center;gap:10px;max-width:300px;background:transparent!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+body[data-style="rose"] .tabs button{flex:none;width:56px;height:56px;max-width:none;border-radius:50%!important;padding:0!important;justify-content:center;background:var(--tabBg);border:1px solid rgba(255,255,255,.3);color:var(--tabInk);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+body[data-style="rose"] .tabs button span{display:none}
+body[data-style="rose"] .tabs button[aria-selected="true"]{background:var(--tabOn);color:var(--tabOnInk)}
+
+:root[data-theme="dark"] body[data-style="rose"] .chip[aria-pressed="true"],:root[data-theme="dark"] body[data-style="rose"] .seg button[aria-pressed="true"],:root[data-theme="dark"] body[data-style="rose"] .travel button[aria-pressed="true"],:root[data-theme="dark"] body[data-style="rose"] .dial button[aria-pressed="true"]{color:#2B2024!important}
 
 /* ===== Rétro : reprise des références années 70 (flat design à contours, ombres pleines, titres « groovy ») ===== */
 @font-face{font-family:"Fraunces Groovy";font-style:normal;font-weight:900;font-display:swap;src:url(../fonts/fraunces-groovy.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "85";
+const APP_VERSION = "86";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -674,6 +674,7 @@ function renderResults(){
   // Bandeau photo de l'envie choisie, en tête des résultats
   if(pos && MOODS[M].img){
     const bn = document.createElement("div"); bn.className = "banner";
+    document.body.style.setProperty("--catbg", `url('${new URL(moodImg(M, true), location.href).href}')`);
     bn.style.backgroundImage = `url('${moodImg(M, true)}'), url('${moodImg(M)}')`;
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
     const mode = SET.travel || "walk", tries = [T < 120 && tx("plus de temps"), mode !== "car" && tx(mode === "walk" ? "le vélo" : "la voiture")].filter(Boolean);
@@ -828,6 +829,7 @@ const wideNow = () => document.body.classList.contains("lay-wide");
 function goStep(n, push){
   if(n === STEP) return;
   STEP = n; $("viewExplore").classList.toggle("step2", n === 2);
+  document.body.classList.toggle("onres", n === 2 && !wideNow());
   if(n === 2 && push !== false && !wideNow()) try{ history.pushState({step: 2}, ""); }catch(e){}
   if(!wideNow()) window.scrollTo(0, 0);
 }
@@ -922,7 +924,7 @@ const THEMES = {
   // inspirés de références de design : rétro (Rayo), rose désert (verre dépoli), studio (gris, menthe, orange),
   // néon (nuit olive, citron vert, lilas), fraîcheur (menthe, blanc, vert)
   retro:{n:"Rétro", L:["#F6EEDD","#F6EEDD","#1A1714","#6B5E52","#FFF9EF","#1A1714","#E0704F","#FFF9EF","#F6CF63"], D:["#1D1812","#1D1812","#F6EEDD","#C4B3A2","#2A231B","#F6EEDD","#EE8061","#1D1812","#D9A93B"]},
-  rose:{n:"Rose désert", L:["#E9AEBB","#F3C9D2","#1E1E1E","#6F5A60","#FFF6F8","#F2D2DA","#1E1E1E","#FFFFFF","#F6D3DB"], D:["#1C1316","#3A1E27","#FBEFF2","#C8A8B1","#2A1D22","#46313A","#FBEFF2","#1C1316","#4A2C37"]},
+  rose:{n:"Rose", L:["#D9C6CB","#E6C3C3","#2B2024","#6A555B","#F4E9EA","#E6D3D6","#6E4A55","#FFFFFF","#EBD5D8"], D:["#221719","#4A3036","#F8EEEE","#C9B1B5","#3A2A2E","#4A383C","#F2C4BE","#2B2024","#4E363B"]},
   studio:{n:"Studio", L:["#D9D0C6","#EDE6DE","#1A1411","#74675C","#EEE9E3","#CFC4B8","#16110E","#F2ECE6","#E2D9CF"], D:["#15100D","#3A2819","#F2ECE6","#A89A8E","#241C17","#3A2F28","#EDE6DF","#16110E","#3A2F28"]},
   neon:{n:"Néon", L:["#EFE6DC","#F7C9A6","#1B1411","#8C7D72","#F7F1EB","#E4D8CC","#FF6A1A","#FFFFFF","#FFD9C2"], D:["#0E0B0A","#5A2410","#F7EDE6","#B39C8E","#1C1512","#33261F","#FF6A1A","#FFFFFF","#3A1E12"]},
   fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}

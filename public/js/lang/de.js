@@ -29,6 +29,7 @@
   "Horaires non indiqués": "Öffnungszeiten nicht angegeben",
   "Horaires à vérifier": "Öffnungszeiten prüfen",
   "Rétro": "Retro",
+  "Rose": "Rosa",
   "Rose désert": "Wüstenrose",
   "Studio": "Studio",
   "Néon": "Neon",
