@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "81";
+const APP_VERSION = "82";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -921,7 +921,7 @@ const THEMES = {
   creme:{n:"Crème", flat:true, L:["#F5EEE6","#F5EEE6","#1C1512","#7A6E63","#FFFCF8","#E8DFD3","#E1140A","#FFFFFF","#F8DCD8"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
   // inspirés de références de design : rétro (Rayo), rose désert (verre dépoli), studio (gris, menthe, orange),
   // néon (nuit olive, citron vert, lilas), fraîcheur (menthe, blanc, vert)
-  retro:{n:"Rétro", L:["#F8EEDF","#FBE3D6","#B8382A","#B0705F","#FDF6EC","#F0D9C8","#D2432F","#FFFFFF","#F9C9CF"], D:["#241311","#3A1A15","#FBE9DC","#C99A8E","#321C18","#4A2A24","#F0634F","#241311","#4A2420"]},
+  retro:{n:"Rétro", L:["#F6EEDD","#F6EEDD","#1A1714","#6B5E52","#FFF9EF","#1A1714","#E0704F","#FFF9EF","#F6CF63"], D:["#1D1812","#1D1812","#F6EEDD","#C4B3A2","#2A231B","#F6EEDD","#EE8061","#1D1812","#D9A93B"]},
   rose:{n:"Rose désert", L:["#E9AEBB","#F3C9D2","#1E1E1E","#6F5A60","#FFF6F8","#F2D2DA","#1E1E1E","#FFFFFF","#F6D3DB"], D:["#1C1316","#3A1E27","#FBEFF2","#C8A8B1","#2A1D22","#46313A","#FBEFF2","#1C1316","#4A2C37"]},
   studio:{n:"Studio", L:["#D8DCD9","#C7E4DF","#151515","#5E625F","#F0F0EC","#C9CECB","#FF6A13","#FFFFFF","#CFE6E1"], D:["#0F0F0F","#1F2B29","#F2F2F0","#9EA3A0","#1C1C1C","#2E2E2E","#FF7A26","#0F0F0F","#263634"]},
   neon:{n:"Néon", L:["#E9E5DC","#E6F3B8","#1A1A1A","#6A675F","#F7F4EE","#D9D4C8","#B98BD6","#1A1A1A","#E3F2A8"], D:["#111111","#2A3320","#F1EEE6","#A4A097","#1E2219","#343A2B","#C9E86A","#111111","#3A4724"]},

@@ -1014,3 +1014,77 @@ body[data-style="rose"] .banner .k{grid-column:1;order:-1;color:var(--soft);text
 body[data-style="rose"] .banner .wx{grid-column:1;justify-self:start;white-space:normal;margin-bottom:12px;background:rgba(246,211,219,.6);color:#1E1E1E;box-shadow:none}
 body[data-style="rose"] .banner .evin{grid-column:1/-1;color:var(--soft)}
 body[data-style="rose"] #whereAt .whereat{font-weight:400;letter-spacing:-.035em;font-size:38px}
+
+/* ===== Rétro : reprise des références années 70 (flat design à contours, ombres pleines, titres « groovy ») ===== */
+@font-face{font-family:"Fraunces Groovy";font-style:normal;font-weight:900;font-display:swap;src:url(../fonts/fraunces-groovy.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Fraunces Groovy";font-style:normal;font-weight:900;font-display:swap;src:url(../fonts/fraunces-groovy-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+body[data-style="retro"]{--terra:#E0704F;--moutarde:#F6CF63;--sauge:#7BB27E;--menthe:#CDE8DF;--ciel:#8ED8E0;--rose:#F2A7C3;--noir:var(--ink);
+  --disp:"Fraunces Groovy","Fraunces",Georgia,serif;--dispW:900;--dispS:normal;--dispLS:-.01em;--dispT:none;--ds:1;--txt:"Archivo",system-ui,sans-serif;--r:18px;
+  --cardBg:var(--card);--cardB:2px solid var(--ink);--cardSh:4px 4px 0 var(--ink);--blur:none;
+  --pill:var(--card);--pillB:2px solid var(--ink);--pillOn:var(--moutarde);--pillOnInk:#1A1714;--btn:var(--moutarde);--btnInk:#1A1714;
+  --tabBg:var(--card);--tabInk:var(--ink);--tabOn:var(--rose);--tabOnInk:#1A1714}
+:root[data-theme="dark"] body[data-style="retro"]{--moutarde:#E4B64A;--rose:#E890B2}
+/* titres groovy ; les titres de rubriques en capitales (FEATURES, MOODBOARD) */
+body[data-style="retro"] .hero2 .display{font-size:clamp(52px,15vw,80px);line-height:.92;letter-spacing:-.02em}
+body[data-style="retro"] .hero2 .display em,body[data-style="retro"] .brand em,body[data-style="retro"] #whereAt .whereat em{font-style:normal;color:var(--terra)}
+body[data-style="retro"] .flat h2,body[data-style="retro"] h2,body[data-style="retro"] .flat .group h3{text-transform:uppercase;letter-spacing:.01em}
+body[data-style="retro"] .flat h2::before{content:"✦";color:var(--ink);font-size:.6em;vertical-align:.25em;margin-right:10px}
+body[data-style="retro"] .kicker{color:var(--ink);letter-spacing:.18em}
+body[data-style="retro"] .post{font-family:var(--disp);font-size:20px;color:var(--terra)}
+body[data-style="retro"] .brand{font-size:23px}
+/* tout est cerné de noir avec une ombre pleine décalée (effet 3D) */
+body[data-style="retro"] .gear,body[data-style="retro"] .srchbtn,body[data-style="retro"] .mebtn,body[data-style="retro"] .resbar .back{background:var(--card);border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink)}
+body[data-style="retro"] .mebtn{background:var(--moutarde);color:#1A1714}
+body[data-style="retro"] .dial button{border-radius:14px;box-shadow:3px 3px 0 var(--ink)}
+body[data-style="retro"] .dial button[aria-pressed="true"]{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+body[data-style="retro"] .flat .chip,body[data-style="retro"] .chip{border:2px solid var(--ink);border-radius:12px;box-shadow:2px 2px 0 var(--ink);background:var(--card)}
+body[data-style="retro"] .chip[aria-pressed="true"]{background:var(--moutarde);color:#1A1714}
+body[data-style="retro"] .flat .travel,body[data-style="retro"] .travel,body[data-style="retro"] .flat .seg{border:2px solid var(--ink);border-radius:16px;box-shadow:4px 4px 0 var(--ink);background:var(--card)}
+body[data-style="retro"] .travel button[aria-pressed="true"],body[data-style="retro"] .travel::before{border-radius:11px}
+body[data-style="retro"] .where .go,body[data-style="retro"] .flat .go{border:2px solid var(--ink);border-radius:12px;box-shadow:2px 2px 0 var(--ink);background:var(--moutarde);color:#1A1714}
+body[data-style="retro"] .flat .ghost{border-radius:12px;box-shadow:inset 0 0 0 2px var(--ink),2px 2px 0 var(--ink);color:var(--ink)}
+body[data-style="retro"] .wheresel{border:2px solid var(--ink);box-shadow:4px 4px 0 var(--ink);background:var(--menthe);color:#1A1714}
+body[data-style="retro"] .wheresel b{color:#1A1714}
+body[data-style="retro"] .wheresel .ok{background:var(--sauge);color:#1A1714;border:2px solid #1A1714}
+/* bouton principal : gros bouton jaune cerné (comme « Create account ») */
+body[data-style="retro"] .seebar .see,body[data-style="retro"] .flat .idea > button{border:2px solid #1A1714;border-radius:16px;box-shadow:4px 4px 0 #1A1714;font-family:var(--disp);font-weight:900;font-size:19px;letter-spacing:.01em}
+/* envies : photos cernées, ombre pleine ; pastille jaune */
+body[data-style="retro"] .moods button.photo{border:2px solid var(--ink)!important;box-shadow:4px 4px 0 var(--ink)!important}
+body[data-style="retro"] .moods button.photo[aria-pressed="true"]{outline:3px solid var(--terra);outline-offset:3px}
+body[data-style="retro"] .moods button.photo .ok{background:var(--moutarde);color:#1A1714;border:2px solid #1A1714;box-shadow:none}
+body[data-style="retro"] .moods button.photo b{text-transform:uppercase;letter-spacing:.01em}
+/* rubriques de lieux : picto dans une pastille colorée cernée ; « le plus proche » en bulle */
+body[data-style="retro"] .group h3 .gi{background:var(--moutarde);border:2px solid var(--ink);border-radius:12px}
+body[data-style="retro"] .flat .place .emo,body[data-style="retro"] .place .emo{background:var(--menthe);border:2px solid var(--ink)}
+body[data-style="retro"] .flat .sticker,body[data-style="retro"] .sticker{background:var(--ciel);color:#1A1714;border:1.5px solid #1A1714;border-radius:10px 10px 10px 2px;box-shadow:2px 2px 0 #1A1714}
+body[data-style="retro"] .group h3 small{border:2px solid var(--ink);background:var(--rose);color:#1A1714}
+/* Mes lieux : bloc vert à lignes (comme « FEATURES ») ; Déjà fait : bloc terracotta (comme « CONTEXT ») */
+body[data-style="retro"] .saved,body[data-style="retro"] .hist{border:2px solid var(--ink);border-radius:18px;box-shadow:5px 5px 0 var(--ink);padding:22px 18px;margin-top:26px;color:#1A1714}
+body[data-style="retro"] .saved{background:var(--sauge)}
+body[data-style="retro"] .hist{background:var(--terra)}
+body[data-style="retro"] .saved h2,body[data-style="retro"] .hist h2{color:#1A1714;border-bottom:2px solid #1A1714;padding-bottom:12px}
+body[data-style="retro"] .saved .seg{background:rgba(255,255,255,.35)}
+body[data-style="retro"] .saved .empty,body[data-style="retro"] .hist .empty{color:#1A1714}
+/* propositions : bloc terracotta avec la photo en arche et des étoiles ✦ (comme le téléphone orange) */
+body[data-style="retro"] .banner{background:var(--terra)!important;color:#1A1714;border:2px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:0 16px;padding:22px 18px;min-height:240px;overflow:hidden}
+body[data-style="retro"] .banner::before{content:"✦";position:absolute;top:14px;right:16px;left:auto;bottom:auto;inset:auto 16px auto auto;background:none;color:#1A1714;font-size:24px}
+body[data-style="retro"] .banner::after{content:"✦";position:absolute;right:46%;bottom:18px;color:#1A1714;font-size:18px;background:none}
+body[data-style="retro"] .banner .circ{display:block;grid-column:2;grid-row:1/span 4;width:100%;aspect-ratio:3/4;border-radius:999px 999px 6px 6px;background-size:cover;background-position:center;border:2px solid #1A1714;box-shadow:4px 4px 0 #1A1714}
+body[data-style="retro"] .banner .circ svg{display:none}
+body[data-style="retro"] .banner h3{grid-column:1;margin:0;font-size:40px;text-transform:uppercase;color:#1A1714;text-shadow:none;line-height:.95}
+body[data-style="retro"] .banner .k{grid-column:1;order:-1;color:#1A1714;text-shadow:none;margin-bottom:8px}
+body[data-style="retro"] .banner p{grid-column:1;color:#1A1714;text-shadow:none;margin:6px 0 0;font-weight:600}
+body[data-style="retro"] .banner .wx{grid-column:1;justify-self:start;white-space:normal;background:var(--menthe);color:#1A1714;border:1.5px solid #1A1714;border-radius:10px 10px 10px 2px;box-shadow:2px 2px 0 #1A1714;margin-bottom:10px}
+body[data-style="retro"] .banner .evin{grid-column:1/-1;color:#1A1714}
+body[data-style="retro"] #whereAt .whereat{font-size:38px;line-height:.98}
+/* barre d'onglets cernée, onglet actif en pastille rose (comme l'appli Pablo) */
+body[data-style="retro"] .flat .tabs,body[data-style="retro"] .tabs{left:14px;right:14px;bottom:calc(10px + env(safe-area-inset-bottom,0px));border:2px solid var(--ink);border-radius:18px;box-shadow:4px 4px 0 var(--ink);max-width:520px;margin:0 auto;padding:6px}
+body[data-style="retro"] .flat .tabs button[aria-selected="true"]{border:2px solid #1A1714;border-radius:12px}
+body[data-style="retro"] .seebar{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+body[data-style="retro"] .idea{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+body[data-style="retro"] .resbar{background:color-mix(in srgb,var(--bg) 88%,transparent);border-bottom:2px solid var(--ink)}
+/* radar et cartes : un peu de couleur pastel */
+body[data-style="retro"] .flat .radar,body[data-style="retro"] .radar{background:var(--card)}
+body[data-style="retro"] .saved .seg button[aria-pressed="true"]{background:var(--moutarde);color:#1A1714;border:2px solid #1A1714}
+body[data-style="retro"] .saved .seg button[aria-pressed="true"] .ei{--ico-a:var(--terra)}
+body[data-style="retro"] .saved .empty,body[data-style="retro"] .hist .empty{background:rgba(255,255,255,.4);border:2px dashed #1A1714;box-shadow:none;border-radius:14px}
