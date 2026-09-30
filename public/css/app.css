@@ -1088,3 +1088,77 @@ body[data-style="retro"] .flat .radar,body[data-style="retro"] .radar{background
 body[data-style="retro"] .saved .seg button[aria-pressed="true"]{background:var(--moutarde);color:#1A1714;border:2px solid #1A1714}
 body[data-style="retro"] .saved .seg button[aria-pressed="true"] .ei{--ico-a:var(--terra)}
 body[data-style="retro"] .saved .empty,body[data-style="retro"] .hist .empty{background:rgba(255,255,255,.4);border:2px dashed #1A1714;box-shadow:none;border-radius:14px}
+
+/* ===== Studio : reprise de la référence « N99 Beauty Studio » (brun chaud, verre sombre, police fine) ===== */
+body[data-style="studio"]{--disp:"Poppins",system-ui,sans-serif;--dispW:400;--dispT:none;--dispLS:-.03em;--ds:.95;--txt:"Poppins",system-ui,sans-serif;--r:30px;
+  --glass:rgba(255,245,235,.07);--glassB:rgba(255,245,235,.10);--sheet:#EEE9E3;--sheetInk:#16110E;--dark:#120E0C;
+  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:0 20px 40px -28px rgba(0,0,0,.6);--blur:blur(18px);
+  --pill:transparent;--pillB:1px solid color-mix(in srgb,var(--ink) 35%,transparent);--pillOn:var(--ink);--pillOnInk:var(--bg);
+  --btn:var(--dark);--btnInk:#F2ECE6;--btnDot:#2E2520;
+  --tabBg:rgba(20,15,12,.72);--tabInk:rgba(242,236,230,.6);--tabOn:#F2ECE6;--tabOnInk:#16110E;
+  background:transparent!important;word-spacing:0}
+html:has(body[data-style="studio"]){background:#15100D}
+/* fond : brun chaud avec un rayon de lumière en diagonale */
+body[data-style="studio"]::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:linear-gradient(118deg,transparent 38%,rgba(255,228,196,.13) 47%,rgba(255,228,196,.05) 55%,transparent 62%),
+    radial-gradient(120% 60% at 85% 0%,#6A4329 0,rgba(106,67,41,0) 62%),radial-gradient(90% 55% at 0% 100%,#3C2A1F 0,rgba(60,42,31,0) 70%),
+    linear-gradient(170deg,#2A1D15,#120E0C 70%)}
+:root[data-theme="light"] body[data-style="studio"],:root:not([data-theme="dark"]) body[data-style="studio"]{--glass:rgba(255,255,255,.45);--glassB:rgba(255,255,255,.6);--tabBg:rgba(22,17,14,.85)}
+:root[data-theme="light"] body[data-style="studio"]::before,:root:not([data-theme="dark"]) body[data-style="studio"]::before{
+  background:linear-gradient(118deg,transparent 38%,rgba(255,255,255,.35) 47%,rgba(255,255,255,.1) 55%,transparent 62%),radial-gradient(120% 60% at 85% 0%,#C9A98E 0,rgba(201,169,142,0) 62%),linear-gradient(170deg,#E4DBD1,#CFC4B8 70%)}
+/* titres fins ; petites étiquettes en capitales très espacées (« BEAUTY STUDIO ») */
+body[data-style="studio"] .hero2 .display{font-weight:300;font-size:clamp(46px,13vw,64px);line-height:1.02;letter-spacing:-.045em}
+body[data-style="studio"] .hero2 .display em,body[data-style="studio"] .brand em,body[data-style="studio"] #whereAt .whereat em{color:var(--soft);font-style:normal}
+body[data-style="studio"] .brand{font-weight:400;font-size:20px;letter-spacing:-.02em}
+body[data-style="studio"] .kicker,body[data-style="studio"] .banner .k,body[data-style="studio"] .where .here{text-transform:uppercase;letter-spacing:.32em;font-size:11px;font-weight:500;color:var(--soft)}
+body[data-style="studio"] .kicker::first-letter{color:transparent}
+body[data-style="studio"] .post{font-weight:300;color:var(--soft)}
+body[data-style="studio"] .flat h2,body[data-style="studio"] h2{font-weight:400;font-size:28px;letter-spacing:-.03em}
+body[data-style="studio"] .flat h2::before{content:none}
+body[data-style="studio"] .flat .group h3{font-weight:400;font-size:24px}
+body[data-style="studio"] #whereAt .whereat{font-weight:300;font-size:34px;letter-spacing:-.04em}
+/* boutons ronds gris translucides (loupe, cœur) */
+body[data-style="studio"] .gear,body[data-style="studio"] .srchbtn,body[data-style="studio"] .mebtn,body[data-style="studio"] .resbar .back{background:rgba(255,245,235,.12);border:0;box-shadow:none;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:var(--ink)}
+body[data-style="studio"] .mebtn{border:1.5px solid rgba(255,245,235,.35)}
+/* pastilles fines à contour (comme « Autumn ✕ ») */
+body[data-style="studio"] .dial button{font-weight:400;box-shadow:none}
+body[data-style="studio"] .flat .chip,body[data-style="studio"] .chip{font-weight:400;box-shadow:none;background:transparent}
+body[data-style="studio"] .flat .travel,body[data-style="studio"] .flat .seg{background:var(--glass);border:1px solid var(--glassB);box-shadow:none}
+body[data-style="studio"] .travel button[aria-pressed="true"]{color:var(--pillOnInk)}
+body[data-style="studio"] .flat .where form{border-radius:999px}
+body[data-style="studio"] .where .go{background:var(--ink);color:var(--bg);font-weight:500}
+body[data-style="studio"] .wheresel{border:1px solid var(--glassB);background:var(--glass)}
+body[data-style="studio"] .wheresel .ok{background:var(--ink);color:var(--bg)}
+/* envies : grandes photos arrondies, pastilles blanches rondes, nom discret */
+body[data-style="studio"] .moods button.photo{border-radius:30px}
+body[data-style="studio"] .moods button.photo b{font-weight:400;letter-spacing:-.03em}
+body[data-style="studio"] .moods button.photo .ok{background:#fff;color:#16110E;border:0;width:32px;height:32px;top:auto;bottom:12px;right:12px}
+body[data-style="studio"] .moods button.photo[aria-pressed="true"] .ok{background:#16110E;color:#fff}
+body[data-style="studio"] .moods button.photo[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+/* bouton principal : pilule noire avec rond à gauche (comme « Added 13 Pics ») */
+body[data-style="studio"] .seebar .see{border:1px solid rgba(255,245,235,.14);font-weight:400;font-size:16px;flex-direction:row-reverse;justify-content:flex-end;gap:14px;padding:9px 26px 9px 9px}
+body[data-style="studio"] .seebar .see::after{margin:0}
+body[data-style="studio"] .flat .idea > button{font-weight:400;border:1px solid rgba(255,245,235,.14)}
+body[data-style="studio"] .flat .go{background:var(--dark);color:#F2ECE6}
+/* « le plus proche » : petite pastille grise (comme « Unconfirmed ») */
+body[data-style="studio"] .flat .sticker,body[data-style="studio"] .sticker{background:rgba(255,245,235,.14);color:var(--ink);font-weight:400;border-radius:999px}
+body[data-style="studio"] .group h3 .gi{background:rgba(255,245,235,.12);border-radius:50%}
+body[data-style="studio"] .flat .place .emo,body[data-style="studio"] .place .emo{background:rgba(255,245,235,.10);border-radius:50%}
+/* propositions : carte claire comme « Manicure 3D » : photo ovale, statut, titre, infos en 2 colonnes */
+body[data-style="studio"] .banner{background:var(--sheet)!important;color:var(--sheetInk);border-radius:34px;box-shadow:0 30px 60px -30px rgba(0,0,0,.7);display:grid;grid-template-columns:118px 1fr;gap:4px 16px;align-items:center;padding:16px 18px 18px 16px;min-height:0}
+body[data-style="studio"] .banner::before,body[data-style="studio"] .banner::after{content:none}
+body[data-style="studio"] .banner .circ{display:block;grid-column:1;grid-row:1/span 3;width:118px;height:140px;border-radius:50%;background-size:cover;background-position:center}
+body[data-style="studio"] .banner .circ svg{display:none}
+body[data-style="studio"] .banner .k{grid-column:2;grid-row:1;align-self:end;justify-self:start;background:#CFC8C0;color:#fff;border-radius:999px;padding:3px 10px;letter-spacing:.02em;text-transform:none;font-size:11px;text-shadow:none}
+body[data-style="studio"] .banner h3{grid-column:2;grid-row:2;margin:0;font-weight:400;font-size:28px;letter-spacing:-.03em;color:var(--sheetInk);text-shadow:none;line-height:1.05}
+body[data-style="studio"] .banner p{grid-column:2;grid-row:3;align-self:start;margin:0;color:#8A7F76;font-weight:300;text-shadow:none}
+body[data-style="studio"] .banner .wx{grid-column:1/-1;grid-row:4;margin-top:12px;justify-self:stretch;text-align:left;background:transparent;border-top:1px solid #D9D2CA;border-radius:0;padding:12px 2px 0;color:var(--sheetInk);box-shadow:none;font-weight:400}
+body[data-style="studio"] .banner .evin{grid-column:1/-1;grid-row:5;color:#8A7F76}
+/* Mes lieux / Déjà fait : feuille claire */
+body[data-style="studio"] .saved,body[data-style="studio"] .hist{background:var(--sheet);color:var(--sheetInk);border-radius:34px;padding:22px 18px;margin-top:22px}
+body[data-style="studio"] .saved h2,body[data-style="studio"] .hist h2{color:var(--sheetInk)}
+body[data-style="studio"] .saved .seg{background:#E0D9D1;border:0}
+body[data-style="studio"] .saved .seg button{color:#6F655D}
+body[data-style="studio"] .saved .seg button[aria-pressed="true"]{background:var(--dark);color:#F2ECE6}
+body[data-style="studio"] .saved .empty,body[data-style="studio"] .hist .empty{color:#8A7F76}
+:root[data-theme="dark"] body[data-style="studio"] .resbar{background:rgba(20,15,12,.55)}
