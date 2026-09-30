@@ -75,7 +75,7 @@ const { googlePrice } = require("./prices");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
-const DEFAULT_ORIGINS = ["https://zcabande-arch.github.io"];
+const DEFAULT_ORIGINS = ["https://fissafissa.app", "https://zcabande-arch.github.io"];
 
 // opts : {adminToken, reportThreshold, rateLimit, sendMail({to, subject, html, text}), appOrigins: [origines autorisées]}
 // req  : {method, url (URL), header(nom) → valeur, ip, json() → corps JSON (rejette {code})}

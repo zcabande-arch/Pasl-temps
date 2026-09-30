@@ -8,7 +8,7 @@ workers_dev = true
 REPORT_THRESHOLD = "3"
 # Connexion par e-mail : expéditeur (adresse validée dans Brevo) et adresses où l'appli est servie
 MAIL_FROM = "Fissa Fissa <pasltempssav@gmail.com>"
-APP_ORIGINS = "https://zcabande-arch.github.io"
+APP_ORIGINS = "https://fissafissa.app,https://www.fissafissa.app,https://zcabande-arch.github.io"
 
 # Notifications : chaque minute, on envoie celles arrivées à l'heure (chrono « Je pars », rappel tous les 3 jours)
 [triggers]
