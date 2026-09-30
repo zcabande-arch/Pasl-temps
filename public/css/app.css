@@ -792,99 +792,112 @@ body.srch-on{overflow:hidden}
 #onb .art.logo{background:#F5EEE6}
 #onb .art.logo img{width:132px;height:auto;display:block}
 
-/* ---------- Détails de style par thème (même typo partout) ---------- */
-/* Rétro : cadres fins couleur brique, comme une affiche des années 70 */
-[data-style="retro"] .place,[data-style="retro"] .card,[data-style="retro"] .radar,[data-style="retro"] .srow,[data-style="retro"] .entry,[data-style="retro"] .where form{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--acc) 45%,transparent)}
-[data-style="retro"] .chip,[data-style="retro"] .seg{border:1.5px solid color-mix(in srgb,var(--acc) 35%,transparent)}
-/* Rose désert : cartes en verre dépoli sur un fond dégradé rose, boutons noirs */
-[data-style="rose"] body,body[data-style="rose"]{background:linear-gradient(180deg,var(--glow) 0%,var(--bg) 42%,var(--bg) 100%) fixed}
-[data-style="rose"] .place,[data-style="rose"] .card,[data-style="rose"] .radar,[data-style="rose"] .srow,[data-style="rose"] .entry,[data-style="rose"] .where form,[data-style="rose"] .chip,[data-style="rose"] .seg{background:color-mix(in srgb,var(--card) 62%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 10px 30px -18px rgba(0,0,0,.35)}
-/* Studio : contrastes forts, grands arrondis, pastilles noires */
-[data-style="studio"] .place,[data-style="studio"] .card,[data-style="studio"] .radar{border-radius:30px}
-[data-style="studio"] .sticker{background:var(--ink);color:var(--card)}
-[data-style="studio"] .chip[aria-pressed="true"]{background:var(--ink);color:var(--card)}
-/* Néon : pastilles citron vert et contours nets */
-[data-style="neon"] .chip{border:1.5px solid var(--ink);box-shadow:none}
-[data-style="neon"] .chip[aria-pressed="true"],[data-style="neon"] .sticker{background:var(--accsoft);color:var(--ink)}
-[data-style="neon"] .place,[data-style="neon"] .radar{border-radius:30px}
-/* Fraîcheur : cartes blanches aérées, gros arrondis */
-[data-style="fraicheur"] .place,[data-style="fraicheur"] .card,[data-style="fraicheur"] .radar,[data-style="fraicheur"] .srow{border-radius:32px;box-shadow:0 14px 34px -22px rgba(17,20,18,.45)}
-
-/* =====================================================================
-   NOUVEAU DESIGN (v2) — inspiré des références : titres en capitales
-   grasses et condensées (Anton), texte Archivo, grandes cartes très
-   arrondies, pastilles à contour, boutons pilule foncés avec rond fléché,
-   barres en verre dépoli, barre d'onglets flottante.
-   ===================================================================== */
 @font-face{font-family:"Anton";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/anton.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
 @font-face{font-family:"Anton";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/anton-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
 @font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url(../fonts/archivo.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
 @font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-display:swap;src:url(../fonts/archivo-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
-:root{--disp:"Anton",Impact,"Arial Narrow",sans-serif;--txt:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;--r:28px}
 
-/* texte */
-body,.flat body,button,input,select,textarea{font-family:var(--txt)}
-/* titres : capitales condensées */
+/* =====================================================================
+   THÈMES D'INTERFACE : chaque thème change toute l'interface (polices,
+   tailles de titres, arrondis, cartes, boutons, onglets, fond), en plus
+   des couleurs. Tout passe par les variables ci-dessous.
+   ===================================================================== */
+body{
+  --disp:"Fraunces",Georgia,serif; --dispW:600; --dispT:none; --dispS:normal; --dispLS:-.02em; --ds:1;
+  --txt:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:26px; --cardBg:var(--card); --cardB:0; --cardSh:var(--sh); --blur:none;
+  --btn:var(--acc); --btnInk:var(--accink); --btnDot:transparent;
+  --pill:var(--card); --pillB:0; --pillOn:var(--ink); --pillOnInk:var(--bg);
+  --tabBg:color-mix(in srgb,var(--bg) 90%,transparent); --tabInk:var(--soft); --tabOn:var(--ink); --tabOnInk:var(--bg); --tabFloat:0;
+  word-spacing:.02em}
+
+/* textes et titres */
+body,button,input,select,textarea{font-family:var(--txt)}
 .flat h1,.flat h2,.flat .serif,.flat .group h3,.flat .brand,.flat .bloghead,.hero2 .display,.banner h3,.moods button.photo b,
-.radar h3,#splash .line,.phead .display,#onb h2,#whereAt .whereat,.wheresel b,.flat .hist h2 span,.flat .group h3 small{
-  font-family:var(--disp);font-weight:400;text-transform:uppercase;letter-spacing:.005em}
-.flat .group h3 small,.flat .hist h2 span{font-family:var(--txt);text-transform:none;font-weight:700}
-.hero2 .display{font-size:clamp(58px,17vw,92px);line-height:.9}
-.hero2 .display em,.brand em,#splash .line em,#whereAt .whereat em,.phead .display em{font-style:normal;color:var(--acc)}
-.flat .brand{font-size:25px;line-height:1.02;letter-spacing:.01em}
-#splash .line{font-size:clamp(52px,15vw,84px);line-height:.92}
-#whereAt .whereat{font-size:44px;line-height:.95}
-.flat h2{font-size:34px;line-height:.95;margin-bottom:18px}
-.flat h2::before{content:none}
-.flat .group h3{font-size:30px;line-height:1}
-.banner h3{font-size:52px;line-height:.9}
-.radar h3{font-size:24px}
-.wheresel b{font-size:30px}
-#onb h2{font-size:40px;line-height:.95}
-.kicker,.flat .kicker{font-family:var(--txt);font-weight:800;letter-spacing:.12em}
-.post{font-family:var(--txt)}
+.radar h3,#splash .line,.phead .display,#onb h2,#whereAt .whereat,.wheresel b{
+  font-family:var(--disp);font-weight:var(--dispW);text-transform:var(--dispT);font-style:var(--dispS);letter-spacing:var(--dispLS)}
+.hero2 .display em,.brand em,#splash .line em,#whereAt .whereat em,.phead .display em{color:var(--acc)}
+.hero2 .display{font-size:calc(clamp(46px,13.5vw,68px) * var(--ds))}
+.flat .brand{font-size:calc(24px * var(--ds))}
+#splash .line{font-size:calc(clamp(40px,11.5vw,72px) * var(--ds))}
+#whereAt .whereat{font-size:calc(36px * var(--ds))}
+.flat h2{font-size:calc(28px * var(--ds))}
+.flat .group h3{font-size:calc(24px * var(--ds))}
+.banner h3{font-size:calc(36px * var(--ds))}
+.moods button.photo b{font-size:calc(24px * var(--ds))}
+#onb h2{font-size:calc(32px * var(--ds))}
+.wheresel b{font-size:calc(26px * var(--ds))}
+.flat .group h3 small{font-family:var(--txt)}
+b,strong{word-spacing:.08em}
 
-/* grandes cartes très arrondies, à plat, fin contour */
-.flat .place,.flat .card,.flat .radar,.flat .entry,.flat .rvp,.flat .srow{border-radius:var(--r);box-shadow:none;border:1.5px solid var(--line)}
-.flat .place .emo{border-radius:22px}
-.flat .place.picked{box-shadow:0 0 0 3px var(--acc)}
-.moods button.photo,.flat .moods button{border-radius:var(--r);box-shadow:none}
-.moods button.photo b{font-size:30px;line-height:.95}
-.moods button.photo .ok{background:color-mix(in srgb,#fff 28%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.55)}
-.banner{border-radius:var(--r)}
+/* cartes */
+.flat .place,.flat .card,.flat .radar,.flat .entry,.flat .rvp,.flat .srow,.flat .where form,.wheresel{
+  border-radius:var(--r);background:var(--cardBg);box-shadow:var(--cardSh);border:var(--cardB);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.wheresel{border:2px solid var(--acc)}
+.moods button.photo,.flat .moods button,.banner{border-radius:var(--r)}
+.flat .place .emo{border-radius:calc(var(--r) * .75)}
+/* pastilles */
+.dial button,.flat .chip,.chip{background:var(--pill);border:var(--pillB)}
+.dial button[aria-pressed="true"],.flat .chip[aria-pressed="true"]{background:var(--pillOn);color:var(--pillOnInk)}
+/* bouton principal (+ rond fléché pour certains thèmes) */
+.seebar .see,.flat .idea > button{background:var(--btn);color:var(--btnInk);box-shadow:0 18px 34px -16px color-mix(in srgb,var(--btn) 60%,transparent)}
+.seebar .see{display:flex;align-items:center;justify-content:center;gap:12px}
+.seebar .see::after{content:"";flex:none;width:0;height:44px;border-radius:50%;background:var(--btnDot) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat;display:none}
+.flat .go{background:var(--btn);color:var(--btnInk)}
+/* onglets */
+.flat .tabs{background:var(--tabBg)}
+.flat .tabs button{color:var(--tabInk)}
+.flat .tabs button[aria-selected="true"]{background:var(--tabOn);color:var(--tabOnInk)}
+.tabs .ico{--ico-k:currentColor}
 
-/* pastilles (temps, filtres, transports) : contour net ; choisie = foncée */
-.dial button,.flat .chip,.chip{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);background:var(--card)}
-.dial button[aria-pressed="true"],.flat .chip[aria-pressed="true"],.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-.dial button{font-family:var(--txt);font-weight:800}
-.travel,.flat .travel,.flat .seg{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 18%,transparent)}
-.flat .where form{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent)}
-.wheresel{box-shadow:none}
+/* modèle « pilule fléchée » (Studio, Néon, Rose désert) */
+body.arrowbtn .seebar .see{justify-content:space-between;padding:9px 9px 9px 26px;min-height:62px;text-align:left}
+body.arrowbtn .seebar .see::after{display:block;width:44px;margin-left:auto}
+/* modèle « onglets flottants » */
+body.floattabs .tabs{left:16px;right:16px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:6px;border-radius:999px;max-width:520px;margin:0 auto;box-shadow:0 16px 40px -18px rgba(0,0,0,.6);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+body.floattabs .tabs button{border-radius:999px}
+body.floattabs .seebar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
+body.floattabs .idea{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.resbar{background:color-mix(in srgb,var(--bg) 78%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
 
-/* boutons principaux : pilule foncée + rond fléché de la couleur d'accent */
-.seebar .see,.flat .idea > button{background:var(--ink);color:var(--bg);box-shadow:0 18px 34px -16px rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;gap:12px;padding:10px 10px 10px 26px;min-height:62px;font-weight:800;letter-spacing:.01em}
-.seebar .see::after{content:"";flex:none;width:44px;height:44px;border-radius:50%;margin-left:auto;background:var(--acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E") center/22px no-repeat}
-.seebar .see{justify-content:space-between;text-align:left}
-.flat .idea > button{padding:12px 24px;min-height:0}
-.flat .go{background:var(--ink);color:var(--bg)}
-.flat .ghost{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 30%,transparent);color:var(--ink)}
-.resbar .back,.mebtn,.srchbtn,.gear,.flat .gear{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--ink) 18%,transparent)}
-.mebtn{border-color:var(--acc)}
+/* ---------- Crème (par défaut) : éditorial chaleureux, titres serif ---------- */
+/* (valeurs par défaut ci-dessus) */
 
-/* barres en verre dépoli */
-.resbar{background:color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+/* ---------- Rétro (Rayo) : serif italique, cadres fins brique, pastilles colorées ---------- */
+body[data-style="retro"]{--dispS:italic;--dispW:600;--txt:"Archivo",system-ui,sans-serif;--r:22px;--cardSh:none;
+  --cardB:1.5px solid color-mix(in srgb,var(--acc) 45%,transparent);--pill:var(--card);--pillB:1.5px solid color-mix(in srgb,var(--acc) 40%,transparent);
+  --pillOn:var(--acc);--pillOnInk:#fff;--tabOn:var(--acc);--tabOnInk:#fff}
+body[data-style="retro"] .hero2 .display em,body[data-style="retro"] .brand em{font-style:italic}
+body[data-style="retro"] .flat .group h3 .gi,body[data-style="retro"] .group h3 .gi{border-radius:50%}
+body[data-style="retro"] .kicker{letter-spacing:.2em}
 
-/* barre d'onglets flottante, foncée */
-.tabs,.flat .tabs{left:16px;right:16px;bottom:calc(10px + env(safe-area-inset-bottom,0px));padding:6px;border-radius:999px;background:color-mix(in srgb,var(--ink) 92%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 16px 40px -18px rgba(0,0,0,.6);max-width:520px;margin:0 auto}
-.tabs button,.flat .tabs button{color:color-mix(in srgb,var(--bg) 70%,transparent);border-radius:999px;padding:7px 0}
-.tabs button[aria-selected="true"],.flat .tabs button[aria-selected="true"]{background:var(--acc);color:var(--accink)}
-.tabs .ico{--ico-k:currentColor;--ico-a:currentColor}
-.seebar{bottom:calc(88px + env(safe-area-inset-bottom,0px))}
-.idea{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+/* ---------- Rose désert : fond dégradé, verre dépoli, police fine, pilule noire fléchée ---------- */
+body[data-style="rose"]{--disp:"Archivo",system-ui,sans-serif;--dispW:500;--dispLS:-.035em;--ds:.95;--txt:"Archivo",system-ui,sans-serif;--r:34px;
+  --cardBg:color-mix(in srgb,var(--card) 58%,transparent);--cardSh:0 1px 0 rgba(255,255,255,.55) inset,0 12px 34px -20px rgba(0,0,0,.35);--blur:blur(18px) saturate(1.2);
+  --btn:#1E1E1E;--btnInk:#fff;--btnDot:#1E1E1E;--pill:color-mix(in srgb,var(--card) 60%,transparent);--pillOn:#1E1E1E;--pillOnInk:#fff;
+  --tabBg:color-mix(in srgb,#1E1E1E 88%,transparent);--tabInk:rgba(255,255,255,.65);--tabOn:#fff;--tabOnInk:#1E1E1E;
+  background:radial-gradient(120% 70% at 50% 0%,var(--glow),transparent 70%),linear-gradient(180deg,var(--bg),color-mix(in srgb,var(--bg) 80%,#fff)) fixed}
+body[data-style="rose"] .hero2 .display em,body[data-style="rose"] .brand em{color:var(--soft)}
+body[data-style="rose"] .seebar .see::after{background-color:rgba(255,255,255,.14)}
+body[data-style="rose"] .flat .chip,body[data-style="rose"] .dial button{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 
-/* petites étiquettes (le plus proche, ouvert tard…) : pastilles pastel */
-.flat .sticker{background:var(--accsoft);color:var(--ink);border-radius:999px}
-/* Archivo : espaces un peu plus larges en petit texte */
-body{word-spacing:.06em}
-.place .tot b{font-weight:700}
-b,strong,.place .tot b{word-spacing:.16em}
+/* ---------- Studio (Edit with style) : grosses capitales condensées, gris/menthe, orange ---------- */
+body[data-style="studio"]{--disp:"Anton",Impact,sans-serif;--dispW:400;--dispT:uppercase;--dispLS:.005em;--ds:1.3;--txt:"Archivo",system-ui,sans-serif;--r:30px;
+  --cardSh:none;--cardB:1.5px solid var(--line);--btn:var(--ink);--btnInk:var(--bg);--btnDot:var(--acc);
+  --pillB:1.5px solid color-mix(in srgb,var(--ink) 22%,transparent);--pillOn:var(--ink);--pillOnInk:var(--bg);
+  --tabBg:color-mix(in srgb,var(--ink) 92%,transparent);--tabInk:color-mix(in srgb,var(--bg) 70%,transparent);--tabOn:var(--acc);--tabOnInk:#fff}
+body[data-style="studio"] .flat .sticker,body[data-style="studio"] .sticker{background:var(--acc);color:#fff;border-radius:999px}
+
+/* ---------- Néon (The Art of Shorts) : capitales condensées, nuit olive, citron vert, lilas ---------- */
+body[data-style="neon"]{--disp:"Anton",Impact,sans-serif;--dispW:400;--dispT:uppercase;--dispLS:.005em;--ds:1.3;--txt:"Archivo",system-ui,sans-serif;--r:34px;
+  --cardSh:none;--cardB:1.5px solid color-mix(in srgb,var(--accsoft) 70%,transparent);--btn:var(--acc);--btnInk:var(--accink);--btnDot:var(--ink);
+  --pillB:1.5px solid var(--ink);--pillOn:var(--accsoft);--pillOnInk:var(--ink);
+  --tabBg:color-mix(in srgb,var(--card) 92%,transparent);--tabInk:var(--soft);--tabOn:var(--acc);--tabOnInk:var(--accink)}
+body[data-style="neon"] .flat .sticker,body[data-style="neon"] .sticker{background:var(--accsoft);color:var(--ink);border-radius:999px}
+body[data-style="neon"] .seebar .see{font-family:var(--disp);text-transform:uppercase;font-weight:400;font-size:20px;letter-spacing:.02em}
+
+/* ---------- Fraîcheur (appli mode menthe) : sans-serif gras, cartes blanches aérées, vert ---------- */
+body[data-style="fraicheur"]{--disp:"Archivo",system-ui,sans-serif;--dispW:800;--dispLS:-.04em;--ds:.95;--txt:"Archivo",system-ui,sans-serif;--r:32px;
+  --cardSh:0 14px 34px -22px rgba(17,20,18,.45);--pill:var(--card);--pillOn:var(--ink);--pillOnInk:var(--bg);
+  --tabBg:var(--ink);--tabInk:color-mix(in srgb,var(--bg) 70%,transparent);--tabOn:var(--acc);--tabOnInk:#fff}
+body[data-style="fraicheur"] .flat .place .emo,body[data-style="fraicheur"] .place .emo{border-radius:50%}

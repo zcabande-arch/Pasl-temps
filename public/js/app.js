@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "78";
+const APP_VERSION = "79";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -924,7 +924,9 @@ function applyTheme(){
   document.body.classList.toggle("no-motion", SET.motion === "off");
   // même typo et même style pour tous les thèmes : seules les couleurs changent
   document.body.classList.add("flat");
-  document.body.dataset.style = SET.theme;           // petits détails de style propres à chaque thème (css)
+  document.body.dataset.style = SET.theme;           // chaque thème a sa propre interface (css)
+  document.body.classList.toggle("arrowbtn", ["studio", "neon", "rose"].includes(SET.theme));
+  document.body.classList.toggle("floattabs", ["studio", "neon", "rose", "fraicheur"].includes(SET.theme));
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
