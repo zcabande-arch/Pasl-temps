@@ -791,3 +791,21 @@ body.srch-on{overflow:hidden}
 /* Présentation : le logo à la place du picto sur la première page */
 #onb .art.logo{background:#F5EEE6}
 #onb .art.logo img{width:132px;height:auto;display:block}
+
+/* ---------- Détails de style par thème (même typo partout) ---------- */
+/* Rétro : cadres fins couleur brique, comme une affiche des années 70 */
+[data-style="retro"] .place,[data-style="retro"] .card,[data-style="retro"] .radar,[data-style="retro"] .srow,[data-style="retro"] .entry,[data-style="retro"] .where form{box-shadow:none;border:1.5px solid color-mix(in srgb,var(--acc) 45%,transparent)}
+[data-style="retro"] .chip,[data-style="retro"] .seg{border:1.5px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+/* Rose désert : cartes en verre dépoli sur un fond dégradé rose, boutons noirs */
+[data-style="rose"] body,body[data-style="rose"]{background:linear-gradient(180deg,var(--glow) 0%,var(--bg) 42%,var(--bg) 100%) fixed}
+[data-style="rose"] .place,[data-style="rose"] .card,[data-style="rose"] .radar,[data-style="rose"] .srow,[data-style="rose"] .entry,[data-style="rose"] .where form,[data-style="rose"] .chip,[data-style="rose"] .seg{background:color-mix(in srgb,var(--card) 62%,transparent);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:0 1px 0 rgba(255,255,255,.5) inset,0 10px 30px -18px rgba(0,0,0,.35)}
+/* Studio : contrastes forts, grands arrondis, pastilles noires */
+[data-style="studio"] .place,[data-style="studio"] .card,[data-style="studio"] .radar{border-radius:30px}
+[data-style="studio"] .sticker{background:var(--ink);color:var(--card)}
+[data-style="studio"] .chip[aria-pressed="true"]{background:var(--ink);color:var(--card)}
+/* Néon : pastilles citron vert et contours nets */
+[data-style="neon"] .chip{border:1.5px solid var(--ink);box-shadow:none}
+[data-style="neon"] .chip[aria-pressed="true"],[data-style="neon"] .sticker{background:var(--accsoft);color:var(--ink)}
+[data-style="neon"] .place,[data-style="neon"] .radar{border-radius:30px}
+/* Fraîcheur : cartes blanches aérées, gros arrondis */
+[data-style="fraicheur"] .place,[data-style="fraicheur"] .card,[data-style="fraicheur"] .radar,[data-style="fraicheur"] .srow{border-radius:32px;box-shadow:0 14px 34px -22px rgba(17,20,18,.45)}

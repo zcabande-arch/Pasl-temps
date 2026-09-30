@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "76";
+const APP_VERSION = "77";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -901,12 +901,13 @@ $("whereForm").addEventListener("submit", async e => {
 const K = ["bg","glow","ink","soft","card","line","acc","accink","accsoft"];
 const THEMES = {
   creme:{n:"Crème", flat:true, L:["#F5EEE6","#F5EEE6","#1C1512","#7A6E63","#FFFCF8","#E8DFD3","#E1140A","#FFFFFF","#F8DCD8"], D:["#161310","#161310","#F4ECDF","#A99F92","#201C18","#3A332C","#FF3B2F","#FFFFFF","#2E2620"]},
-  lavande:{n:"Lavande", L:["#F4F2FF","#E0D9FF","#1E1846","#6B6790","#FFFFFF","#E4E0F5","#5B4BDB","#FFFFFF","#ECE9FF"], D:["#13112A","#2B2366","#F1EEFF","#A9A4CC","#1F1B3D","#302A58","#8F82FF","#13112A","#2A2459"]},
-  menthe:{n:"Menthe", L:["#EEF7F3","#CDEEDD","#143D33","#5E7F75","#FFFFFF","#D6EAE1","#1F9D74","#FFFFFF","#DDF3EA"], D:["#0F1F1B","#17493B","#E8F7F1","#9DBDB2","#182D28","#24423A","#4FD1A5","#0F1F1B","#1D3E35"]},
-  peche:{n:"Pêche", L:["#FFF3EE","#FFD9C9","#3A1F1A","#86655C","#FFFFFF","#F4DDD4","#E8603C","#FFFFFF","#FFE4DA"], D:["#1F1412","#4A2419","#FFEFEA","#C9A69C","#2C1D1A","#43302B","#FF8A66","#1F1412","#43261F"]},
-  ocean:{n:"Océan", L:["#EEF5FF","#CFE2FF","#0F2447","#5B6E8F","#FFFFFF","#DCE6F5","#1E6FE8","#FFFFFF","#E0ECFF"], D:["#0B1526","#13305E","#EAF2FF","#9FB2D1","#14223A","#223556","#5B9BFF","#0B1526","#1A2F55"]},
-  bonbon:{n:"Bonbon", L:["#FFF0F7","#FFD1E8","#3D1030","#8A5F7A","#FFFFFF","#F5DCEA","#D63A8A","#FFFFFF","#FFE0EF"], D:["#1E0F19","#4B1638","#FFEAF5","#CFA3BD","#2B1724","#45263A","#FF6FB5","#1E0F19","#45203A"]},
-  soleil:{n:"Soleil", L:["#FFF9E6","#FFE9A3","#2A2410","#7D7456","#FFFFFF","#F1E7C4","#2A2410","#FFD84D","#FFF0BF"], D:["#16140C","#3D3510","#FFF6D6","#C2B791","#221F13","#3A351F","#FFD84D","#16140C","#3A3314"]}
+  // inspirés de références de design : rétro (Rayo), rose désert (verre dépoli), studio (gris, menthe, orange),
+  // néon (nuit olive, citron vert, lilas), fraîcheur (menthe, blanc, vert)
+  retro:{n:"Rétro", L:["#F8EEDF","#FBE3D6","#B8382A","#B0705F","#FDF6EC","#F0D9C8","#D2432F","#FFFFFF","#F9C9CF"], D:["#241311","#3A1A15","#FBE9DC","#C99A8E","#321C18","#4A2A24","#F0634F","#241311","#4A2420"]},
+  rose:{n:"Rose désert", L:["#F2D5DA","#E79CAD","#1F1C1D","#7B5E64","#FBF0F2","#EBCBD2","#1F1C1D","#FFFFFF","#F6C3CE"], D:["#1C1719","#4A2330","#F8E6EB","#B99AA3","#2A2226","#43343A","#F2A7B8","#1C1719","#4A2A35"]},
+  studio:{n:"Studio", L:["#D8DCD9","#C7E4DF","#151515","#5E625F","#F0F0EC","#C9CECB","#FF6A13","#FFFFFF","#CFE6E1"], D:["#0F0F0F","#1F2B29","#F2F2F0","#9EA3A0","#1C1C1C","#2E2E2E","#FF7A26","#0F0F0F","#263634"]},
+  neon:{n:"Néon", L:["#E9E5DC","#E6F3B8","#1A1A1A","#6A675F","#F7F4EE","#D9D4C8","#B98BD6","#1A1A1A","#E3F2A8"], D:["#111111","#2A3320","#F1EEE6","#A4A097","#1E2219","#343A2B","#C9E86A","#111111","#3A4724"]},
+  fraicheur:{n:"Fraîcheur", L:["#D5EFE5","#B8EBD6","#111412","#56665F","#FFFFFF","#C3E3D6","#2FBF71","#FFFFFF","#C9F0DC"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}
 };
 const SET_KEY = "pasltemps.settings";
 let SET = {theme:"creme", mode:"auto", motion:"on", layout:"auto"};
@@ -923,6 +924,7 @@ function applyTheme(){
   document.body.classList.toggle("no-motion", SET.motion === "off");
   // même typo et même style pour tous les thèmes : seules les couleurs changent
   document.body.classList.add("flat");
+  document.body.dataset.style = SET.theme;           // petits détails de style propres à chaque thème (css)
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
