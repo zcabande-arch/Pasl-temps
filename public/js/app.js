@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "80";
+const APP_VERSION = "81";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -922,7 +922,7 @@ const THEMES = {
   // inspirés de références de design : rétro (Rayo), rose désert (verre dépoli), studio (gris, menthe, orange),
   // néon (nuit olive, citron vert, lilas), fraîcheur (menthe, blanc, vert)
   retro:{n:"Rétro", L:["#F8EEDF","#FBE3D6","#B8382A","#B0705F","#FDF6EC","#F0D9C8","#D2432F","#FFFFFF","#F9C9CF"], D:["#241311","#3A1A15","#FBE9DC","#C99A8E","#321C18","#4A2A24","#F0634F","#241311","#4A2420"]},
-  rose:{n:"Rose désert", L:["#F2D5DA","#E79CAD","#1F1C1D","#7B5E64","#FBF0F2","#EBCBD2","#1F1C1D","#FFFFFF","#F6C3CE"], D:["#1C1719","#4A2330","#F8E6EB","#B99AA3","#2A2226","#43343A","#F2A7B8","#1C1719","#4A2A35"]},
+  rose:{n:"Rose désert", L:["#E9AEBB","#F3C9D2","#1E1E1E","#6F5A60","#FFF6F8","#F2D2DA","#1E1E1E","#FFFFFF","#F6D3DB"], D:["#1C1316","#3A1E27","#FBEFF2","#C8A8B1","#2A1D22","#46313A","#FBEFF2","#1C1316","#4A2C37"]},
   studio:{n:"Studio", L:["#D8DCD9","#C7E4DF","#151515","#5E625F","#F0F0EC","#C9CECB","#FF6A13","#FFFFFF","#CFE6E1"], D:["#0F0F0F","#1F2B29","#F2F2F0","#9EA3A0","#1C1C1C","#2E2E2E","#FF7A26","#0F0F0F","#263634"]},
   neon:{n:"Néon", L:["#E9E5DC","#E6F3B8","#1A1A1A","#6A675F","#F7F4EE","#D9D4C8","#B98BD6","#1A1A1A","#E3F2A8"], D:["#111111","#2A3320","#F1EEE6","#A4A097","#1E2219","#343A2B","#C9E86A","#111111","#3A4724"]},
   fraicheur:{n:"Fraîcheur", L:["#F6FBF9","#DDF4EA","#111412","#6E7A74","#FFFFFF","#E4EFEA","#3BCB7F","#FFFFFF","#DDF6E9"], D:["#0E1814","#15392B","#E9F7F0","#98B5A9","#16241E","#25392F","#45DE8C","#0E1814","#1D3A2D"]}

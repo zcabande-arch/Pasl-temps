@@ -952,3 +952,65 @@ body[data-style="fraicheur"] .banner .wx,body[data-style="fraicheur"] .banner .k
 body[data-style="fraicheur"] .banner h3{grid-column:1;margin:0;font-size:26px;color:var(--ink);text-shadow:none}
 body[data-style="fraicheur"] .banner p{grid-column:2;margin:0;font-weight:800;color:var(--acc);text-shadow:none;white-space:nowrap}
 body[data-style="fraicheur"] .banner .evin{grid-column:1/-1;color:var(--soft)}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:300;font-display:swap;src:url(../fonts/poppins-300.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:300;font-display:swap;src:url(../fonts/poppins-300-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-400.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/poppins-400-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-500.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:500;font-display:swap;src:url(../fonts/poppins-500-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-600.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2212}
+@font-face{font-family:"Poppins";font-style:normal;font-weight:600;font-display:swap;src:url(../fonts/poppins-600-ext.woff2) format("woff2");unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+1E00-1E9F,U+1EF2-1EFF,U+20A0-20AB,U+20AD-20C0,U+2C60-2C7F,U+A720-A7FF}
+
+/* ===== Rose désert : reprise de l'interface de référence (paysage rose, verre dépoli, Poppins) ===== */
+body[data-style="rose"]{--disp:"Poppins",system-ui,sans-serif;--dispW:400;--dispLS:-.025em;--ds:.92;--txt:"Poppins",system-ui,sans-serif;--r:34px;
+  --glass:rgba(255,238,243,.42);--glassB:rgba(255,255,255,.55);--glassIn:rgba(255,255,255,.62);
+  --cardBg:var(--glass);--cardB:1px solid var(--glassB);--cardSh:0 20px 44px -30px rgba(80,20,40,.45);--blur:blur(22px) saturate(1.15);
+  --pill:var(--glassIn);--pillB:0;--pillOn:#1E1E1E;--pillOnInk:#fff;--btn:#1E1E1E;--btnInk:#fff;--btnDot:#1E1E1E;
+  --tabBg:rgba(255,238,243,.5);--tabInk:#1E1E1E;--tabOn:#1E1E1E;--tabOnInk:#fff;
+  background:transparent!important;word-spacing:0}
+html:has(body[data-style="rose"]){background:#E9AEBB}
+/* le paysage en fond, fixe (y compris sur iPhone) */
+body[data-style="rose"]::before{content:"";position:fixed;inset:0;z-index:-1;
+  background:url(../img/themes/desert-rose-fond.jpg) center/cover no-repeat,#E7A3B2}
+:root[data-theme="dark"] body[data-style="rose"]{--glass:rgba(40,22,29,.55);--glassB:rgba(255,255,255,.12);--glassIn:rgba(255,255,255,.1);--tabBg:rgba(40,22,29,.6);--tabInk:#FBEFF2;--tabOn:#FBEFF2;--tabOnInk:#1C1316;--btn:#FBEFF2;--btnInk:#1C1316;--btnDot:#FBEFF2}
+:root[data-theme="dark"] body[data-style="rose"]::before{background:linear-gradient(180deg,rgba(20,8,13,.62),rgba(20,8,13,.72)),url(../img/themes/desert-rose-fond.jpg) center/cover no-repeat,#1C1316}
+:root[data-theme="dark"] body[data-style="rose"] .seebar .see::after{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C1316' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E")}
+/* textes : gros titres fins, le deuxième mot en gris (comme « Jan / 2025 ») */
+body[data-style="rose"] .hero2 .display{font-size:clamp(50px,14.5vw,72px);line-height:1;font-weight:400;letter-spacing:-.04em}
+body[data-style="rose"] .hero2 .display em,body[data-style="rose"] .brand em,body[data-style="rose"] #whereAt .whereat em{color:var(--soft);font-style:normal}
+body[data-style="rose"] .kicker{text-align:right;text-transform:none;letter-spacing:0;font-weight:400;font-size:14px;color:var(--ink);margin-bottom:10px}
+body[data-style="rose"] .kicker::first-letter{color:transparent}
+body[data-style="rose"] .flat h2,body[data-style="rose"] h2{font-size:30px;font-weight:400}
+body[data-style="rose"] .brand{font-weight:500;font-size:21px}
+/* boutons ronds du haut : blancs translucides */
+body[data-style="rose"] .gear,body[data-style="rose"] .srchbtn,body[data-style="rose"] .mebtn,body[data-style="rose"] .resbar .back{background:var(--glassIn);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--glassB);box-shadow:none}
+body[data-style="rose"] .mebtn{border-color:#1E1E1E}
+/* champ d'adresse : pilule blanche avec le picto dans un rond blanc (comme « @ e-mail address ») */
+body[data-style="rose"] .where form{position:relative;background:var(--glassIn);padding:6px 6px 6px 56px;border-radius:999px}
+body[data-style="rose"] .where form::before{content:"";position:absolute;left:8px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231E1E1E' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z'/%3E%3Ccircle cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E") center/18px no-repeat}
+body[data-style="rose"] .where .go{background:#fff;color:#1E1E1E;border-radius:999px;font-weight:500}
+/* pastilles : fines, à contour (comme « Pinterest ») */
+body[data-style="rose"] .flat .chip,body[data-style="rose"] .chip{background:transparent;border:1.2px solid color-mix(in srgb,var(--ink) 45%,transparent);box-shadow:none;font-weight:400}
+body[data-style="rose"] .chip[aria-pressed="true"]{background:#1E1E1E;color:#fff;border-color:#1E1E1E}
+body[data-style="rose"] .dial button{font-weight:500}
+/* envies : photos très arrondies, noms en Poppins */
+body[data-style="rose"] .moods button.photo b{font-weight:500;letter-spacing:-.02em}
+/* Mes lieux et Déjà fait : carte noire (comme « References / Discover ») */
+body[data-style="rose"] .saved,body[data-style="rose"] .hist{background:#1E1E1E;color:#F4ECEE;border-radius:34px;padding:24px 20px;margin-top:22px}
+body[data-style="rose"] .saved h2,body[data-style="rose"] .hist h2{color:#fff}
+body[data-style="rose"] .saved .seg{background:rgba(255,255,255,.08);border:0}
+body[data-style="rose"] .saved .seg button{color:rgba(255,255,255,.7)}
+body[data-style="rose"] .saved .seg button[aria-pressed="true"]{background:#fff;color:#1E1E1E}
+body[data-style="rose"] .saved .empty,body[data-style="rose"] .hist .empty{color:rgba(255,255,255,.6)}
+/* page des propositions : carte blanche avec grand titre et la photo en boule (comme « Jan 2025 ») */
+body[data-style="rose"] .banner{background:#fff!important;color:#1E1E1E;box-shadow:0 24px 50px -34px rgba(80,20,40,.5);display:grid;grid-template-columns:1.1fr .9fr;align-items:center;gap:0 12px;min-height:220px;padding:24px 20px;overflow:hidden}
+:root[data-theme="dark"] body[data-style="rose"] .banner{background:#2A1D22!important;color:#FBEFF2}
+body[data-style="rose"] .banner::before,body[data-style="rose"] .banner::after{content:none}
+body[data-style="rose"] .banner .circ{display:block;grid-column:2;grid-row:1/span 4;width:100%;aspect-ratio:1;border-radius:50%;background-size:cover;background-position:center;box-shadow:0 0 0 10px rgba(246,211,219,.55),0 0 60px 20px rgba(233,150,170,.45)}
+body[data-style="rose"] .banner .circ svg{display:none}
+body[data-style="rose"] .banner h3{grid-column:1;margin:0;font-size:40px;font-weight:400;letter-spacing:-.04em;color:inherit;text-shadow:none;line-height:1}
+body[data-style="rose"] .banner p{grid-column:1;margin:6px 0 0;color:var(--soft);text-shadow:none}
+body[data-style="rose"] .banner .k{grid-column:1;order:-1;color:var(--soft);text-shadow:none;letter-spacing:0;text-transform:none;font-size:13px;margin-bottom:6px}
+body[data-style="rose"] .banner .wx{grid-column:1;justify-self:start;white-space:normal;margin-bottom:12px;background:rgba(246,211,219,.6);color:#1E1E1E;box-shadow:none}
+body[data-style="rose"] .banner .evin{grid-column:1/-1;color:var(--soft)}
+body[data-style="rose"] #whereAt .whereat{font-weight:400;letter-spacing:-.035em;font-size:38px}
