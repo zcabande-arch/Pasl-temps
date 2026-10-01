@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "87";
+const APP_VERSION = "88";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -1121,7 +1121,7 @@ async function applyBackupData(data){
   if(Array.isArray(data.friends)){ FRIENDS = [...new Set([...FRIENDS, ...data.friends])]; saveFriends(); }
   // Historique : on ajoute ce qui manque, sans rien effacer
   const have = new Set(HIST.map(h => h.id));
-  const add = (data.history || []).filter(h => h && h.id && !have.has(h.id));
+  const add = (data.history || []).filter(h => h && h.id && !have.has(h.id) && !GONE.has(h.id));
   HIST = [...HIST, ...add].sort((a,b) => b.at - a.at);
   renderHistory(); renderResults();
   if(store){ for(const e of add){ try{ await store.add(e); }catch(err){} } } else lsSave();
@@ -1980,6 +1980,11 @@ const RETRY = new Map(); // écritures à renvoyer quand la connexion revient (i
 const LS_KEY = "pasltemps.history";
 const lsLoad = () => { try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); }catch(e){ return []; } };
 const lsSave = () => { try{ localStorage.setItem(LS_KEY, JSON.stringify(HIST.slice(0,300))); }catch(e){} };
+// Lieux supprimés : on s'en souvient tant que le serveur ne les a pas vraiment effacés,
+// pour qu'ils ne reviennent pas (suppression ratée, réseau coupé, autre appareil, sauvegarde…)
+const DEL_KEY = "pasltemps.histDel";
+let GONE = new Set((() => { try{ return JSON.parse(localStorage.getItem(DEL_KEY) || "[]"); }catch(e){ return []; } })());
+const saveGone = () => { try{ localStorage.setItem(DEL_KEY, JSON.stringify([...GONE].slice(-500))); }catch(e){} };
 
 let initTries = 0;
 async function initHistory(){
@@ -1999,10 +2004,13 @@ async function initHistory(){
       col.orderBy("at","desc").limit(300).onSnapshot(snap => {
         if(!snap.docs.length && HIST.length){ HIST.forEach(e => store.add(e).catch(()=>{})); return; } // première connexion : on envoie l'historique local
         const pending = HIST.filter(h => RETRY.has(h.id)), ids = new Set(snap.docs.map(d => d.id));
-        HIST = [...pending.filter(h => !ids.has(h.id)), ...snap.docs.map(d => ({...d.data(), id:d.id}))].sort((a,b) => b.at - a.at);
+        // encore sur le serveur alors qu'on l'a supprimé : on relance la suppression, sans le réafficher
+        ids.forEach(id => { if(GONE.has(id)) store.remove(id).catch(() => {}); });
+        let changed = false; GONE.forEach(id => { if(!ids.has(id)){ GONE.delete(id); changed = true; } }); if(changed) saveGone();
+        HIST = [...pending.filter(h => !ids.has(h.id)), ...snap.docs.map(d => ({...d.data(), id:d.id}))].filter(h => !GONE.has(h.id)).sort((a,b) => b.at - a.at);
         renderHistory(); renderResults();
         lsSave();
-      }, () => { store = null; HIST = lsLoad(); renderHistory(); });
+      }, () => { store = null; HIST = lsLoad().filter(h => !GONE.has(h.id)); renderHistory(); });
       return;
     }
   }catch(e){}
@@ -2017,6 +2025,7 @@ async function write(id, fn){
   scheduleBackup();
 }
 addEventListener("online", () => RETRY.forEach((fn, id) => write(id, fn)));
+setInterval(() => { if(store && navigator.onLine !== false) RETRY.forEach((fn, id) => write(id, fn)); }, 30000); // nouvel essai régulier
 function logVisit(p){
   const e = {id:"h"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), at:Date.now(),
     n:p.name, q:p.g, pid:p.id, addr:p.addr, url:p.url||"", mood:M, T, done:false, note:"",
@@ -2027,7 +2036,7 @@ function logVisit(p){
   return e;
 }
 function patch(id, p){ const e = HIST.find(h => h.id === id); if(!e) return; Object.assign(e, p); renderHistory(); renderResults(); write(id, () => store.set(id, HIST.find(h => h.id === id))); syncDerived(); }
-function removeEntry(id){ HIST = HIST.filter(h => h.id !== id); renderHistory(); renderResults(); write(id, () => store.remove(id)); }
+function removeEntry(id){ GONE.add(id); saveGone(); RETRY.delete(id); HIST = HIST.filter(h => h.id !== id); renderHistory(); renderResults(); write(id, () => store.remove(id)); syncDerived(); }
 function whenTxt(t){
   const d = new Date(t), now = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const en = I18N.lang !== "fr", mm = String(d.getMinutes()).padStart(2,"0");
@@ -2077,7 +2086,7 @@ renderTravel();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
-HIST = lsLoad();
+HIST = lsLoad().filter(h => !GONE.has(h.id));
 renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();
 
