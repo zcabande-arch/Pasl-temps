@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "88";
+const APP_VERSION = "89";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -235,15 +235,33 @@ function pcFind(mood, need){
     Object.entries(need).every(([g, r]) => (e.radii[g] || 0) >= r - 1));
 }
 let searchCtl = null;
+// Temps de trajet aller : le vrai trajet par les rues quand il est connu, sinon une estimation
+function legOf(p){
+  const mode = SET.travel || "walk", s = window.ROUTES && pos ? ROUTES.known(mode, pos, p) : undefined;
+  if(s == null) return {walk: travelOf(p.dist), real: false};
+  return {walk: Math.max(1, Math.round(s / 60 + TR().over)), real: true};
+}
+let routeCtl = null;
 function showFound(entry, groups, need){
+  const near = [];
   groups.forEach(g => {
-    const fit = (entry.found[g.l] || []).map(p => ({...p, dist: PLACES.meters(pos, p)}))
-      .filter(p => p.dist <= need[g.l] * 1.05)
-      .sort((a, b) => a.dist - b.dist)
-      .map(p => ({...p, walk: travelOf(p.dist), g:g.l, stay:g.stay, em:g.em, h:g.h}))
-      .filter(p => 2*p.walk + g.stay <= T);
+    const cand = (entry.found[g.l] || []).map(p => ({...p, dist: PLACES.meters(pos, p)}))
+      .filter(p => p.dist <= need[g.l] * 1.05);
+    near.push(...cand);
+    const fit = cand.map(p => ({...p, ...legOf(p), g:g.l, stay:g.stay, em:g.em, h:g.h}))
+      .filter(p => 2*p.walk + g.stay <= T)
+      .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
+  // vrais itinéraires en arrière-plan, puis on remet la liste à jour
+  if(!window.ROUTES || !near.length) return;
+  const my = runId, mode = SET.travel || "walk";
+  if(routeCtl) routeCtl.abort();
+  routeCtl = new AbortController();
+  ROUTES.fill(mode, pos, near, routeCtl.signal).then(added => {
+    if(!added || my !== runId || (SET.travel || "walk") !== mode) return;
+    showFound(entry, groups, need); renderResults();
+  }).catch(() => {});
 }
 async function search(){
   const my = ++runId; pickedId = null; $("ideaTxt").textContent = "";
