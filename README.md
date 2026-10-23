@@ -69,7 +69,7 @@ sur **Cloudflare Workers + D1**, deux offres gratuites, sans carte bancaire.
 ### 1. L'appli : GitHub Pages
 
 **Settings → Pages → Build and deployment → Deploy from a branch** : branche principale, dossier `/ (root)`.
-L'appli est sur **https://zcabande-arch.github.io/Pasl-temps/** (la page d'accueil redirige vers `public/`).
+L'appli est sur **https://fissafissa.app** (ancienne adresse : https://zcabande-arch.github.io/Pasl-temps/, redirigée automatiquement) (la page d'accueil redirige vers `public/`).
 
 ### 2. Le serveur : Cloudflare (une seule fois, ~10 min)
 
