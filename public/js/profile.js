@@ -183,7 +183,7 @@
           R.querySelector(".msg").textContent = c === "bad_email" ? tx("Cette adresse n'a pas l'air valide.")
             : c === "rate_limited" ? tx("Trop de demandes : réessaie dans un moment.")
             : c === "mail_unavailable" ? tx("La connexion par e-mail n'est pas encore active.")
-            : tx("L'e-mail n'a pas pu partir. Réessaie dans une minute.");
+            : tx("L'e-mail n'a pas pu partir. Réessaie dans une minute.") + (c ? " (" + c + ")" : " (réseau)");
           R.querySelector(".msg").classList.add("warn");
         }
       };
