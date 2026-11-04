@@ -50,6 +50,8 @@ function d1Store(db){
     async statAdd(day, ev, dim){ await run("statAdd", day, ev, dim); },
     async statRange(from){ return all("statRange", from); },
     async statPurge(before){ await run("statPurge", before); },
+    async logAdd(who, action, target, detail){ await run("logAdd", Date.now(), who, action, target || "", detail || ""); },
+    async logList(limit){ return all("logList", limit); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;

@@ -51,7 +51,8 @@ h2{font-size:19px;margin:28px 0 8px}
 <body>
 <main>
   <h1>Administration</h1>
-  <form id="f"><input id="tok" type="password" placeholder="Code administrateur (ADMIN_TOKEN)" autocomplete="off"><button>Ouvrir</button></form>
+  <p class="lead" id="who">Connecte-toi d'abord dans l'appli avec ton adresse administrateur, puis entre ton code personnel.</p>
+  <form id="f"><input id="tok" type="password" placeholder="Ton code personnel" autocomplete="current-password"><button>Ouvrir</button></form>
   <section id="aud" hidden>
     <h2>Audience</h2>
     <p class="lead">Totaux anonymes par jour (sans cookie ni identifiant). « Ouvertures » = appareils différents par jour, additionnés sur la période.</p>
@@ -60,6 +61,11 @@ h2{font-size:19px;margin:28px 0 8px}
     <div class="card"><div class="leg"><span><i class="c-open"></i>Ouvertures</span><span><i class="c-search"></i>Recherches</span><span><i class="c-go"></i>« Je pars »</span><span><i class="c-done"></i>Sorties terminées</span></div><div class="days" id="days"></div></div>
     <div class="card"><b>Par envie</b><table class="tbl" id="byMood"></table></div>
     <p id="smsg" class="lead"></p>
+  </section>
+  <section id="logBox" hidden>
+    <h2>Journal</h2>
+    <p class="lead">Les 200 dernières actions de l'espace admin : qui, quoi, quand.</p>
+    <div class="card"><table class="tbl" id="logT"></table></div>
   </section>
   <h2>Modération</h2>
   <p class="lead">Les contenus signalés. Au-delà du seuil, ils sont masqués automatiquement : vous pouvez les rétablir, les masquer vous-même ou bannir l'auteur.</p>
@@ -73,9 +79,13 @@ const $ = id => document.getElementById(id);
 const REASONS = {spam:"Spam, pub", insulte:"Insultant", inapproprie:"Inapproprié", faux:"Faux lieu", autre:"Autre"};
 let tok = ""; try{ tok = sessionStorage.getItem("pasltemps.admin") || ""; }catch(e){}
 $("tok").value = tok;
+// Profil administrateur : la session de l'appli (même site, donc même stockage) + le code personnel.
+// (Tant que le profil n'est pas configuré sur le serveur, le même champ sert d'ancien code partagé.)
+let session = null; try{ session = JSON.parse(localStorage.getItem("pasltemps.auth") || "null"); }catch(e){}
 async function api(path, body){
-  const r = await fetch(BASE + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Token": tok, "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
-  if(r.status === 403) throw new Error("Code de modération incorrect.");
+  const r = await fetch(BASE + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Code": tok, "X-Admin-Token": tok,
+    ...(session && session.token ? {"Authorization": "Bearer " + session.token} : {}), "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
+  if(r.status === 403) throw new Error(session && session.email ? "Accès refusé : code incorrect, ou ce compte (" + session.email + ") n'est pas administrateur. Après 10 essais ratés, attends une heure." : "Accès refusé : connecte-toi d'abord dans l'appli avec ton adresse administrateur, puis entre ton code.");
   if(!r.ok) throw new Error("Le serveur ne répond pas.");
   return r.json();
 }
@@ -97,7 +107,7 @@ async function load(){
       el.querySelector(".acts").onclick = async e => {
         const a = e.target.closest("button"); if(!a) return;
         if(a.dataset.a === "ban" && !confirm(`Bannir ${r.author || "cette personne"} ? Son profil et tous ses posts seront supprimés, et elle ne pourra plus publier.`)) return;
-        try{ await api("/api/admin/" + a.dataset.a, a.dataset.a === "ban" ? {uid:r.owner} : {target:r.target}); load(); }
+        try{ await api("/api/admin/" + a.dataset.a, a.dataset.a === "ban" ? {uid:r.owner} : {target:r.target}); load(); loadWho(); }
         catch(err){ $("msg").textContent = err.message; }
       };
       $("list").appendChild(el);
@@ -135,8 +145,21 @@ async function loadStats(){
   }catch(err){ $("smsg").textContent = err.message; }
 }
 $("per").onclick = e => { const b = e.target.closest("button"); if(!b) return; days = +b.dataset.d; $("per").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); loadStats(); };
-$("f").onsubmit = e => { e.preventDefault(); tok = $("tok").value.trim(); try{ sessionStorage.setItem("pasltemps.admin", tok); }catch(_){} load(); loadStats(); };
-if(tok){ load(); loadStats(); }
+// ---------- Qui est connecté, et journal ----------
+const ACT = {masquer: "a masqué", "rétablir": "a rétabli", bannir: "a banni", annonce: "a envoyé l'annonce"};
+async function loadWho(){
+  try{
+    const r = await api("/api/admin/check");
+    $("who").textContent = r.personal ? "✓ Connecté·e en administrateur : " + r.who : "Mode transitoire : ancien code partagé (configure ton profil administrateur, voir le README).";
+    const {log} = await api("/api/admin/log");
+    $("logBox").hidden = false;
+    $("logT").innerHTML = log.length ? log.map(x => `<tr><td>${new Date(x.at).toLocaleString("fr-FR")}</td><td><b></b> ${ACT[x.action] || x.action} <code></code> <small></small></td></tr>`).join("") : "<tr><td>Rien pour l'instant.</td></tr>";
+    $("logT").querySelectorAll("tr").forEach((tr, i) => { const x = log[i]; if(!x) return; tr.querySelector("b").textContent = x.who; tr.querySelector("code").textContent = x.target; tr.querySelector("small").textContent = x.detail ? "— " + x.detail : ""; });
+  }catch(err){ $("who").textContent = err.message; $("logBox").hidden = true; }
+}
+const openAll = () => { loadWho(); load(); loadStats(); };
+$("f").onsubmit = e => { e.preventDefault(); tok = $("tok").value.trim(); try{ sessionStorage.setItem("pasltemps.admin", tok); }catch(_){} openAll(); };
+if(tok) openAll();
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "95";
+const APP_VERSION = "99";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -1475,6 +1475,32 @@ function moderate(walls){
   });
   return out;
 }
+// ---------- Profil administrateur (compte e-mail + code personnel) ----------
+// L'appli montre « Espace admin » et les boutons « 🛡️ Masquer » au compte administrateur ; le code est demandé
+// une fois par session du navigateur (même clé que la page admin.html) et vérifié par le serveur à chaque action.
+let ADMIN = false;
+async function checkAdmin(){
+  const r = window.PLT && PLT.adminMe ? await PLT.adminMe() : null;
+  ADMIN = !!(r && r.account);
+  const a = $("pAdmin"); if(a) a.hidden = !ADMIN;
+  if(ADMIN){ renderBlog(); renderReviews(); }
+}
+async function adminHide(target, label){
+  let code = ""; try{ code = sessionStorage.getItem("pasltemps.admin") || ""; }catch(e){}
+  if(!code) code = (prompt(tx("Ton code administrateur :")) || "").trim();
+  if(!code) return;
+  const why = prompt(tx("Masquer « {l} » pour tout le monde ? Raison (facultatif, notée dans le journal) :", {l: label}), "");
+  if(why === null) return;
+  try{
+    await PLT.adminCall("/api/admin/hide", {target, why: why.slice(0, 120)}, code);
+    try{ sessionStorage.setItem("pasltemps.admin", code); }catch(e){}
+    HIDDEN.add(target); remoderate();
+  }catch(e){
+    try{ sessionStorage.removeItem("pasltemps.admin"); }catch(_){}
+    alert(e && e.code === "forbidden" ? tx("Accès refusé : code incorrect (10 essais par heure au plus).") : tx("Le serveur ne répond pas, réessaie."));
+  }
+}
+const adminBtn = () => ADMIN ? `<button class="ghost adm">${tx("🛡️ Masquer")}</button>` : "";
 function remoderate(){ WALLS = moderate({...RAW_WALLS, ...(UID && WALLS[UID] ? {[UID]:WALLS[UID]} : {})}); groupCache = null; renderBlog(); renderReviews(); }
 const REPORT_REASONS = [["spam","Spam, pub"],["insulte","Insultant"],["inapproprie","Inapproprié"],["faux","Faux lieu"]];
 async function reportContent(target, reason){
@@ -1743,12 +1769,14 @@ function renderFeed(){
       ${p.text?`<p class="tx"></p>`:""}${(p.with||[]).length?`<p class="with"></p>`:""}
       <div class="reacts">${["❤️","😋","🔥"].map(e => `<button data-e="${e}" aria-pressed="${mine===e}">${e} ${c[e]||""}</button>`).join("")}${p.author.code === me.code ? `<button class="del">Supprimer</button>` : `<button class="more" aria-label="Signaler ou bloquer" aria-expanded="false">⋯</button>`}</div>
       <div class="modbox" hidden><p>Signaler ce post :</p><div class="btns">${REPORT_REASONS.map(([k,l]) => `<button class="ghost" data-r="${k}">${l}</button>`).join("")}</div>
-        <p style="margin-top:12px">Ne plus voir cette personne :</p><div class="btns"><button class="ghost blk">🚫 Bloquer</button></div></div>`;
+        <p style="margin-top:12px">Ne plus voir cette personne :</p><div class="btns"><button class="ghost blk">🚫 Bloquer</button></div>
+        ${ADMIN ? `<p style="margin-top:12px">${tx("Administrateur :")}</p><div class="btns">${adminBtn()}</div>` : ""}</div>`;
     const mb = el.querySelector(".modbox");
     if(mb){
       mb.onclick = e => {
         const b = e.target.closest("button"); if(!b) return;
         if(b.classList.contains("blk")){ blockUser(p.author._uid); return; }
+        if(b.classList.contains("adm")){ adminHide(`post:${p.author._uid}:${p.id}`, p.place || ""); return; }
         if(b.dataset.r) reportContent(`post:${p.author._uid}:${p.id}`, b.dataset.r);
       };
     }
@@ -2142,9 +2170,10 @@ function renderReviews(){
       if(hr){ const p = document.createElement("p"); p.className = "small"; p.textContent = `🕐 Horaires signalés : ${hr.hours} (${hr.author.pseudo || "quelqu'un"}, ${whenTxt(hr.at).toLowerCase()})`; B.appendChild(p); }
       g.reviews.forEach(r => {
         const d = document.createElement("div"); d.className = "rv1";
-        d.innerHTML = `<span class="ava sm">${avaInner(r.author)}</span><div class="c"><div class="h"><b></b><time>${esc(whenTxt(r.at))}${r.author._uid !== UID ? ` · <button class="rm rp">signaler</button>` : ""}</time></div>${r.rating ? starsHTML(r.rating) : ""}${r.text ? `<p></p>` : ""}${r.photo ? `<img class="pic" alt="">` : ""}</div>`;
+        d.innerHTML = `<span class="ava sm">${avaInner(r.author)}</span><div class="c"><div class="h"><b></b><time>${esc(whenTxt(r.at))}${r.author._uid !== UID ? ` · <button class="rm rp">signaler</button>` : ""}${ADMIN ? ` · <button class="rm adm">${tx("🛡️ masquer")}</button>` : ""}</time></div>${r.rating ? starsHTML(r.rating) : ""}${r.text ? `<p></p>` : ""}${r.photo ? `<img class="pic" alt="">` : ""}</div>`;
         d.querySelector(".h b").textContent = r.author.pseudo || "Quelqu'un";
         if(r.text) d.querySelector("p").textContent = r.text;
+        const ad = d.querySelector(".adm"); if(ad) ad.onclick = () => adminHide(`post:${r.author._uid}:${r.id}`, r.text ? r.text.slice(0, 40) : (r.author.pseudo || ""));
         const rp = d.querySelector(".rp"); if(rp) rp.onclick = () => { if(confirm("Signaler cet avis ? Il sera masqué pour toi, et pour tout le monde s'il est signalé plusieurs fois.")) reportContent(`post:${r.author._uid}:${r.id}`, "inapproprie"); };
         if(r.photo) loadPhoto(r.author._uid, r.id, d.querySelector(".pic"));
         B.appendChild(d);
@@ -2243,7 +2272,7 @@ async function initHistory(){
     UID = uid; dbState = db && uid ? "ok" : "none";
     // Blog, avis et code de récupération n'apparaissent que si le serveur répond
     document.body.classList.toggle("social-on", dbState === "ok");
-    if(db && uid){ initBlog(); initLists(); afterLogin(); refreshRemind(); }
+    if(db && uid){ initBlog(); initLists(); afterLogin(); refreshRemind(); checkAdmin(); }
     if(db && uid){
       const col = db.doc("data/users/" + uid + "/profile").collection("history");
       store = { add: e => col.doc(e.id).set(e), set: (id, e) => col.doc(id).set(e), remove: id => col.doc(id).delete() };
