@@ -1392,3 +1392,17 @@ body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;bo
 .garebox .valise small{flex-basis:100%;padding-left:26px}
 .garebox .valise small{font-weight:400;color:var(--soft)}
 .garebox .valise input{flex:none;width:18px;height:18px;padding:0;accent-color:var(--acc)}
+
+/* Temps sur place réglable */
+.seg.pace{margin:-4px 0 14px}
+.seg.pace button{font-size:14px}
+.stayadj{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px;font-size:15px}
+.stayadj > span{flex:1;min-width:150px}
+.stayadj small{color:var(--soft)}
+.stayadj .sm{padding:5px 12px;font-size:14px;min-width:48px}
+.stayadj .sm[disabled]{opacity:.35}
+.stayadj > span{display:block}
+.stayadj .ei{display:inline}
+.stayadj span b,.stayadj span small{display:inline;font-size:inherit;line-height:inherit}
+.stayadj span small{font-size:13px}
+.stayadj span .ico{display:inline-block;vertical-align:-4px;width:20px;height:20px;margin-right:4px}
