@@ -82,9 +82,24 @@ L'appli est sur **https://fissafissa.app** (ancienne adresse : https://zcabande-
 4. Dans GitHub : **Settings → Secrets and variables → Actions → New repository secret**, créer :
    - `CLOUDFLARE_API_TOKEN` : la clé de l'étape 2
    - `CLOUDFLARE_ACCOUNT_ID` : l'identifiant de l'étape 3
-   - `ADMIN_TOKEN` : un code secret de votre choix, pour la page de modération `admin.html`
+   - `ADMIN_TOKEN` : ancien code partagé de la page `admin.html`, utilisé seulement tant que le profil
+     administrateur ci-dessous n'est pas configuré
+   - `ADMIN_EMAIL` et `ADMIN_CODE_HASH` : le **profil administrateur personnel** (voir « Espace admin » plus bas)
    - `MAIL_WEBHOOK_URL` et `MAIL_WEBHOOK_KEY` : l'envoi des e-mails de connexion (étape 3 bis)
 5. **Actions → Publier l'API (Cloudflare, gratuit) → Run workflow.**
+
+**Espace admin : ton profil administrateur personnel**
+Pour entrer, il faut les deux : être connecté·e à l'appli avec **ton adresse e-mail** (connexion par lien ou code,
+comme d'habitude) **et** donner **ton code personnel**. Le code n'est écrit nulle part : le serveur ne garde qu'une
+empreinte chiffrée (PBKDF2), rangée dans les secrets Cloudflare. Chaque action (masquer, rétablir, bannir, annonce)
+est notée dans un journal, visible dans `admin.html`.
+1. Sur ton ordinateur, dans le dossier du projet : `node scripts/admin-code.js` → tape ton code (12 caractères au
+   moins, une phrase de passe c'est très bien) → copie l'empreinte affichée (`pbkdf2$100000$…`).
+2. Secrets GitHub (**Settings → Secrets and variables → Actions → New repository secret**) :
+   `ADMIN_EMAIL` = ton adresse de connexion à l'appli, `ADMIN_CODE_HASH` = l'empreinte.
+3. **Actions → Publier l'API → Run workflow.** Dans l'appli, connecte-toi avec cette adresse : ton profil affiche
+   « 🛡️ Espace admin », et les posts et avis ont un bouton « 🛡️ Masquer ».
+Pour changer de code : refais l'étape 1, remplace `ADMIN_CODE_HASH`, relance la publication.
 
 **3 bis. Les e-mails de connexion : la boîte Gmail de l'appli** (gratuit, ~100 e-mails par jour)
 - Connecté·e avec `pasltempssav@gmail.com`, ouvrir [script.google.com](https://script.google.com) → **Nouveau projet**.

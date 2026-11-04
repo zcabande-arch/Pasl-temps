@@ -129,5 +129,20 @@
       const j = await r.json(); return r.ok && j && j.prices ? j.prices : null;
     }catch(e){ return null; }
   }
-  window.PLT = {connect, account, push: pushApi, prices};
+  // Mesure d'audience anonyme : +1 au total du jour pour un événement (open, search, go, done), sans identifiant.
+  // Envoyée en arrière-plan, jamais bloquante ; rien si le serveur n'est pas configuré.
+  function stat(ev, dim){
+    if(!BASE) return;
+    try{ fetch(BASE + "/api/stats", {method: "POST", keepalive: true, headers: {"Content-Type": "application/json"}, body: JSON.stringify({ev, dim: dim || ""})}).catch(() => {}); }catch(e){}
+  }
+  // Espace admin : le compte connecté est-il celui de l'administrateur ? (sans le code)
+  async function adminMe(){ if(!BASE || !auth) return null; try{ return await call("GET", "/api/admin/me"); }catch(e){ return null; } }
+  // Action de modération depuis l'appli : session + code personnel (gardé seulement pour cette session du navigateur)
+  async function adminCall(path, body, code){
+    const res = await fetch(BASE + path, {method: "POST", headers: {"Authorization": "Bearer " + auth.token, "X-Admin-Code": code, "Content-Type": "application/json"}, body: JSON.stringify(body)});
+    if(res.status === 403) throw {code: "forbidden"};
+    if(!res.ok) throw {code: "http_" + res.status};
+    return res.json();
+  }
+  window.PLT = {connect, account, push: pushApi, prices, stat, adminMe, adminCall};
 })();
