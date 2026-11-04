@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "91";
+const APP_VERSION = "92";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -790,6 +790,8 @@ function laterGroups(){
 }
 // Choix du temps : jusqu'à 2 h
 const TIMES = [10, 20, 30, 45, 60, 90, 120];
+// Temps habituel (choisi au premier lancement) : c'est lui qui est proposé à l'ouverture
+try{ const t0 = +JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").time; if(TIMES.includes(t0)) T = t0; }catch(e){}
 $("dial").innerHTML = TIMES.map(t => `<button${t < 60 ? ` class="m"` : ""} data-t="${t}" aria-pressed="${t === T}">${t < 60 ? t : fmtDur(t)}</button>`).join("");
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;

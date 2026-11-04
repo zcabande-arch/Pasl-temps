@@ -164,6 +164,7 @@
     "Tu pars, on chronomètre": "You go, we keep time",
     "Touche « Je pars » : l'appli te prévient quand il faut repartir pour être à l'heure.": "Tap “Let's go”: the app tells you when to head back to be on time.",
     "Et toi, c'est quoi ton prénom ?": "And what's your first name?",
+    "Quel âge as-tu ?": "How old are you?", "Pour ne te proposer que des endroits adaptés. Tu peux aussi le laisser vide.": "So we only suggest places that suit you. You can leave it blank too.", "Tu te déplaces comment ?": "How do you get around?", "On calcule les trajets avec. Tu pourras changer à tout moment.": "We use it to work out journeys. You can change it any time.", "Tu as souvent combien de temps ?": "How much time do you usually have?", "Ce sera le temps proposé quand tu ouvres l'appli.": "This is the time suggested when you open the app.", "Tes endroits préférés ?": "Your favourite places?", "Ils passeront en premier. Choisis-en autant que tu veux.": "They'll come first. Pick as many as you like.",
     "Il reste sur ton appareil. Tu peux aussi le laisser vide.": "It stays on your device. You can also leave it empty.",
     "Passer": "Skip", "C'est parti": "Let's go", "Suivant": "Next",
     "Boire un verre": "Grab a drink", "Bars, pubs, cafés": "Bars, pubs, cafés", "Bars": "Bars", "Pubs, brasseries": "Pubs & beer gardens",

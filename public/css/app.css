@@ -674,6 +674,10 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 #onb .dots i{width:8px;height:8px;border-radius:50%;background:var(--line)}
 #onb .dots i.on{background:var(--acc);width:22px;border-radius:99px}
 #onb .next{min-width:220px;font-size:17px;padding:14px 24px}
+#onb .art.sm{width:96px;height:96px;margin-bottom:16px}
+#onb .onbpick{justify-content:center;max-width:480px;max-height:42vh;overflow-y:auto;margin:0 0 14px;padding:4px}
+#onb .onbpick button{background:var(--card);box-shadow:var(--sh)}
+#onb .onbpick.one button::after{content:none}
 .backby .atbox{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 /* Nombre impair d'envies : la dernière prend toute la largeur (illustration large) */
 .moods button.photo:last-child:nth-child(odd){grid-column:1 / -1;aspect-ratio:2/1;background-image:var(--lg)!important}
