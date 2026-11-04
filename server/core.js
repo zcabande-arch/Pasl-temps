@@ -71,10 +71,12 @@ const fail = (status, error) => ({status, body:{error}});
 
 const { loginMail } = require("./mail");
 const push = require("./push");
-const { googlePrice } = require("./prices");
+const { googlePrice, communityLevel } = require("./prices");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
+// Identifiant d'un lieu (OpenStreetMap ou Google), pour les prix de la communauté
+const PLACE_ID = /^(osm:[nwr]?\d{1,15}|[A-Za-z0-9:_-]{3,80})$/;
 const DEFAULT_ORIGINS = ["https://fissafissa.app", "https://zcabande-arch.github.io"];
 
 // opts : {adminToken, reportThreshold, rateLimit, sendMail({to, subject, html, text}), appOrigins: [origines autorisées]}
@@ -190,6 +192,15 @@ function createApi(store, opts = {}){
       return ok({prices});
     }
 
+    // ---------- Prix de la communauté (public en lecture) ----------
+    // GET /api/price/community?ids=osm:n1,osm:w2 (40 au plus) → {prices: {id: {lvl, n}}} pour les lieux avec 3 réponses ou plus
+    if(path === "/api/price/community" && method === "GET"){
+      const ids = String(url.searchParams.get("ids") || "").split(",").map(s => s.trim()).filter(s => PLACE_ID.test(s)).slice(0, 40);
+      const prices = {};
+      for(const id of ids){ const c = communityLevel(await store.votesFor(id)); if(c) prices[id] = c; }
+      return ok({prices});
+    }
+
     if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
 
     // Contenus masqués par la modération (public)
@@ -227,6 +238,15 @@ function createApi(store, opts = {}){
     const uid = await whoIs(req);
     if(!uid) return fail(401, "unauthenticated");
 
+    // Prix de la communauté : « C'était plutôt € / €€ / €€€ ? » ({place, lvl}, lvl 0 = retirer sa réponse)
+    if(path === "/api/price/vote" && method === "POST"){
+      if(!limited("vote:" + uid, 1, 60, 60 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {}, place = String(v.place || ""), lvl = Math.round(+v.lvl);
+      if(!PLACE_ID.test(place) || !(lvl >= 0 && lvl <= 3)) return fail(400, "bad_vote");
+      await store.voteSet(place, uid, lvl);
+      return ok({ok:true, community: communityLevel(await store.votesFor(place))});
+    }
     // Rappels « T'as l'temps ? » : s'abonner (heure locale, tous les N jours) ou se désabonner
     if(path === "/api/push/subscribe" && method === "POST"){
       if(!limited("push:" + uid, 1, 20, 20 / 3600)) return fail(429, "rate_limited");

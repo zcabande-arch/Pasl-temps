@@ -35,7 +35,7 @@ function openStore(file){
     getCode(email){ return q.getCode.get(email) || null; },
     codeTry(email){ q.codeTry.run(email); },
     delCode(email){ q.delCode.run(email); },
-    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.timerDelUid.run(uid); q.slotDelUid.run(uid); q.stateDelUid.run(uid); q.pushDelUid.run(uid); },
+    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.timerDelUid.run(uid); q.slotDelUid.run(uid); q.stateDelUid.run(uid); q.pushDelUid.run(uid); q.voteDelUid.run(uid); },
     // Notifications
     kvGet(k){ const r = q.kvGet.get(k); return r ? r.v : null; },
     kvSet(k, v){ q.kvSet.run(k, v); },
@@ -54,6 +54,9 @@ function openStore(file){
     pushState(endpoint){ return q.stateGet.get(endpoint) || {seen: 0, day: ""}; },
     pushSeen(endpoint, at){ q.stateSeen.run(endpoint, at); },
     pushDay(endpoint, day){ q.stateDay.run(endpoint, day); },
+    // Prix de la communauté
+    voteSet(place, uid, lvl){ lvl ? q.voteSet.run(place, uid, lvl, Date.now()) : q.voteDel.run(place, uid); },
+    votesFor(place){ return q.votesFor.all(place).map(r => r.lvl); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

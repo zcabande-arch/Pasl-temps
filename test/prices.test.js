@@ -43,3 +43,46 @@ test("plafond du jour : au-delà, service coupé", async () => {
   assert.equal(calls.length, 2);
   srv.close();
 });
+
+// ---------- Prix de la communauté ----------
+const { communityLevel } = require("../server/prices");
+
+test("niveau de la communauté : médiane, seulement à partir de 3 réponses", () => {
+  assert.equal(communityLevel([1, 2]), null);
+  assert.deepEqual(communityLevel([1, 1, 3]), {lvl: 1, n: 3});
+  assert.deepEqual(communityLevel([2, 3, 3, 1]), {lvl: 3, n: 4});        // médiane 2,5 → €€€
+  assert.deepEqual(communityLevel([2, 2, 1, 1]), {lvl: 2, n: 4});        // médiane 1,5 → €€
+  assert.equal(communityLevel([0, 4, 9, 1]), null);                      // réponses hors gamme ignorées
+});
+
+test("prix de la communauté : une réponse par personne, publiés à 3, effacés avec le compte", async () => {
+  const store = openStore(":memory:");
+  const srv = createServer(store, {rateLimit: false});
+  await new Promise(ok => srv.listen(0, "127.0.0.1", ok));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try{
+    const who = [];
+    for(let i = 0; i < 3; i++) who.push(await (await fetch(base + "/api/session", {method: "POST"})).json());
+    const vote = (w, body) => fetch(base + "/api/price/vote", {method: "POST", headers: {Authorization: "Bearer " + w.token, "Content-Type": "application/json"}, body: JSON.stringify(body)});
+    const community = ids => fetch(base + "/api/price/community?ids=" + ids).then(r => r.json());
+    // sans compte : refusé ; valeurs bizarres : refusées
+    assert.equal((await fetch(base + "/api/price/vote", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({place: "osm:n1", lvl: 1})})).status, 401);
+    assert.equal((await vote(who[0], {place: "osm:n1", lvl: 7})).status, 400);
+    assert.equal((await vote(who[0], {place: "<script>", lvl: 1})).status, 400);
+    // la même personne qui répond deux fois ne compte qu'une fois (la dernière réponse)
+    await vote(who[0], {place: "osm:n1", lvl: 3});
+    await vote(who[0], {place: "osm:n1", lvl: 1});
+    await vote(who[1], {place: "osm:n1", lvl: 1});
+    assert.deepEqual((await community("osm:n1")).prices, {});          // 2 réponses : pas encore publié
+    const r = await (await vote(who[2], {place: "osm:n1", lvl: 2})).json();
+    assert.deepEqual(r.community, {lvl: 1, n: 3});
+    assert.deepEqual((await community("osm:n1,osm:n2")).prices, {"osm:n1": {lvl: 1, n: 3}});
+    // retirer sa réponse (lvl 0)
+    await vote(who[2], {place: "osm:n1", lvl: 0});
+    assert.deepEqual((await community("osm:n1")).prices, {});
+    // suppression du compte : ses réponses partent avec
+    await vote(who[2], {place: "osm:n1", lvl: 2});
+    await store.deleteAccount(who[0].uid);
+    assert.deepEqual(store.votesFor("osm:n1").sort(), [1, 2]);
+  } finally { srv.close(); }
+});

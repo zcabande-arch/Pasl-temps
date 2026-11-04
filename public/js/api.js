@@ -129,5 +129,15 @@
       const j = await r.json(); return r.ok && j && j.prices ? j.prices : null;
     }catch(e){ return null; }
   }
-  window.PLT = {connect, account, push: pushApi, prices};
+  // Prix de la communauté : lecture publique {id: {lvl, n}} (3 réponses ou plus), ou null si le serveur ne répond pas
+  async function communityPrices(ids){
+    if(!BASE || !ids.length) return null;
+    try{
+      const r = await fetch(BASE + "/api/price/community?ids=" + encodeURIComponent(ids.join(",")));
+      const j = await r.json(); return r.ok && j ? j.prices || {} : null;
+    }catch(e){ return null; }
+  }
+  // « C'était plutôt € / €€ / €€€ ? » (lvl 0 = retirer sa réponse) ; il faut être relié au serveur
+  const priceVote = (place, lvl) => auth ? call("POST", "/api/price/vote", {place, lvl}) : Promise.resolve(null);
+  window.PLT = {connect, account, push: pushApi, prices, communityPrices, priceVote};
 })();

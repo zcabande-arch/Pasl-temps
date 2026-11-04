@@ -29,7 +29,7 @@ function d1Store(db){
     async getCode(email){ return (await first("getCode", email)) || null; },
     async codeTry(email){ await run("codeTry", email); },
     async delCode(email){ await run("delCode", email); },
-    async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); await run("timerDelUid", uid); await run("slotDelUid", uid); await run("stateDelUid", uid); await run("pushDelUid", uid); },
+    async deleteAccount(uid){ await run("delAccount", uid); await run("delSessions", uid); await run("delUserRow", uid); await run("timerDelUid", uid); await run("slotDelUid", uid); await run("stateDelUid", uid); await run("pushDelUid", uid); await run("voteDelUid", uid); },
     async kvGet(k){ const r = await first("kvGet", k); return r ? r.v : null; },
     async kvSet(k, v){ await run("kvSet", k, v); },
     async pushSet(endpoint, uid, sub, hour, tz, every, nextAt){ await run("pushSet", endpoint, uid, sub, hour, tz, every, nextAt); },
@@ -47,6 +47,8 @@ function d1Store(db){
     async pushState(endpoint){ return (await first("stateGet", endpoint)) || {seen: 0, day: ""}; },
     async pushSeen(endpoint, at){ await run("stateSeen", endpoint, at); },
     async pushDay(endpoint, day){ await run("stateDay", endpoint, day); },
+    async voteSet(place, uid, lvl){ lvl ? await run("voteSet", place, uid, lvl, Date.now()) : await run("voteDel", place, uid); },
+    async votesFor(place){ return (await all("votesFor", place)).map(r => r.lvl); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;

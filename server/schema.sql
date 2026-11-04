@@ -99,3 +99,12 @@ CREATE TABLE IF NOT EXISTS push_state (
   seen     INTEGER NOT NULL DEFAULT 0,
   day      TEXT NOT NULL DEFAULT ''
 );
+-- Prix donnés par la communauté (« C'était plutôt € / €€ / €€€ ? », en notant une sortie) : une réponse par personne
+-- et par lieu (la dernière compte). Niveau publié à partir de 3 réponses. Table ajoutée sans toucher aux autres (aucune perte).
+CREATE TABLE IF NOT EXISTS price_votes (
+  place TEXT NOT NULL,
+  uid   TEXT NOT NULL,
+  lvl   INTEGER NOT NULL,
+  at    INTEGER NOT NULL,
+  PRIMARY KEY (place, uid)
+);
