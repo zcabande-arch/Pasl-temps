@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="92">
+<meta name="app-version" content="93">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -61,7 +61,7 @@
   </div>
   <p class="offline" id="offline" hidden>📴 Hors connexion : vos lieux et votre historique restent accessibles.</p>
   <div class="pushask" id="pushAsk" hidden>
-    <p>🔔 <b>Active les notifications</b> : on te prévient quand il est l'heure de repartir, et on te fait signe tous les 3 jours.</p>
+    <p>🔔 <b>Active les notifications</b> : un petit signe aux moments où tu as souvent du temps (midi, sortie du travail ou des cours, samedi), une fois par jour au plus et jamais la nuit, et quand il est l'heure de repartir.</p>
     <div class="btns"><button class="go" id="pushYes">Autoriser</button><button class="link" id="pushLater">Plus tard</button></div>
   </div>
   <div id="viewExplore">
@@ -206,6 +206,10 @@
   <div class="seg" id="langSeg"><button data-v="auto">Auto</button><button data-v="fr">Français</button><button data-v="en">English</button><button data-v="es">Español</button><button data-v="de">Deutsch</button><button data-v="it">Italiano</button><button data-v="pt">Português</button><button data-v="nl">Nederlands</button></div>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
+  <h4>Notifications</h4>
+  <div class="seg" id="notifSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
+  <p class="setnote" id="notifNote"></p>
+  <p class="setnote"><button class="link" id="habitClear">Effacer mon historique</button></p>
   <h4>Nous contacter</h4>
   <div class="rec contactBox"></div>
   <h4>Installer l'appli</h4>
@@ -226,5 +230,6 @@
 <script src="js/app.js"></script>
 <script src="js/profile.js"></script>
 <script src="js/onboard.js"></script>
+<script src="js/notif.js"></script>
 </body>
 </html>

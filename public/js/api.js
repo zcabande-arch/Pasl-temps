@@ -117,7 +117,8 @@
     async key(){ const r = await fetch(BASE + "/api/push/key"); if(!r.ok) throw {code: "http_" + r.status}; return (await r.json()).key; },
     subscribe: body => call("POST", "/api/push/subscribe", body),
     unsubscribe: endpoint => call("POST", "/api/push/unsubscribe", {endpoint}),
-    timer: (endpoint, events) => call("POST", "/api/push/timer", {endpoint, events})
+    timer: (endpoint, events) => call("POST", "/api/push/timer", {endpoint, events}),
+    slots: (endpoint, tz, slots) => call("POST", "/api/push/slots", {endpoint, tz, slots})
   };
 
   // Prix Google des lieux (sans compte) : {id: {level, from, to, cur} | null}, ou null si le service est coupé

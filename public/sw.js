@@ -1,5 +1,5 @@
 /* Fissa Fissa — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v92";
+const VERSION = "pasltemps-v93";
 const CORE = [
   "./",
   "./index.html",
@@ -20,6 +20,7 @@ const CORE = [
   "./js/icons.js",
   "./js/profile.js",
   "./js/onboard.js",
+  "./js/notif.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./img/moods/manger.jpg",
@@ -128,20 +129,46 @@ const RAPPELS = {
        "Wat dacht je van 20 minuten frisse lucht?", "Half uurtje? Er is vast iets leuks bij jou in de buurt.",
        "Even pauze vandaag? Open Fissa Fissa, wij regelen de rest."]
 };
-self.addEventListener("push", e => {
-  // le serveur envoie {title, body, tag, url} (chiffré, déchiffré par le navigateur) ; sinon, message au hasard
-  let m = null; try{ m = e.data ? e.data.json() : null; }catch(err){}
+// Texte écrit par l'appli pour une habitude (lieu ouvert tout près) : gardé sur le téléphone, jamais envoyé au serveur
+function habitText(hm){
+  return new Promise(ok => {
+    try{
+      const r = indexedDB.open("fissa-notif", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      r.onerror = () => ok(null);
+      r.onsuccess = () => {
+        const db = r.result;
+        try{ const g = db.transaction("kv").objectStore("kv").get("hm:" + hm); g.onsuccess = () => { db.close(); ok(g.result || null); }; g.onerror = () => { db.close(); ok(null); }; }
+        catch(err){ db.close(); ok(null); }
+      };
+    }catch(err){ ok(null); }
+  });
+}
+async function showPush(m){
   const code = String(self.navigator.language || "fr").slice(0, 2).toLowerCase(), list = RAPPELS[code] || RAPPELS.en;
   if(!m || !m.body) m = {title: "Fissa Fissa", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"};
-  e.waitUntil(self.registration.showNotification(m.title || "Fissa Fissa", {
+  if(m.slot === "habitude" && m.hm >= 0){ const t = await habitText(m.hm); if(t) m = {...m, body: t}; }
+  return self.registration.showNotification(m.title || "Fissa Fissa", {
     body: m.body, icon: "icons/icon-192.png", badge: "icons/icon-192.png", tag: m.tag || "pasltemps", renotify: true,
     vibrate: [200, 100, 200], data: {url: m.url || "./"}
-  }));
+  });
+}
+self.addEventListener("push", e => {
+  // le serveur envoie {title, body, tag, url, slot?, t?, hm?} (chiffré, déchiffré par le navigateur) ; sinon, message au hasard
+  let m = null; try{ m = e.data ? e.data.json() : null; }catch(err){}
+  e.waitUntil(showPush(m));
+});
+// Debug (NOTIF.simulate dans l'appli) : même affichage qu'une vraie notification de créneau
+self.addEventListener("message", e => {
+  if(e.data && e.data.type === "simulate-push") e.waitUntil(showPush(e.data.msg));
 });
 self.addEventListener("notificationclick", e => {
   e.notification.close();
+  // l'adresse peut porter la durée déjà choisie (./?t=30) : l'appli s'ouvre dessus
+  const url = new URL((e.notification.data && e.notification.data.url) || "./", self.registration.scope).href;
   e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(list => {
     const open = list.find(c => "focus" in c);
-    return open ? open.focus() : self.clients.openWindow("./");
+    if(!open) return self.clients.openWindow(url);
+    return open.focus().then(c => url.includes("?t=") && c && "navigate" in c ? c.navigate(url).catch(() => c) : c);
   }));
 });

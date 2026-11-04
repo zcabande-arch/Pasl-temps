@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "92";
+const APP_VERSION = "93";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -264,6 +264,7 @@ function showFound(entry, groups, need){
       .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
+  if(window.NOTIF) NOTIF.writeHabitTexts();   // lieu ouvert près d'une habitude : texte gardé sur le téléphone
   // vrais itinéraires en arrière-plan, puis on remet la liste à jour
   if(!window.ROUTES || !near.length) return;
   const my = runId, mode = SET.travel || "walk";
@@ -506,6 +507,7 @@ async function pushSubscribe(){
   if(!sub) sub = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: b64ToBytes(await PLT.push.key())});
   const r = SET.remind || {};
   await PLT.push.subscribe({subscription: sub.toJSON(), hour: r.hour || 12, tz: new Date().getTimezoneOffset(), every: 3, lang: I18N.lang});
+  if(window.NOTIF) NOTIF.sync();   // créneaux des 7 prochains jours (heures seulement)
 }
 async function pushUnsubscribe(){
   try{ const reg = await navigator.serviceWorker.ready, sub = await reg.pushManager.getSubscription();
@@ -513,7 +515,7 @@ async function pushUnsubscribe(){
 }
 // À chaque ouverture (serveur joint) : abonnement tenu à jour (le rythme de 3 jours continue), sinon bannière
 function refreshRemind(){
-  if(pushReady() && Notification.permission === "granted") pushSubscribe().catch(() => {});
+  if(SET.notif !== "off" && pushReady() && Notification.permission === "granted") pushSubscribe().catch(() => {});
   renderPushAsk();
 }
 // Demande d'autorisation : bannière (au plus tous les 3 jours si « Plus tard »), et au premier « Je pars »
@@ -530,7 +532,7 @@ function renderPushAsk(){
   const box = $("pushAsk"); if(!box) return;
   let later = 0; try{ later = +localStorage.getItem("pasltemps.pushlater") || 0; }catch(e){}
   const onb = document.getElementById("onb");
-  box.hidden = !(pushReady() && Notification.permission === "default" && Date.now() - later > 3 * 864e5 && !onb);
+  box.hidden = !(SET.notif !== "off" && pushReady() && Notification.permission === "default" && Date.now() - later > 3 * 864e5 && !onb);
 }
 $("pushYes").onclick = () => enablePush();
 $("pushLater").onclick = () => { try{ localStorage.setItem("pasltemps.pushlater", String(Date.now())); }catch(e){} renderPushAsk(); };
@@ -792,6 +794,9 @@ function laterGroups(){
 const TIMES = [10, 20, 30, 45, 60, 90, 120];
 // Temps habituel (choisi au premier lancement) : c'est lui qui est proposé à l'ouverture
 try{ const t0 = +JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").time; if(TIMES.includes(t0)) T = t0; }catch(e){}
+// Ouverture depuis une notification de créneau (./?t=30) : la durée est déjà choisie
+try{ const q = new URLSearchParams(location.search), tq = +q.get("t");
+  if(TIMES.includes(tq)){ T = tq; q.delete("t"); history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash); } }catch(e){}
 $("dial").innerHTML = TIMES.map(t => `<button${t < 60 ? ` class="m"` : ""} data-t="${t}" aria-pressed="${t === T}">${t < 60 ? t : fmtDur(t)}</button>`).join("");
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
@@ -880,13 +885,23 @@ function renderSee(total, loading){
   $("resSum").textContent = `${fmtDur(T)} · ${TR().way}`;
 }
 
+// Première fois : on explique à quoi sert la position avant que le téléphone ne la demande (bouton « Ma position »)
 function locate(manual){
+  if(manual || !navigator.permissions || !navigator.geolocation) return locateNow(manual);
+  navigator.permissions.query({name: "geolocation"}).then(st => {
+    if(st.state !== "prompt") return locateNow(false);
+    $("whereMsg").textContent = tx("📍 Touche « Ma position » pour voir ce qui est autour de toi. Elle sert aussi à repérer tes habitudes (quartier et heure) pour te prévenir au bon moment : celles-ci restent sur ton téléphone.");
+    if(!pos){ geoState = "no"; renderResults(); }
+  }).catch(() => locateNow(false));
+}
+function locateNow(manual){
   if(!pos){ geoState = "wait"; renderResults(); }
   if(manual) $("whereMsg").textContent = tx("Localisation…");
   try{
     if(!navigator.geolocation) throw 0;
     navigator.geolocation.getCurrentPosition(g => {
       $("whereMsg").textContent = "";
+      if(window.NOTIF) NOTIF.note({lat: g.coords.latitude, lng: g.coords.longitude});   // habitude : quartier + heure, sur l'appareil
       setPlace(g.coords.latitude, g.coords.longitude, tx("ma position"), false);
     }, () => {
       if(manual) $("whereMsg").textContent = tx("Position GPS indisponible ici : tape une adresse ou une ville.");
@@ -997,7 +1012,32 @@ function renderSettings(){
     : innerWidth < 600 && SET.layout !== "phone" ? tx("Cet écran est trop petit : l'affichage reste en format mobile.") : "";
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
+  renderNotifSet();
 }
+// Notifications : interrupteur, état, et effacement des habitudes (gardées sur l'appareil)
+function renderNotifSet(){
+  const off = SET.notif === "off";
+  document.querySelectorAll("#notifSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (off ? "off" : "on"))));
+  const n = window.NOTIF ? NOTIF.count() : 0;
+  $("notifNote").textContent = off ? tx("Aucune notification. Tes habitudes ne sont plus notées.")
+    : !pushOk() ? tx("Ce navigateur ne gère pas les notifications.")
+    : isIOS() && !standalone() ? tx("Sur iPhone et iPad : ajoute d'abord Fissa Fissa à l'écran d'accueil (Partager → Sur l'écran d'accueil), puis ouvre-la depuis l'icône pour activer les rappels.")
+    : Notification.permission === "denied" ? tx("Notifications bloquées dans les réglages du téléphone ou du navigateur.")
+    : (n ? tx("{n} habitude(s) repérée(s). ", {n}) : "") + tx("Au plus une par jour, jamais entre 21 h et 8 h. Tes habitudes (quartier et heure) restent sur ton téléphone.");
+}
+$("notifSeg").addEventListener("click", async e => {
+  const b = e.target.closest("button"); if(!b) return;
+  SET.notif = b.dataset.v; saveSet(); renderNotifSet();
+  if(SET.notif === "off"){ if(window.NOTIF) await NOTIF.sync(); await pushUnsubscribe(); }
+  else if(pushReady()) await enablePush();
+  renderNotifSet();
+});
+$("habitClear").addEventListener("click", async () => {
+  if(!confirm(tx("Effacer les habitudes notées sur ce téléphone (quartiers et heures) ?"))) return;
+  if(window.NOTIF) await NOTIF.clear();
+  renderNotifSet(); $("habitClear").textContent = tx("Historique effacé ✓");
+  setTimeout(() => { $("habitClear").textContent = tx("Effacer mon historique"); }, 2500);
+});
 function openSheet(on){
   $("sheet").classList.toggle("on", on); $("sheetBg").classList.toggle("on", on);
   if(on){ renderSettings(); recView = "main"; renderRec(); $("sheet").scrollTop = 0; $("sheetDone").focus({preventScroll:true}); } else $("gear").focus({preventScroll:true});
@@ -1712,7 +1752,7 @@ function startTimer(p, h, total){
   TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   vibrated = false; saveTimer(); renderTimer();
   // première fois : on demande l'autorisation ici (c'est le bon moment), puis on programme les notifications
-  if(pushReady() && Notification.permission === "default") enablePush().then(ok => ok && scheduleTimerPush());
+  if(SET.notif !== "off" && pushReady() && Notification.permission === "default") enablePush().then(ok => ok && scheduleTimerPush());
   else scheduleTimerPush();
 }
 function stopTimer(done){

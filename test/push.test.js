@@ -96,12 +96,54 @@ test("abonnement, rappel tous les 3 jours et chrono « Je pars »", async () => 
     await push.runReminders(store, {now: now + 10 * 60e3, fetchFn});
     assert.equal(got.length, 1);
 
-    // 4 jours plus tard : le rappel part, l'abonnement expiré est supprimé
-    const r = await push.runReminders(store, {now: now + 4 * 864e5, fetchFn});
+    // à l'heure prévue (midi, dans 3 jours) : le rappel part, l'abonnement expiré est supprimé
+    const r = await push.runReminders(store, {now: before + 60e3, fetchFn});
     assert.deepEqual(r, {sent: 1, removed: 1});
     assert.ok(push.NUDGES.fr.includes(got[1].body));
     assert.equal(store.pushDue(now + 5 * 864e5, 10).length, 0);
     assert.equal(store.pushDue(now + 8 * 864e5, 10).length, 1);
+  } finally { srv.close(); }
+});
+
+test("créneaux : heures prévues par l'appareil, 1 par jour, rien la nuit ni juste après une ouverture", async () => {
+  const store = openStore(":memory:");
+  const srv = createServer(store, {rateLimit:false});
+  await new Promise(ok => srv.listen(0, "127.0.0.1", ok));
+  const base = `http://127.0.0.1:${srv.address().port}`;
+  try{
+    const a = await (await fetch(base + "/api/session", {method:"POST"})).json(), other = await (await fetch(base + "/api/session", {method:"POST"})).json();
+    const api = (who, url, body) => fetch(base + url, {method:"POST", headers:{Authorization:"Bearer " + who.token, "Content-Type":"application/json"}, body: JSON.stringify(body)});
+    const br = await fakeBrowser(), ep = "https://push.example/slots", tz = -60;   // Paris en hiver
+    await api(a, "/api/push/subscribe", {subscription:{endpoint: ep, keys: br.keys}, hour:12, tz, lang:"fr"});
+    // demain et après-demain (heure de Paris) : 11 h 55, 17 h 30 le même jour, et 22 h (refusé : la nuit)
+    const day = d => { const x = new Date(Date.now() - tz * 60000 + d * 864e5); x.setUTCHours(0, 0, 0, 0); return x.getTime() + tz * 60000; };
+    const at = (d, h, m) => day(d) + (h * 60 + m) * 60e3;
+    const slots = [{at: at(1, 11, 55), slot:"midi", t:30}, {at: at(1, 17, 30), slot:"soir", t:45}, {at: at(1, 22, 0), slot:"soir", t:30},
+      {at: at(2, 12, 20), slot:"habitude", t:20, hm: 745}, {at: at(2, 13, 0), slot:"piratage", t:30}];
+    assert.equal((await api(other, "/api/push/slots", {endpoint: ep, tz, slots})).status, 403);
+    assert.equal((await (await api(a, "/api/push/slots", {endpoint: ep, tz, slots})).json()).count, 3);
+    const got = [], fetchFn = async (url, o) => { got.push(await br.decrypt(o.body)); return {status: 201}; };
+    // demain midi : envoyée, avec la durée dans l'adresse
+    await push.runReminders(store, {now: at(1, 11, 55), fetchFn});
+    assert.equal(got.length, 1);
+    assert.equal(got[0].url, "./?t=30");
+    assert.ok(push.SLOTS.fr.midi.map(x => x.replace("{t}", 30)).includes(got[0].body));
+    // 17 h 30 le même jour : déjà une notification aujourd'hui → rien
+    await push.runReminders(store, {now: at(1, 17, 30), fetchFn});
+    assert.equal(got.length, 1);
+    // après-demain : l'appli vient d'être ouverte (moins d'une heure) → rien
+    store.pushSeen(ep, at(2, 11, 50));
+    await push.runReminders(store, {now: at(2, 12, 20), fetchFn});
+    assert.equal(got.length, 1);
+    // nouvelle liste : la précédente est remplacée ; habitude envoyée avec son heure (pour le texte fait sur le téléphone)
+    await api(a, "/api/push/slots", {endpoint: ep, tz, slots: [{at: at(3, 12, 20), slot:"habitude", t:20, hm: 745}]});
+    await push.runReminders(store, {now: at(3, 12, 20), fetchFn});
+    assert.equal(got.length, 2);
+    assert.deepEqual([got[1].slot, got[1].t, got[1].hm], ["habitude", 20, 745]);
+    // se désabonner efface aussi les créneaux
+    await api(a, "/api/push/slots", {endpoint: ep, tz, slots: [{at: at(4, 12, 0), slot:"midi", t:30}]});
+    await api(a, "/api/push/unsubscribe", {endpoint: ep});
+    assert.equal(store.slotsDue(at(5, 0, 0), 10).length, 0);
   } finally { srv.close(); }
 });
 

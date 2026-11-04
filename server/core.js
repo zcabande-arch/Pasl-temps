@@ -234,13 +234,14 @@ function createApi(store, opts = {}){
       const v = b.value || {}, sub = v.subscription || {};
       let ep; try{ ep = new URL(sub.endpoint); }catch(e){ return fail(400, "bad_subscription"); }
       if(ep.protocol !== "https:" || String(sub.endpoint).length > 800) return fail(400, "bad_subscription");
-      const hour = Math.min(22, Math.max(7, Math.round(+v.hour) || 12));
+      const hour = Math.min(20, Math.max(8, Math.round(+v.hour) || 12));   // jamais entre 21 h et 8 h
       const tz = Math.min(840, Math.max(-840, Math.round(+v.tz) || 0));
       const every = Math.min(14, Math.max(1, Math.round(+v.every) || 3));
       if(!isObj(sub.keys) || typeof sub.keys.p256dh !== "string" || typeof sub.keys.auth !== "string") return fail(400, "bad_subscription");
       const saved = JSON.stringify({endpoint: sub.endpoint, keys: {p256dh: sub.keys.p256dh.slice(0, 200), auth: sub.keys.auth.slice(0, 100)}, lang: LANGS.includes(v.lang) ? v.lang : "fr"});
       // premier abonnement : rappel dans 3 jours ; ensuite le rythme continue (le serveur garde la date prévue)
       await store.pushSet(sub.endpoint, uid, saved, hour, tz, every, push.nextAt(Date.now(), hour, tz, every));
+      await store.pushSeen(sub.endpoint, Date.now());   // appelé à chaque ouverture : pas de notification dans l'heure qui suit
       return ok({ok:true});
     }
     // Chrono « Je pars » : notifications à heure fixe (c'est l'heure de repartir, temps écoulé) ; liste vide = annuler
@@ -253,6 +254,21 @@ function createApi(store, opts = {}){
         .filter(e => isObj(e) && Number.isFinite(+e.at) && +e.at > now - 60e3 && +e.at < now + 6 * 3600e3)
         .map(e => ({at: +e.at, payload: JSON.stringify({title: String(e.title || "Fissa Fissa").slice(0, 80), body: String(e.body || "").slice(0, 200), tag: "pasltemps-chrono", url: "./"})}));
       await store.timersSet(v.endpoint, list);
+      return ok({ok:true, count: list.length});
+    }
+    // Notifications par créneau : heures prévues par l'appareil (jamais sa position) ; liste vide = aucune
+    if(path === "/api/push/slots" && method === "POST"){
+      if(!limited("slots:" + uid, 1, 30, 30 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {};
+      if(typeof v.endpoint !== "string" || (await store.pushOwner(v.endpoint)) !== uid) return fail(403, "forbidden");
+      const tz = Math.min(840, Math.max(-840, Math.round(+v.tz) || 0)), now = Date.now(), TIMES = [10, 20, 30, 45, 60, 90, 120];
+      const list = (Array.isArray(v.slots) ? v.slots : []).slice(0, 10)
+        .filter(e => isObj(e) && Number.isFinite(+e.at) && +e.at > now && +e.at < now + 8 * 864e5 && !push.quiet(+e.at, tz)
+          && push.SLOT_KINDS.includes(e.slot) && TIMES.includes(+e.t))
+        .map(e => ({at: Math.round(+e.at), slot: e.slot, minutes: +e.t, hm: Number.isInteger(e.hm) && e.hm >= 0 && e.hm < 1440 ? e.hm : -1}));
+      await store.slotsSet(v.endpoint, list);
+      await store.pushSeen(v.endpoint, now);
       return ok({ok:true, count: list.length});
     }
     if(path === "/api/push/unsubscribe" && method === "POST"){

@@ -81,3 +81,21 @@ CREATE TABLE IF NOT EXISTS push_timers (
 );
 CREATE INDEX IF NOT EXISTS push_timers_at ON push_timers(at);
 CREATE INDEX IF NOT EXISTS push_timers_ep ON push_timers(endpoint);
+-- Notifications par créneau (midi, sortie du travail, samedi, habitudes) : l'appareil envoie seulement les heures
+-- prévues, jamais sa position ; le serveur applique les limites (1 par jour, 8 h – 21 h, pas juste après une ouverture)
+CREATE TABLE IF NOT EXISTS push_slots (
+  id       INTEGER PRIMARY KEY AUTOINCREMENT,
+  endpoint TEXT NOT NULL,
+  at       INTEGER NOT NULL,
+  slot     TEXT NOT NULL,
+  minutes  INTEGER NOT NULL,
+  hm       INTEGER NOT NULL DEFAULT -1
+);
+CREATE INDEX IF NOT EXISTS push_slots_at ON push_slots(at);
+CREATE INDEX IF NOT EXISTS push_slots_ep ON push_slots(endpoint);
+-- Par appareil : dernière ouverture de l'appli, et dernier jour (heure locale) où une notification « créneau » est partie
+CREATE TABLE IF NOT EXISTS push_state (
+  endpoint TEXT PRIMARY KEY,
+  seen     INTEGER NOT NULL DEFAULT 0,
+  day      TEXT NOT NULL DEFAULT ''
+);

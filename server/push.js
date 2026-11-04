@@ -64,6 +64,47 @@ const NUDGES = {
        "Even pauze vandaag? Open Fissa Fissa, wij regelen de rest."]
 };
 
+// Notifications par créneau : le texte varie selon le moment. {t} = durée proposée (minutes).
+// « habitude » : texte de secours ; le téléphone le remplace par un lieu ouvert près de chez lui (service worker),
+// sans que le serveur ne connaisse ni le lieu ni la position.
+const SLOT_KINDS = ["midi", "soir", "samedi", "habitude"];
+const SLOTS = {
+  fr: {midi: ["{t} min devant toi ce midi ? Découvre ce qui est ouvert autour de toi !", "Pause déj' ? En {t} min, on te trouve un coin sympa tout près."],
+       soir: ["Fini pour aujourd'hui ? {t} min pour souffler avant de rentrer ?", "Sortie du boulot ou des cours : un petit détour de {t} min ?"],
+       samedi: ["Samedi matin ! Une heure devant toi ? On te trouve quoi faire près de chez toi.", "C'est samedi : un marché, un café, un parc ? Regarde ce qui est ouvert."],
+       habitude: ["C'est ton moment habituel : {t} min devant toi ? Regarde ce qui est ouvert tout près."]},
+  en: {midi: ["{t} min free this lunchtime? See what's open around you!", "Lunch break? In {t} min we'll find you a nice spot nearby."],
+       soir: ["Done for the day? {t} min to unwind before heading home?", "Leaving work or class: a little {t}-min detour?"],
+       samedi: ["Saturday morning! An hour to spare? We'll find something to do near you.", "It's Saturday: a market, a café, a park? See what's open."],
+       habitude: ["It's your usual moment: {t} min free? See what's open nearby."]},
+  es: {midi: ["¿{t} min libres este mediodía? ¡Descubre qué está abierto a tu alrededor!", "¿Pausa para comer? En {t} min te encontramos un sitio chulo cerca."],
+       soir: ["¿Terminaste por hoy? ¿{t} min para desconectar antes de volver?", "Saliendo del trabajo o de clase: ¿un desvío de {t} min?"],
+       samedi: ["¡Sábado por la mañana! ¿Una hora libre? Te encontramos un plan cerca de casa.", "Es sábado: ¿un mercado, un café, un parque? Mira qué está abierto."],
+       habitude: ["Es tu momento de siempre: ¿{t} min libres? Mira qué está abierto cerca."]},
+  de: {midi: ["{t} Min. Zeit heute Mittag? Entdecke, was in deiner Nähe offen hat!", "Mittagspause? In {t} Min. finden wir dir einen schönen Ort ganz in der Nähe."],
+       soir: ["Feierabend? {t} Min. zum Durchatmen, bevor du heimgehst?", "Nach Arbeit oder Uni: ein kleiner Umweg von {t} Min.?"],
+       samedi: ["Samstagmorgen! Eine Stunde Zeit? Wir finden etwas in deiner Nähe.", "Es ist Samstag: ein Markt, ein Café, ein Park? Schau, was offen hat."],
+       habitude: ["Dein üblicher Moment: {t} Min. Zeit? Schau, was in der Nähe offen hat."]},
+  it: {midi: ["{t} min liberi a pranzo? Scopri cosa è aperto intorno a te!", "Pausa pranzo? In {t} min ti troviamo un bel posto vicino."],
+       soir: ["Finito per oggi? {t} min per rilassarti prima di tornare a casa?", "Uscita dal lavoro o dalle lezioni: una deviazione di {t} min?"],
+       samedi: ["Sabato mattina! Un'ora libera? Ti troviamo cosa fare vicino a casa.", "È sabato: un mercato, un caffè, un parco? Guarda cosa è aperto."],
+       habitude: ["È il tuo solito momento: {t} min liberi? Guarda cosa è aperto qui vicino."]},
+  pt: {midi: ["{t} min livres neste almoço? Descobre o que está aberto à tua volta!", "Pausa para almoço? Em {t} min encontramos um sítio giro perto de ti."],
+       soir: ["Acabou por hoje? {t} min para descontrair antes de ir para casa?", "Saída do trabalho ou das aulas: um desvio de {t} min?"],
+       samedi: ["Sábado de manhã! Uma hora livre? Encontramos o que fazer perto de ti.", "É sábado: um mercado, um café, um parque? Vê o que está aberto."],
+       habitude: ["É o teu momento habitual: {t} min livres? Vê o que está aberto perto."]},
+  nl: {midi: ["{t} min vrij deze middag? Ontdek wat er open is bij jou in de buurt!", "Lunchpauze? In {t} min vinden we een leuk plekje vlakbij."],
+       soir: ["Klaar voor vandaag? {t} min om te ontspannen voor je naar huis gaat?", "Op weg van werk of school: een omweg van {t} min?"],
+       samedi: ["Zaterdagochtend! Een uurtje vrij? We vinden iets te doen bij jou in de buurt.", "Het is zaterdag: een markt, een café, een park? Kijk wat er open is."],
+       habitude: ["Je vaste moment: {t} min vrij? Kijk wat er open is vlakbij."]}
+};
+const slotText = (lang, slot, t) => { const l = (SLOTS[lang] || SLOTS.fr)[slot] || SLOTS.fr.midi; return l[Math.floor(Math.random() * l.length)].replace("{t}", t); };
+// Jour et minute de la journée à l'heure locale de l'appareil (tz : décalage comme getTimezoneOffset)
+const localDay = (at, tz) => new Date(at - tz * 60000).toISOString().slice(0, 10);
+const localMin = (at, tz) => { const d = new Date(at - tz * 60000); return d.getUTCHours() * 60 + d.getUTCMinutes(); };
+const QUIET_FROM = 21 * 60, QUIET_TO = 8 * 60;      // rien entre 21 h et 8 h
+const quiet = (at, tz) => { const m = localMin(at, tz); return m >= QUIET_FROM || m < QUIET_TO; };
+
 // → {publicKey (base64url, 65 octets), privateJwk}
 async function vapidKeys(store){
   const saved = await store.kvGet("vapid");
@@ -94,8 +135,8 @@ function nextAt(from, hour, tz, days){
 // Envoie les rappels « tous les 3 jours » et les notifications du chrono arrivés à échéance ;
 // les abonnements expirés (404/410) sont supprimés
 async function runReminders(store, {fetchFn = fetch, now = Date.now(), contact = "mailto:pasltempssav@gmail.com", limit = 300} = {}){
-  const due = await store.pushDue(now, limit), timers = await store.timersDue(now, limit);
-  if(!due.length && !timers.length) return {sent: 0, removed: 0};
+  const due = await store.pushDue(now, limit), timers = await store.timersDue(now, limit), slots = await store.slotsDue(now, limit);
+  if(!due.length && !timers.length && !slots.length) return {sent: 0, removed: 0};
   const keys = await vapidKeys(store);
   let sent = 0, removed = 0;
   const go = async (endpoint, subJson, msg, ttl) => {
@@ -111,12 +152,27 @@ async function runReminders(store, {fetchFn = fetch, now = Date.now(), contact =
     let msg; try{ msg = JSON.parse(t.payload); }catch(e){ continue; }
     await go(t.endpoint, t.sub, msg, 900);             // plus d'intérêt au-delà de 15 min
   }
+  // Limites communes aux créneaux et au rappel : 1 par jour, rien la nuit, rien si l'appli a été ouverte dans l'heure
+  const blocked = async (endpoint, tz) => {
+    const st = await store.pushState(endpoint);
+    return quiet(now, tz) || st.day === localDay(now, tz) || now - st.seen < 3600e3;
+  };
+  for(const t of slots){
+    await store.slotDel(t.id);
+    if(now - t.at > 15 * 60e3 || await blocked(t.endpoint, t.tz)) continue;   // trop tard, ou limite atteinte
+    let lang = "fr"; try{ lang = JSON.parse(t.sub).lang; }catch(e){}
+    await go(t.endpoint, t.sub, {title: "Fissa Fissa", body: slotText(lang, t.slot, t.minutes), tag: "pasltemps-creneau",
+      url: "./?t=" + t.minutes, slot: t.slot, t: t.minutes, hm: t.hm}, 1800);
+    await store.pushDay(t.endpoint, localDay(now, t.tz));
+  }
   for(const s of due){
     let lang = "fr"; try{ lang = JSON.parse(s.sub).lang; }catch(e){}
     if(!NUDGES[lang]) lang = "fr";
     const list = NUDGES[lang];
-    await go(s.endpoint, s.sub, {title: "Fissa Fissa", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"}, 43200);
     await store.pushNext(s.endpoint, nextAt(now, s.hour, s.tz, s.every));
+    if(await blocked(s.endpoint, s.tz)) continue;
+    await go(s.endpoint, s.sub, {title: "Fissa Fissa", body: list[Math.floor(Math.random() * list.length)], tag: "pasltemps-rappel", url: "./"}, 43200);
+    await store.pushDay(s.endpoint, localDay(now, s.tz));
   }
   return {sent, removed};
 }
@@ -135,4 +191,4 @@ async function broadcast(store, msg, {fetchFn = fetch, contact = "mailto:pasltem
   return {subscribers: subs.length, sent, removed, failed};
 }
 
-module.exports = { vapidKeys, vapidAuth, nextAt, encrypt, send, runReminders, broadcast, NUDGES };
+module.exports = { vapidKeys, vapidAuth, nextAt, encrypt, send, runReminders, broadcast, NUDGES, SLOTS, SLOT_KINDS, localDay, localMin, quiet };
