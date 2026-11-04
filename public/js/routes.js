@@ -25,6 +25,9 @@
 
   // durée aller en secondes déjà connue, sinon undefined (null = aucun chemin trouvé)
   function known(mode, pos, p){ const c = CACHE[key(mode, pos, p)]; return c ? c[0] : undefined; }
+  // Arrivée ailleurs : durée lieu → dest. La clé contient l'arrivée (« to| » + dest arrondie) : changer d'arrivée relance le calcul.
+  const keyTo = (mode, dest, p) => mode + "|to|" + origin(dest) + "|" + (p.id || (p.lat.toFixed(5) + "," + p.lng.toFixed(5)));
+  function knownTo(mode, dest, p){ const c = CACHE[keyTo(mode, dest, p)]; return c ? c[0] : undefined; }
 
   const busy = new Set();
   async function fetchChunk(mode, pos, list, signal){
@@ -37,6 +40,32 @@
     const t = Date.now();
     list.forEach((p, i) => { const s = j.durations[0][i + 1]; CACHE[key(mode, pos, p)] = [s == null ? null : Math.round(s), t]; });
     save();
+  }
+  // Service « table » d'OSRM avec plusieurs sources (les lieux) et une seule destination (l'arrivée)
+  async function fetchChunkTo(mode, dest, list, signal){
+    const pts = [[dest.lng, dest.lat], ...list.map(p => [p.lng, p.lat])].map(([x, y]) => x.toFixed(6) + "," + y.toFixed(6)).join(";");
+    const src = list.map((_, i) => i + 1).join(";");
+    const url = `${BASE}${PROFILE[mode] || "foot"}/table/v1/driving/${pts}?sources=${src}&destinations=0&annotations=duration`;
+    const r = await fetch(url, {signal});
+    if(!r.ok) throw {code: "route_" + r.status};
+    const j = await r.json();
+    if(j.code !== "Ok" || !j.durations || j.durations.length !== list.length) throw {code: "route_bad"};
+    const t = Date.now();
+    list.forEach((p, i) => { const s = j.durations[i] && j.durations[i][0]; CACHE[keyTo(mode, dest, p)] = [s == null ? null : Math.round(s), t]; });
+    save();
+  }
+  async function fillTo(mode, dest, places, signal){
+    const todo = places.filter(p => knownTo(mode, dest, p) === undefined && !busy.has(keyTo(mode, dest, p)));
+    if(!todo.length) return false;
+    todo.forEach(p => busy.add(keyTo(mode, dest, p)));
+    let added = false;
+    try{
+      for(let i = 0; i < todo.length; i += CHUNK){
+        try{ await fetchChunkTo(mode, dest, todo.slice(i, i + CHUNK), signal); added = true; }
+        catch(e){ if(e && e.name === "AbortError") break; }
+      }
+    } finally { todo.forEach(p => busy.delete(keyTo(mode, dest, p))); }
+    return added;
   }
   // calcule les trajets manquants ; renvoie true si au moins un temps a été ajouté
   async function fill(mode, pos, places, signal){
@@ -52,5 +81,5 @@
     } finally { todo.forEach(p => busy.delete(key(mode, pos, p))); }
     return added;
   }
-  window.ROUTES = {known, fill};
+  window.ROUTES = {known, fill, knownTo, fillTo};
 })();

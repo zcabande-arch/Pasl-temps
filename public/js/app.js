@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "93";
+const APP_VERSION = "95";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -70,7 +70,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 // Marche : 80 m/min, +30 % de détours
 // ---------- Profil (gardé sur l'appareil) ----------
 const PROFILE_KEY = "pasltemps.profile";
-let PROFILE = {name:"", age:"", gender:"", prefs:[], photo:""};
+let PROFILE = {name:"", age:"", gender:"", prefs:[], photo:"", home:null, work:null};
 try{ PROFILE = {...PROFILE, ...JSON.parse(localStorage.getItem(PROFILE_KEY) || "{}")}; }catch(e){}
 if(!Array.isArray(PROFILE.prefs)) PROFILE.prefs = [];
 function saveProfile(){
@@ -218,15 +218,49 @@ function maxLeg(){
   return Math.max(1, (T - Math.min(...gs.map(g => g.stay))) / 2);
 }
 const bandOf = walk => BANDS.find(b => walk / maxLeg() <= b.max);
+// Mode arrivée : la couleur suit le détour (part du détour possible), sinon le trajet aller
+function maxDetour(){
+  const gs = groupsNow(); if(!gs.length) return 1;
+  return Math.max(1, T - directMin() - Math.min(...gs.map(g => g.stay)));
+}
+const bandFor = p => destMode() ? BANDS.find(b => TRIP.detourRatio(p.detour || 0, maxDetour()) <= b.max) : bandOf(p.walk);
 // Minutes de trajet pour une distance à vol d'oiseau (m)
 const travelOf = d => { const t = TR(); return Math.max(1, Math.round(d * t.detour / t.speed + t.over)); };
 // Distance maximale pour que aller + retour + temps sur place tiennent dans t minutes
-const radiusFor = (stay, t = T) => { const m = TR(); return Math.min(m.cap, Math.max(150, ((t - stay) / 2 - m.over) * m.speed / m.detour)); };
-const fits = (g, t) => (!g.minT || t >= g.minT) && t - g.stay - 2 * TR().over >= 2;
+// (calculs purs dans js/trip.js, testés : test/trip.test.js)
+const radiusFor = (stay, t = T) => TRIP.radiusFor(stay, t, TR());
+const fits = (g, t) => TRIP.fits(g, t, TR());
 // (rubriques d'alcool masquées aux moins de 18 ans)
 const allowed = g => !(g.adult && isMinor());
-const groupsNow = () => MOODS[M].groups.filter(g => allowed(g) && fits(g, T));
-function dirUrl(p){ return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${TR().gm}`; }
+// ---------- Arrivée ailleurs (« Je dois être à… ») ----------
+// DEST = {lat, lng, label} ; ARRIVE_AT = heure d'arrivée (ms). Vides : aller-retour depuis pos, comme avant.
+let DEST = null, ARRIVE_AT = null;
+const destMode = () => !!(DEST && ARRIVE_AT);
+const destPt = () => ({id: "dest:" + DEST.lat.toFixed(5) + "," + DEST.lng.toFixed(5), lat: DEST.lat, lng: DEST.lng});
+const destName = () => DEST ? (DEST.home ? tx("la maison") : DEST.work ? tx("le travail") : String(DEST.label || "").split(",")[0]) : "";
+// Trajet direct pos → DEST (min) : vrai trajet OSRM s'il est connu, sinon estimation
+function directMin(){
+  if(!destMode() || !pos) return 0;
+  const s = window.ROUTES ? ROUTES.known(SET.travel || "walk", pos, destPt()) : undefined;
+  return s != null ? Math.max(1, Math.round(s / 60 + TR().over)) : TRIP.travelMin(TRIP.meters(pos, DEST), TR());
+}
+// Lieu → DEST (min)
+function legTo(p){
+  const s = window.ROUTES ? ROUTES.knownTo(SET.travel || "walk", DEST, p) : undefined;
+  if(s == null) return {back: TRIP.travelMin(TRIP.meters(p, DEST), TR()), realB: false};
+  return {back: Math.max(1, Math.round(s / 60 + TR().over)), realB: true};
+}
+// Pas le temps de faire un détour : le trajet direct prend déjà presque tout
+const noDetour = () => destMode() && !!pos && !TRIP.roomFor(directMin(), T);
+const okAt = (g, t) => destMode() ? TRIP.fitsDest(g, t, directMin(), TR()) : fits(g, t);
+// Zone de recherche d'une rubrique : rayon (aller-retour) ou somme des distances aux deux foyers (ellipse)
+const needFor = (stay, t = T) => destMode() ? TRIP.spanFor(stay, t, TR(), TRIP.meters(pos, DEST)) : radiusFor(stay, t);
+const groupsNow = () => MOODS[M].groups.filter(g => allowed(g) && okAt(g, T));
+// « Je pars » : en mode arrivée, le lieu en étape et l'arrivée en destination
+function dirUrl(p){
+  if(destMode()) return `https://www.google.com/maps/dir/?api=1&destination=${DEST.lat},${DEST.lng}&waypoints=${p.lat},${p.lng}&travelmode=${TR().gm}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${TR().gm}`;
+}
 function mapsSearch(q){ return pos ? `https://www.google.com/maps/search/${encodeURIComponent(q)}/@${pos.lat.toFixed(5)},${pos.lng.toFixed(5)},16z` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q+tx(" à proximité"))}`; }
 
 // ---------- Recherche des lieux ----------
@@ -242,9 +276,11 @@ function pcSave(){
   }
 }
 function pcFind(mood, need){
-  return PCACHE.find(e => e.m === mood && Date.now() - e.at < PC_KEEP && PLACES.meters(e.pos, pos) < 80 &&
+  return PCACHE.find(e => e.m === mood && Date.now() - e.at < PC_KEEP && PLACES.meters(e.pos, pos) < 80 && sameDest(e.dest) &&
     Object.entries(need).every(([g, r]) => (e.radii[g] || 0) >= r - 1));
 }
+// même arrivée (à 80 m près) — ou aucune des deux
+const sameDest = d => destMode() ? !!d && PLACES.meters(d, DEST) < 80 : !d;
 let searchCtl = null;
 // Temps de trajet aller : le vrai trajet par les rues quand il est connu, sinon une estimation
 function legOf(p){
@@ -255,13 +291,20 @@ function legOf(p){
 let routeCtl = null;
 function showFound(entry, groups, need){
   const near = [];
+  // détour : on compare ce qui est comparable (trajets réels entre eux, estimations entre elles)
+  const dest = destMode(), dm = dest ? directMin() : 0, dmEst = dest ? TRIP.travelMin(TRIP.meters(pos, DEST), TR()) : 0;
   groups.forEach(g => {
     const cand = (entry.found[g.l] || []).map(p => ({...p, dist: PLACES.meters(pos, p)}))
-      .filter(p => p.dist <= need[g.l] * 1.05);
+      .filter(p => (dest ? p.dist + PLACES.meters(p, DEST) : p.dist) <= need[g.l] * 1.05);
     near.push(...cand);
-    const fit = cand.map(p => ({...p, ...legOf(p), g:g.l, stay:g.stay, em:g.em, h:g.h}))
-      .filter(p => 2*p.walk + g.stay <= T)
-      .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
+    const fit = dest
+      // aller + sur place + vers l'arrivée ≤ temps avant l'heure d'arrivée ; les plus petits détours d'abord
+      ? cand.map(p => { const a = legOf(p), b = legTo(p); return {...p, ...a, ...b, detour: TRIP.detourOf(a.walk, b.back, a.real && b.realB ? dm : dmEst), g:g.l, stay:g.stay, em:g.em, h:g.h}; })
+        .filter(p => TRIP.fitsVia(p.walk, g.stay, p.back, T))
+        .sort((a, b) => a.detour - b.detour || a.walk - b.walk)
+      : cand.map(p => ({...p, ...legOf(p), g:g.l, stay:g.stay, em:g.em, h:g.h}))
+        .filter(p => 2*p.walk + g.stay <= T)
+        .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
   if(window.NOTIF) NOTIF.writeHabitTexts();   // lieu ouvert près d'une habitude : texte gardé sur le téléphone
@@ -270,18 +313,24 @@ function showFound(entry, groups, need){
   const my = runId, mode = SET.travel || "walk";
   if(routeCtl) routeCtl.abort();
   routeCtl = new AbortController();
-  ROUTES.fill(mode, pos, near, routeCtl.signal).then(added => {
+  const jobs = [ROUTES.fill(mode, pos, near, routeCtl.signal)];
+  if(dest) jobs.push(ROUTES.fillTo(mode, DEST, near, routeCtl.signal), ROUTES.fill(mode, pos, [destPt()], routeCtl.signal));
+  Promise.all(jobs.map(j => j.catch(() => false))).then(r => r.some(Boolean)).then(added => {
     if(!added || my !== runId || (SET.travel || "walk") !== mode) return;
     showFound(entry, groups, need); renderResults();
   }).catch(() => {});
 }
+// Zone envoyée à PLACES.nearby : rayon (aller-retour) ou ellipse (span) en mode arrivée
+const zoneOf = (g, r) => destMode() ? {l:g.l, osm:g.osm, span:r} : {l:g.l, osm:g.osm, radius:r};
 async function search(){
   const my = ++runId; pickedId = null; $("ideaTxt").textContent = "";
   LOADED = {};
   if(searchCtl) searchCtl.abort();
   const groups = groupsNow();
   if(!pos){ renderResults(); return; }
-  const need = Object.fromEntries(groups.map(g => [g.l, Math.round(radiusFor(g.stay))]));
+  if(noDetour()){ renderResults(); return; }
+  if(destMode() && window.ROUTES) ROUTES.fill(SET.travel || "walk", pos, [destPt()]).then(a => { if(a && my === runId) search(); }).catch(() => {});
+  const need = Object.fromEntries(groups.map(g => [g.l, Math.round(needFor(g.stay))]));
   const hit = pcFind(M, need);
   if(hit){
     showFound(hit, groups, need); renderResults();
@@ -291,26 +340,27 @@ async function search(){
     renderResults();
   }
   // On cherche au moins pour 30 min (les petits changements de temps restent instantanés)
-  const Tw = Math.max(T, 30);
-  const wide = Object.fromEntries(MOODS[M].groups.filter(g => fits(g, Tw)).map(g => [g.l, Math.round(radiusFor(g.stay, Tw))]));
+  // (en mode arrivée, l'heure est fixée : pas d'élargissement)
+  const Tw = destMode() ? T : Math.max(T, 30);
+  const wide = Object.fromEntries(MOODS[M].groups.filter(g => okAt(g, Tw)).map(g => [g.l, Math.round(needFor(g.stay, Tw))]));
   groups.forEach(g => { wide[g.l] = Math.max(wide[g.l] || 0, need[g.l]); });
   const fetchGroups = MOODS[M].groups.filter(g => wide[g.l]);
   try{
     searchCtl = new AbortController();
     let radii = wide, found;
     try{
-      found = await PLACES.nearby(pos, fetchGroups.map(g => ({l:g.l, osm:g.osm, radius:wide[g.l]})), {signal:searchCtl.signal, limit:24, quick:true});
+      found = await PLACES.nearby(pos, fetchGroups.map(g => zoneOf(g, wide[g.l])), {signal:searchCtl.signal, limit:24, quick:true, dest: destMode() ? DEST : null});
     }catch(err){
       if(!err || err.code === "aborted" || err.code === "bad_request" || err.code === "offline" || my !== runId) throw err;
       // Service surchargé : on réessaie une fois, plus petit (juste le temps choisi) et plus léger
       if(!hit){ groups.forEach(g => LOADED[g.l] = {state:"loading", slow:true}); renderResults(); }
       radii = need;
-      found = await PLACES.nearby(pos, groups.map(g => ({l:g.l, osm:g.osm, radius:need[g.l]})), {signal:searchCtl.signal, limit:24, lite:true});
+      found = await PLACES.nearby(pos, groups.map(g => zoneOf(g, need[g.l])), {signal:searchCtl.signal, limit:24, lite:true, dest: destMode() ? DEST : null});
     }
     const wideUsed = radii;
-    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found};
+    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found, dest: destMode() ? {lat:DEST.lat, lng:DEST.lng} : null};
     // on remplace seulement les anciennes recherches du même endroit entièrement couvertes par celle-ci
-    const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && Object.entries(e.radii).every(([g, r]) => (wideUsed[g] || 0) >= r);
+    const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && sameDest(e.dest) && Object.entries(e.radii).every(([g, r]) => (wideUsed[g] || 0) >= r);
     PCACHE = [entry, ...PCACHE.filter(e => !covered(e))];
     pcSave();
     if(my !== runId) return;
@@ -339,16 +389,19 @@ function placeEl(p){
   el.className = "place" + (p.id === pickedId ? " picked open" : "") + (p.open && p.open.level === "closed" ? " closed" : "");
   el.style.setProperty("--h", p.h);
   el.id = "p-" + p.id.replace(/[^\w-]/g,"");
-  const total = 2*p.walk + p.stay, band = bandOf(p.walk);
-  const wPct = Math.min(50, p.walk/T*100), sPct = Math.min(100-2*wPct, p.stay/T*100);
+  const dest = destMode() && p.back != null;
+  const total = dest ? p.walk + p.stay + p.back : 2*p.walk + p.stay, band = bandFor(p);
+  const wPct = Math.min(50, p.walk/T*100), sPct = Math.min(100-2*wPct, p.stay/T*100), bPct = dest ? Math.min(100 - wPct - sPct, p.back/T*100) : wPct;
   const free = Math.max(0, T - total);
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot"><b>${tx("{d} au total", {d:fmtDur(total)})}</b> · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur" title="${pr.est ? tx("prix estimé") : tx("prix Google")}">${euros(pr.lvl)}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${wPct}%"></i></span></span><span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span></button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur" title="${pr.est ? tx("prix estimé") : tx("prix Google")}">${euros(pr.lvl)}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
-      <p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>
+      ${dest
+        ? `<p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Jusqu'à {dest} {b} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay), dest:esc(destName()), b:p.back})} <b>${fmtDur(total)}</b> · ${tx("détour de {x} min", {x:p.detour})}${free?" · " + tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}):""}</p>`
+        : `<p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>`}
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
@@ -544,9 +597,11 @@ async function scheduleTimerPush(){
     if(!sub) return;
     const events = [];
     if(TIMER){
-      const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, back = TIMER.start + (TIMER.T - TIMER.walk) * 60000, end = TIMER.start + TIMER.T * 60000;
-      if(back > Date.now() + 30e3) events.push({at: back, title: "Fissa Fissa", body: tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
-      events.push({at: end, title: "Fissa Fissa", body: tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
+      const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, bk = TIMER.back || TIMER.walk, back = TIMER.start + (TIMER.T - bk) * 60000, end = TIMER.start + TIMER.T * 60000;
+      if(back > Date.now() + 30e3) events.push({at: back, title: "Fissa Fissa", body: TIMER.dest
+        ? tx("🏃 Pars maintenant de {n} : {m} min {of} pour être à {d} à {a}.", {n: TIMER.name, m: bk, of: tv.of, d: TIMER.dest, a: hhmm(TIMER.arrive)})
+        : tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
+      events.push({at: end, title: "Fissa Fissa", body: TIMER.dest ? tx("⏰ C'est l'heure : tu devrais être à {d} !", {d: TIMER.dest}) : tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
     }
     await PLT.push.timer(sub.endpoint, events);
   }catch(e){}
@@ -656,18 +711,26 @@ function renderResults(){
   // Statut
   if(geoState === "wait") s.textContent = tx("Localisation en cours…");
   else if(geoState === "no") s.textContent = tx("Tape une adresse ou une ville ci-dessus pour voir les lieux autour.");
+  else if(destMode()) s.textContent = tx("Lieux où faire un détour {way} avant d'être à {dest} à {h}.", {way:TR().way, dest:destName(), h:hhmm(ARRIVE_AT)});
   else s.textContent = tx("Lieux où aller, en profiter et revenir {way} tient dans tes {d}.", {way:TR().way, d:fmtDur(T)});
+  // Mode arrivée : le trajet direct ne laisse pas de place à un détour → on le dit clairement
+  if(pos && noDetour()){
+    $("filters").hidden = true; $("idea").classList.remove("on"); renderSee(0, false);
+    const dm = directMin();
+    R.innerHTML = `<div class="nodetour"><p class="big">⏱️ ${tx("Tu n'as pas le temps de faire un détour, pars maintenant.")}</p><p class="note">${tx("Trajet direct jusqu'à {dest} : {d} {way}, pour y être à {h}.", {dest:esc(destName()), d:fmtDur(dm), way:esc(TR().way), h:hhmm(ARRIVE_AT)})}</p><a class="go" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination=${DEST.lat},${DEST.lng}&travelmode=${TR().gm}">${TR().e} ${tx("Y aller")}</a></div>`;
+    return;
+  }
 
   const wet = g => wxNow() && wxNow().rain && isOutdoor(g) ? 1 : 0;   // sous la pluie, le dehors passe après
   const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (wet(a.g) - wet(b.g)) || (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
-  const renderLater = () => laterGroups().forEach(({g, t}) => {
+  const renderLater = () => !destMode() && laterGroups().forEach(({g, t}) => {
     const sec = document.createElement("section"); sec.className = "group later";
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}</span></h3>
       <p class="note">${tx("Il te faut au moins {t} : {s} sur place, plus le trajet.", {t:fmtDur(t), s:fmtDur(g.stay)})} <button class="link more-time">${tx("Passer à {t}", {t:fmtDur(t)})}</button></p>`;
     sec.querySelector(".more-time").onclick = () => $("dial").querySelector(`button[data-t="${t}"]`).click();
     R.appendChild(sec);
   });
-  if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); renderSee(0, false); return; }
+  if(!groups.length){ $("filters").hidden = true; R.innerHTML = `<p class="status">${destMode() ? tx("Pas assez de temps avant {h} pour ça : essaie une autre envie.", {h:hhmm(ARRIVE_AT)}) : tx("{d}, c'est court pour ça. Choisis un peu plus de temps.", {d:fmtDur(T)})}</p>`; renderLater(); $("idea").classList.remove("on"); renderSee(0, false); return; }
   let total = 0;
   const rd = radarEl(); if(rd) R.appendChild(rd);
   groups.forEach(g => {
@@ -677,7 +740,7 @@ function renderResults(){
     const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
-      .sort((a, b) => rankOpen(a) - rankOpen(b) || a.dist - b.dist);
+      .sort((a, b) => rankOpen(a) - rankOpen(b) || (destMode() ? a.detour - b.detour : 0) || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -695,7 +758,7 @@ function renderResults(){
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
       if(items.length > SHOW){
         const more = document.createElement("button"); more.className = "more-btn";
-        more.textContent = all ? tx("Voir moins") : tx("Voir plus ({n}), jusqu'à {m} min {way}", {n:items.length - SHOW, m:items[items.length - 1].walk, way:TR().way});
+        more.textContent = all ? tx("Voir moins") : destMode() ? tx("Voir plus ({n}), jusqu'à {m} min de détour", {n:items.length - SHOW, m:items[items.length - 1].detour}) : tx("Voir plus ({n}), jusqu'à {m} min {way}", {n:items.length - SHOW, m:items[items.length - 1].walk, way:TR().way});
         more.onclick = () => { all ? EXPANDED.delete(g.l) : EXPANDED.add(g.l); renderResults(); };
         sec.appendChild(more);
       }
@@ -711,7 +774,8 @@ function renderResults(){
     const loading = groups.some(g => LOADED[g.l] && LOADED[g.l].state === "loading");
     const mode = SET.travel || "walk", tries = [T < 120 && tx("plus de temps"), mode !== "car" && tx(mode === "walk" ? "le vélo" : "la voiture")].filter(Boolean);
     const wl = wxLine();
-    bn.innerHTML = `${wl ? `<span class="wx">${esc(wl)}</span>` : ""}<span class="k">${tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)})}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
+    const kline = destMode() ? tx("{d} {way} avant {dest}", {d:fmtDur(T), way:esc(TR().way), dest:esc(destName())}) : tx("{d} {way}, retour compris", {d:fmtDur(T), way:esc(TR().way)});
+    bn.innerHTML = `${wl ? `<span class="wx">${esc(wl)}</span>` : ""}<span class="k">${kline}</span><h3></h3><p>${loading ? tx("Je cherche autour de toi…") : total ? tx(total > 1 ? "{n} lieux à portée" : "{n} lieu à portée", {n:total}) : tx("Rien à portée") + (tries.length ? tx(" : essaie ") + tries.join(tx(" ou ")) : "")}</p>`;
     bn.querySelector("h3").textContent = MOODS[M].l;
     // photo ronde avec le nom de l'envie écrit en cercle autour (thème Fraîcheur)
     const ring = `${MOODS[M].l} · ${tx("{d} {way}, retour compris", {d:fmtDur(T), way:TR().way})} · `;
@@ -801,6 +865,7 @@ $("dial").innerHTML = TIMES.map(t => `<button${t < 60 ? ` class="m"` : ""} data-
 $("dial").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
   if(BACK_AT) setBackBy("");
+  if(ARRIVE_AT) clearArrive();
   T = +b.dataset.t;
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
   const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
@@ -814,7 +879,7 @@ const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
-  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : tx("✦ Sortir, profiter, rentrer à l'heure");
+  $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : destMode() ? tx("✦ À {d} à {h}", {d:destName(), h:hhmm(ARRIVE_AT)}) : tx("✦ Sortir, profiter, rentrer à l'heure");
 }
 function setBackBy(value){
   $("atMsg").textContent = "";
@@ -822,6 +887,7 @@ function setBackBy(value){
   const [h, m] = value.split(":").map(Number), d = new Date(); d.setHours(h, m, 0, 0);
   if(d.getTime() <= Date.now()){ $("atMsg").textContent = tx("Cette heure est déjà passée."); return; }
   if((d.getTime() - Date.now()) / 60000 < 10){ $("atMsg").textContent = tx("Moins de 10 min : même fissa fissa, c'est court !"); return; }
+  if(ARRIVE_AT) clearArrive(true);
   BACK_AT = d.getTime();
   if(minsLeft() > 240) $("atMsg").textContent = tx("Je cherche pour 4 h au maximum.");
   applyBackBy();
@@ -838,6 +904,86 @@ function applyBackBy(){
 $("atIn").addEventListener("change", () => setBackBy($("atIn").value));
 $("atClear").onclick = () => { setBackBy(""); $("dial").querySelector('button[data-t="20"]').click(); };
 setInterval(applyBackBy, 30e3);
+
+// ---------- « Je dois être à… » : une adresse d'arrivée et une heure ----------
+// Même recherche d'adresse que « Où es-tu ? » (BAN puis Nominatim). Adresses récentes, et Maison / Travail dans le profil.
+const ARR_KEY = "pasltemps.arrivals";
+let ARRIVALS = []; try{ ARRIVALS = JSON.parse(localStorage.getItem(ARR_KEY) || "[]"); }catch(e){ ARRIVALS = []; }
+let ARR_TIME = "";                          // heure choisie (« 18:30 ») en attendant l'adresse, ou l'inverse
+let ARR_CHOICES = null;                     // plusieurs adresses trouvées : « Laquelle ? »
+function saveArrivals(){ try{ localStorage.setItem(ARR_KEY, JSON.stringify(ARRIVALS.slice(0, 5))); }catch(e){} }
+const sameSpot = (a, b) => !!a && !!b && PLACES.meters(a, b) < 60;
+function setArriveDest(d){
+  ARR_CHOICES = null;
+  DEST = d ? {lat:d.lat, lng:d.lng, label:d.label, home:sameSpot(d, PROFILE.home), work:sameSpot(d, PROFILE.work)} : null;
+  if(d && !DEST.home && !DEST.work){ ARRIVALS = [{lat:d.lat, lng:d.lng, label:d.label}, ...ARRIVALS.filter(r => !sameSpot(r, d))].slice(0, 5); saveArrivals(); }
+  applyArriveInput();
+}
+function setArriveTime(v){ ARR_TIME = v || ""; applyArriveInput(); }
+function applyArriveInput(){
+  $("arrMsg").textContent = "";
+  if(!DEST || !ARR_TIME){ ARRIVE_AT = null; renderArrive(); if(!DEST && !ARR_TIME) return; $("arrMsg").textContent = !DEST ? (ARR_CHOICES ? tx("Laquelle ?") : tx("Où dois-tu être ? Tape une adresse ou choisis-en une.")) : tx("À quelle heure ?"); return; }
+  const [h, m] = ARR_TIME.split(":").map(Number), d = new Date(); d.setHours(h, m, 0, 0);
+  if(d.getTime() <= Date.now() + 2 * 60e3){ ARRIVE_AT = null; renderArrive(); $("arrMsg").textContent = tx("Cette heure est déjà passée."); return; }
+  if(BACK_AT){ BACK_AT = null; $("atIn").value = ""; }
+  ARRIVE_AT = d.getTime();
+  if((ARRIVE_AT - Date.now()) / 60000 > 240) $("arrMsg").textContent = tx("Je cherche pour 4 h au maximum.");
+  applyArrive(true);
+}
+function applyArrive(force){
+  if(!destMode()) return;
+  const left = Math.floor((ARRIVE_AT - Date.now()) / 60000);
+  if(left < 1){ clearArrive(); $("arrMsg").textContent = tx("C'est l'heure d'y être !"); return; }
+  document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", "false"));
+  renderArrive(); renderBackBy();
+  const nt = Math.min(240, left);
+  if(nt !== T || force){ T = nt; search(); }
+}
+function clearArrive(keepMsg){
+  DEST = null; ARRIVE_AT = null; ARR_TIME = ""; ARR_CHOICES = null; $("arrAt").value = "";
+  if(!keepMsg) $("arrMsg").textContent = "";
+  renderArrive(); renderBackBy();
+}
+function renderArrive(){
+  const on = destMode();
+  $("arrBy").classList.toggle("on", on);
+  $("arrClear").hidden = !(DEST || ARR_TIME);
+  $("arrBox").hidden = !(DEST || ARR_TIME || $("arrBy").classList.contains("open"));
+  const sel = $("arrSel"); sel.hidden = !DEST;
+  if(DEST){ sel.innerHTML = `<span class="pin">${DEST.home ? "🏠" : DEST.work ? "💼" : "📍"}</span><span class="txt"><b></b><small></small></span><span class="ok">✓</span>`; sel.querySelector("b").textContent = destName(); sel.querySelector("small").textContent = DEST.home || DEST.work ? DEST.label : ""; }
+  const row = $("arrRow"); row.innerHTML = "";
+  const chip = (txt, d) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = txt; b.onclick = () => setArriveDest(d); row.appendChild(b); };
+  if(ARR_CHOICES && !DEST){ ARR_CHOICES.forEach(r => chip("👉 " + r.label, r)); return; }
+  if(PROFILE.home && !(DEST && DEST.home)) chip("🏠 " + tx("Maison"), PROFILE.home);
+  if(PROFILE.work && !(DEST && DEST.work)) chip("💼 " + tx("Travail"), PROFILE.work);
+  ARRIVALS.filter(r => !sameSpot(r, DEST)).forEach(r => chip("🕘 " + r.label, r));
+  // l'adresse choisie peut devenir « Maison » ou « Travail » (gardé dans le profil)
+  if(DEST && !DEST.home && !DEST.work){
+    [["home", "🏠 " + tx("C'est ma maison")], ["work", "💼 " + tx("C'est mon travail")]].forEach(([k, t]) => {
+      const b = document.createElement("button"); b.className = "chip save"; b.textContent = t;
+      b.onclick = () => { PROFILE[k] = {lat:DEST.lat, lng:DEST.lng, label:DEST.label}; saveProfile(); DEST[k] = true; renderArrive(); renderBackBy(); if(destMode()) search(); };
+      row.appendChild(b);
+    });
+  }
+}
+// chips de choix quand l'adresse tapée donne plusieurs résultats
+function renderArriveChoices(list){ ARR_CHOICES = list; if(DEST){ DEST = null; ARRIVE_AT = null; } renderArrive(); }
+$("arrOpen").onclick = () => { $("arrBy").classList.toggle("open"); renderArrive(); if(!$("arrBox").hidden) $("arrInput").focus(); };
+$("arrAt").addEventListener("change", () => { $("arrBy").classList.add("open"); setArriveTime($("arrAt").value); });
+$("arrClear").onclick = () => { $("arrBy").classList.remove("open"); clearArrive(); $("dial").querySelector('button[data-t="20"]').click(); };
+$("arrForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const q = $("arrInput").value.trim(); if(!q) return;
+  const msg = $("arrMsg"); msg.textContent = tx("Je cherche…");
+  try{
+    const found = await PLACES.geocode(q, pos);
+    if(!found.length){ msg.textContent = tx("Adresse introuvable. Essaie avec la ville, par exemple « rue X, Lyon » ou un code postal."); return; }
+    $("arrInput").value = ""; $("arrInput").blur(); msg.textContent = "";
+    if(found.length === 1) setArriveDest(found[0]);
+    else { msg.textContent = tx("Laquelle ?"); renderArriveChoices(found); }
+  }catch(err){ msg.textContent = err && err.code === "offline" ? tx("Pas de connexion internet.") : tx("La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute."); }
+});
+setInterval(() => applyArrive(false), 30e3);
 
 // Une seule ligne, une bulle qui glisse sous le mode choisi
 function renderTravel(){
@@ -1676,20 +1822,28 @@ function radarEl(){
   if(!pos) return null;
   const uniq = new Map(); allLoaded().forEach(p => { if(!uniq.has(p.id) && passFilter(p)) uniq.set(p.id, p); });
   const items = [...uniq.values()]; if(!items.length) return null;
-  const tm = TR(), leg = maxLeg();
+  const tm = TR(), dest = destMode(), leg = dest ? maxDetour() : maxLeg();
   const rOf = m => Math.max(0, m - tm.over) * tm.speed / tm.detour;        // minutes de trajet → mètres
-  const maxD = Math.max(150, rOf(leg), ...items.map(p => p.dist)) * 1.06, k = 146 / maxD;
+  const dDest = dest ? PLACES.meters(pos, DEST) : 0;
+  const maxD = Math.max(150, dest ? 0 : rOf(leg), dDest, ...items.map(p => p.dist)) * 1.06, k = 146 / maxD;
   const cosL = Math.cos(pos.lat * Math.PI / 180);
-  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="${tx("Plan des lieux autour de toi, en couleur selon la distance")}">`;
-  // zones colorées, de la plus lointaine à la plus proche
-  [...BANDS].reverse().forEach(b => {
-    const r = rOf(Math.min(b.max, 1) * leg) * k;
-    if(r > 4) svg += `<circle r="${r.toFixed(1)}" fill="${b.c}" fill-opacity=".07" stroke="${b.c}" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 5"/>`;
-  });
-  BANDS.forEach(b => {
-    const m = Math.min(b.max, 1) * leg, r = rOf(m) * k;
-    if(r > 16 && r <= 152) svg += `<text class="rl" x="4" y="${(-r + 11).toFixed(1)}" fill="${b.c}">${Math.round(m)} min</text>`;
-  });
+  const xy = p => [(p.lng - pos.lng) * 111320 * cosL * k, -(p.lat - pos.lat) * 110540 * k];
+  let svg = `<svg viewBox="-160 -160 320 320" role="img" aria-label="${dest ? tx("Plan des lieux entre toi et ton arrivée, en couleur selon le détour") : tx("Plan des lieux autour de toi, en couleur selon la distance")}">`;
+  if(dest){
+    // mode arrivée : le trajet direct en pointillés (l'arrivée est dessinée par-dessus les lieux) ; les couleurs suivent le détour
+    const [dx, dy] = xy(DEST);
+    svg += `<line x1="0" y1="0" x2="${dx.toFixed(1)}" y2="${dy.toFixed(1)}" stroke="var(--ink)" stroke-opacity=".45" stroke-width="2" stroke-dasharray="5 6"/>`;
+  } else {
+    // zones colorées, de la plus lointaine à la plus proche
+    [...BANDS].reverse().forEach(b => {
+      const r = rOf(Math.min(b.max, 1) * leg) * k;
+      if(r > 4) svg += `<circle r="${r.toFixed(1)}" fill="${b.c}" fill-opacity=".07" stroke="${b.c}" stroke-opacity=".55" stroke-width="1.5" stroke-dasharray="4 5"/>`;
+    });
+    BANDS.forEach(b => {
+      const m = Math.min(b.max, 1) * leg, r = rOf(m) * k;
+      if(r > 16 && r <= 152) svg += `<text class="rl" x="4" y="${(-r + 11).toFixed(1)}" fill="${b.c}">${Math.round(m)} min</text>`;
+    });
+  }
   svg += `<text class="rl" x="0" y="-152" text-anchor="middle">N</text>`;
   // Lieux trop proches pour être touchés un par un : regroupés en une bulle « 3 » (toucher → la liste)
   const clusters = [];
@@ -1699,20 +1853,21 @@ function radarEl(){
     if(c) c.list.push(p); else clusters.push({x, y, list:[p]});
   });
   clusters.forEach(({x, y, list}) => {
-    const p = list[0], b = bandOf(p.walk), at = `transform="translate(${x.toFixed(1)},${y.toFixed(1)})"`;
+    const p = list[0], b = bandFor(p), at = `transform="translate(${x.toFixed(1)},${y.toFixed(1)})"`;
     if(list.length > 1){
       svg += `<g class="pt cl" data-ids="${esc(list.map(q => q.id).join("|"))}" ${at}><title>${esc(list.map(q => q.name).join(", "))}</title><circle r="15" style="stroke:${b.c};stroke-width:2.5"/><text class="cn" text-anchor="middle" dy="5">${list.length}</text></g>`;
       return;
     }
-    svg += `<g class="pt" data-id="${esc(p.id)}" ${at}><title>${esc(p.name)} · ${tx("{w} min aller · {d} au total", {w:p.walk, d:fmtDur(2*p.walk + p.stay)})}</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
+    svg += `<g class="pt" data-id="${esc(p.id)}" ${at}><title>${esc(p.name)} · ${dest ? tx("détour de {x} min", {x:p.detour}) : tx("{w} min aller · {d} au total", {w:p.walk, d:fmtDur(2*p.walk + p.stay)})}</title><circle r="13" style="stroke:${b.c};stroke-width:2.5"/>${ICONS.has(p.em) ? ICONS.ico(p.em, 18).replace("<svg ", '<svg x="-9" y="-9" ') : `<text text-anchor="middle" dy="4.5">${p.em}</text>`}</g>`;
   });
+  if(dest){ const [dx, dy] = xy(DEST); svg += `<g transform="translate(${dx.toFixed(1)},${dy.toFixed(1)})"><title>${esc(destName())}</title><rect x="-13" y="-13" width="26" height="26" rx="7" fill="var(--ink)"/><text text-anchor="middle" dy="5" fill="var(--bg)" style="font-size:15px;font-weight:800">${DEST.home ? "⌂" : "★"}</text></g>`; }
   svg += `<circle class="me" r="7"/><circle r="12" fill="none" stroke="var(--acc)" stroke-opacity=".35" stroke-width="3"/></svg>`;
   const d = document.createElement("div"); d.className = "radar";
   const legend = BANDS.map((b, i) => {
     const lo = i ? Math.round(BANDS[i-1].max * leg) : 0, hi = Math.round(Math.min(b.max, 1) * leg);
     return `<span><i style="background:${b.c}"></i>${b.l} <small>${i < 3 ? `${lo}–${hi} min` : tx("+ de {m} min", {m:lo})}</small></span>`;
   }).join("");
-  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="cllist" hidden></div><div class="bands">${legend}</div><p class="bnote">${tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
+  d.innerHTML = `<h3>${ICONS.ico("compass", 20)} ${dest ? tx("Sur ton chemin") : tx("Autour de toi")} <small>${tx("touche un point")}</small></h3>${svg}<div class="cllist" hidden></div><div class="bands">${legend}</div><p class="bnote">${dest ? tx("Couleur : détour par rapport au trajet direct jusqu'à {dest} ({d} {way}).", {dest:esc(destName()), d:fmtDur(directMin()), way:esc(tm.way)}) : tx("Temps de trajet aller {way}. Le retour est compté aussi.", {way:esc(tm.way)})}</p>`;
   // (sur tout le bloc : le premier <svg> du bloc est la boussole du titre, pas la carte)
   d.addEventListener("click", e => {
     const one = e.target.closest("[data-id]"); if(one){ goToPlace(one.dataset.id); return; }
@@ -1720,7 +1875,7 @@ function radarEl(){
     // bulle de plusieurs lieux : la liste s'ouvre sous la carte
     const box = d.querySelector(".cllist"), ids = g.dataset.ids.split("|");
     const list = ids.map(id => items.find(p => p.id === id)).filter(Boolean);
-    box.innerHTML = list.map(p => `<button data-id="${esc(p.id)}"><span class="e">${ICONS.ico(p.em, 22)}</span><b></b><small style="color:${bandOf(p.walk).c}">${p.walk} min</small></button>`).join("");
+    box.innerHTML = list.map(p => `<button data-id="${esc(p.id)}"><span class="e">${ICONS.ico(p.em, 22)}</span><b></b><small style="color:${bandFor(p).c}">${dest ? "+" + p.detour : p.walk} min</small></button>`).join("");
     box.querySelectorAll("b").forEach((b, i) => b.textContent = list[i].name);
     box.hidden = false;
     box.scrollIntoView({behavior: SET.motion === "off" ? "auto" : "smooth", block:"nearest"});
@@ -1750,6 +1905,8 @@ try{ TIMER = JSON.parse(localStorage.getItem("pasltemps.timer") || "null"); }cat
 function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.stringify(TIMER)) : localStorage.removeItem("pasltemps.timer"); }catch(e){} }
 function startTimer(p, h, total){
   TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
+  // mode arrivée : on repart du lieu vers l'arrivée (et non vers le point de départ), pour y être à l'heure
+  if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT});
   vibrated = false; saveTimer(); renderTimer();
   // première fois : on demande l'autorisation ici (c'est le bon moment), puis on programme les notifications
   if(SET.notif !== "off" && pushReady() && Notification.permission === "default") enablePush().then(ok => ok && scheduleTimerPush());
@@ -1766,18 +1923,18 @@ function renderTimer(){
   if(!TIMER){ box.hidden = true; document.body.classList.remove("timing"); clearInterval(timerTick); timerTick = null; return; }
   if(!timerTick) timerTick = setInterval(renderTimer, 1000);
   box.hidden = false; document.body.classList.add("timing");
-  const el = (Date.now() - TIMER.start)/1000, total = TIMER.T*60, remain = total - el, walkS = TIMER.walk*60;
+  const el = (Date.now() - TIMER.start)/1000, total = TIMER.T*60, remain = total - el, walkS = TIMER.walk*60, backS = (TIMER.back || TIMER.walk)*60;
   let phase, sub, cls = "";
-  const tv = TRAVEL[TIMER.mode] || TRAVEL.walk;
+  const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, leaveAt = (TIMER.arrive || TIMER.start + total * 1000) - backS * 1000;
   if(el < walkS){ phase = tv.e + " " + tx("En route"); sub = tx("Arrivée dans ~{m} min", {m:Math.ceil((walkS-el)/60)}); }
-  else if(remain > walkS){ phase = tx("⏱️ Sur place"); sub = tx("Repars dans {m} min", {m:Math.ceil((remain-walkS)/60)}); }
-  else if(remain > 0){ phase = tx("🏃 C'est l'heure de repartir !"); sub = tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
+  else if(remain > backS){ phase = tx("⏱️ Sur place"); sub = TIMER.dest ? tx("Repars à {h} pour être à {d} à {a}", {h:hhmm(leaveAt), d:TIMER.dest, a:hhmm(TIMER.arrive)}) : tx("Repars dans {m} min", {m:Math.ceil((remain-backS)/60)}); }
+  else if(remain > 0){ phase = TIMER.dest ? tx("🏃 Pars maintenant pour {d} !", {d:TIMER.dest}) : tx("🏃 C'est l'heure de repartir !"); sub = TIMER.dest ? tx("{m} min {of} pour y être à {a}", {m:TIMER.back, of:tv.of, a:hhmm(TIMER.arrive)}) : tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
   else { phase = tx("⏰ Temps écoulé"); sub = tx("Tu dépasses de {m} min", {m:Math.ceil(-remain/60)}); cls = "late"; }
   box.className = "timer " + cls;
   box.innerHTML = `<div class="tin"><div class="top"><span class="e">${ICONS.ico(TIMER.em, 28)}</span><div class="mid"><b></b><span></span></div><div class="clock">${remain < 0 ? "+" : ""}${mmss(remain)}</div></div>
     <div class="bar"><i style="width:${Math.min(100, el/total*100).toFixed(1)}%"></i></div>
-    <div class="acts"><button class="ok" id="tDone">${tx("✓ Je suis rentré·e")}</button><button id="tStop">${tx("Arrêter")}</button></div></div>`;
+    <div class="acts"><button class="ok" id="tDone">${TIMER.dest ? tx("✓ Je suis arrivé·e") : tx("✓ Je suis rentré·e")}</button><button id="tStop">${tx("Arrêter")}</button></div></div>`;
   box.querySelector(".mid b").textContent = phase + " · " + TIMER.name;
   box.querySelector(".mid span").textContent = sub;
   $("tDone").onclick = () => stopTimer(true);
@@ -2013,7 +2170,7 @@ function pickForMe(list){
   const d = new Date(), hr = d.getHours() + d.getMinutes()/60;
   const recent = new Set(HIST.slice(0,12).map(h => h.pid));
   const scored = list.map(p => {
-    let w = hourBoost(p.g, hr) * (1.4 - Math.min(1, 2*p.walk/T) * .8);
+    let w = hourBoost(p.g, hr) * (1.4 - Math.min(1, destMode() && p.detour != null ? p.detour / maxDetour() : 2*p.walk/T) * .8);
     const o = HOURS.forVisit(p.oh, p.walk, p.stay);
     if(o.level === "closed") w *= .01; else if(o.level === "warn") w *= .4; else if(o.level === "ok") w *= 1.2;
     if(LISTS.todo[p.id]) w *= 2.2; else if(LISTS.fav[p.id]) w *= 1.5;
@@ -2026,13 +2183,14 @@ function pickForMe(list){
   });
   let r = Math.random() * scored.reduce((s,x) => s + x.w, 0);
   const hit = scored.find(x => (r -= x.w) <= 0) || scored[0];
-  const p = hit.p, free = Math.max(0, T - 2*p.walk - p.stay);
+  const p = hit.p, viaDest = destMode() && p.back != null, free = Math.max(0, T - (viaDest ? p.walk + p.back : 2*p.walk) - p.stay);
   const why = LISTS.todo[p.id] ? tx("tu l'avais noté à tester, c'est le moment") :
     recent.has(p.id) ? tx("une valeur sûre") :
     wxNow() && wxNow().rain && !isOutdoor(MOODS[M].groups.find(x => x.l === p.g)) ? tx("à l'abri de la pluie") :
     wxNow() && wxNow().nice && isOutdoor(MOODS[M].groups.find(x => x.l === p.g)) ? tx("parfait avec ce soleil") :
     hourBoost(p.g, hr) > 1.5 ? tx("parfait {m}", {m:MOMENT(hr)}) :
     !HIST.some(h => h.pid === p.id) ? tx("tu n'y es encore jamais allé·e") : tx("ça change un peu");
+  if(viaDest) return {p, txt:`${p.name}${tx(" : ")}${why}. ${tx("Détour de {x} min sur le chemin de {dest}", {x:p.detour, dest:destName()})}${free ? ", " + tx("tu y seras avec {d} d'avance", {d:fmtDur(free)}) : ""}.`};
   return {p, txt:`${p.name}${tx(" : ")}${why}. ${tx("{d} en tout ({w} min {way} à l'aller et au retour)", {d:fmtDur(2*p.walk + p.stay), w:p.walk, way:TR().way})}${free ? ", " + tx("il te restera {d}", {d:fmtDur(free)}) : ""}.`};
 }
 $("ideaBtn").addEventListener("click", () => {
@@ -2153,7 +2311,7 @@ function renderHistory(){
 }
 
 // ---------- Démarrage ----------
-renderTravel();
+renderTravel(); renderArrive();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }

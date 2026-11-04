@@ -36,8 +36,8 @@ test("arrivée au point de départ : même zone que l'aller-retour", () => {
 });
 
 test("le plafond cap ne coupe pas un long trajet en voiture", () => {
-  // 30 km à faire en voiture, 2 h devant soi : la zone va au-delà de l'arrivée
-  const direct = 30000, span = TRIP.spanFor(15, 120, CAR, direct);
+  // 30 km à faire en voiture, 3 h devant soi : la zone va au-delà de l'arrivée
+  const direct = 30000, span = TRIP.spanFor(15, 180, CAR, direct);
   assert.ok(span >= direct, "la zone contient au moins le trajet direct");
   assert.equal(span, direct + 2 * CAR.cap);                        // on s'écarte d'au plus 3,5 km du chemin
   // à pied, peu de temps : c'est le temps qui limite, pas le plafond
