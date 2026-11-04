@@ -1,5 +1,5 @@
 /* Fissa Fissa — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v90";
+const VERSION = "pasltemps-v91";
 const CORE = [
   "./",
   "./index.html",
@@ -30,6 +30,7 @@ const CORE = [
   "./img/moods/poser.jpg",
   "./img/moods/bouger.jpg",
   "./img/moods/culture.jpg",
+  "./img/moods/artisans.jpg",
   "./icons/icon.svg",
   "./icons/mark.svg",
   "./icons/icon-192.png",

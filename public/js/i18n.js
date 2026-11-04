@@ -48,6 +48,7 @@
     "espace vert": "green space", "centre commercial": "shopping centre", "marché": "market", "boutique cadeaux": "gift shop",
     "librairie": "bookshop", "monument": "monument", "bibliothèque": "library", "musée": "museum", "galerie d'art": "art gallery",
     "salon de thé": "tea room", "salle de sport": "gym", " à proximité": " nearby",
+    "Artisans": "Craftspeople", "Cordonniers, garages, drogueries": "Cobblers, garages, hardware", "Cordonniers, clés": "Cobblers & keys", "Retouches, couture": "Alterations & sewing", "Pressings, laveries": "Dry cleaners & laundries", "Drogueries, quincailleries": "Hardware & household stores", "Réparation téléphone, informatique": "Phone & computer repair", "Horlogers": "Watchmakers", "Imprimeurs, photocopies": "Printers & copy shops", "Vélos, réparation": "Bike repair", "Garages": "Car repair", "cordonnier": "cobbler", "retouches": "alterations", "pressing": "dry cleaner", "droguerie": "hardware store", "réparation téléphone": "phone repair", "horloger": "watchmaker", "imprimerie": "print shop", "réparation vélo": "bike repair", "garage": "car repair",
     // --- Transport, distances ---
     "À pied": "Walk", "Vélo": "Bike", "Voiture": "Car", "à pied": "on foot", "à vélo": "by bike", "en voiture": "by car",
     "de marche": "walking", "de vélo": "cycling", "de route": "driving",

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "90";
+const APP_VERSION = "91";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -48,7 +48,17 @@ const MOODS = {
     {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
   bouger: {img:"img/moods/bouger.jpg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
-    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]}
+    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]},
+  artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), groups:[
+    {l:"Cordonniers, clés", em:"👞", h:25, osm:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith"], stay:10, q:"cordonnier"},
+    {l:"Retouches, couture", em:"🧵", h:300, osm:["shop=tailor","craft=tailor","craft=dressmaker"], stay:10, q:"retouches"},
+    {l:"Pressings, laveries", em:"👔", h:210, osm:["shop=dry_cleaning","shop=laundry"], stay:10, q:"pressing"},
+    {l:"Drogueries, quincailleries", em:"🧴", h:50, osm:["shop=chemist","shop=hardware","shop=doityourself","shop=paint"], stay:10, q:"droguerie"},
+    {l:"Réparation téléphone, informatique", em:"📱", h:240, osm:["craft=electronics_repair","shop=repair","shop=computer"], stay:15, q:"réparation téléphone"},
+    {l:"Horlogers", em:"⌚", h:280, osm:["craft=watchmaker","shop=watches"], stay:10, q:"horloger"},
+    {l:"Imprimeurs, photocopies", em:"🖨️", h:190, osm:["shop=copyshop","craft=printer"], stay:10, q:"imprimerie"},
+    {l:"Vélos, réparation", em:"🚲", h:120, osm:["shop=bicycle"], stay:15, q:"réparation vélo"},
+    {l:"Garages", em:"🚗", h:0, osm:["shop=car_repair","shop=tyres"], stay:30, q:"garage", minT:45}]}
 };
 
 let T = 20, M = "manger", pos = null, geoState = "wait";
@@ -178,7 +188,8 @@ const PREF_TYPES = [
   {k:"library", l:tx("Bibliothèques"),       ico:"books",    sels:["amenity=library"]},
   {k:"bar",     l:tx("Bars, pubs"),          ico:"cocktail", sels:["amenity=bar","amenity=pub","amenity=biergarten"]},
   {k:"courses", l:tx("Courses"),             ico:"cart",     sels:["shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli"]},
-  {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]}
+  {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]},
+  {k:"artisans",l:tx("Artisans"),            ico:"wrench",   sels:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith","shop=tailor","craft=tailor","craft=dressmaker","shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair","shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres"]}
 ];
 function isPreferred(g){
   if(!PROFILE.prefs.length || !g) return false;

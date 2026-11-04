@@ -194,6 +194,16 @@
     try{ out = await nearbyFromTiles(pos, groups, 6000); }
     catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
     if(!out) out = await nearbyOverpass(pos, groups, {...opts, limit: 600});
+    else{
+      // Rubrique ajoutée depuis la dernière construction des tuiles (ex. « Artisans ») : ses étiquettes n'y sont pas
+      // encore, on la cherche via Overpass en attendant la prochaine construction.
+      const idx = await tileIndex().catch(() => null), known = new Set((idx && idx.sels) || []);
+      const fresh = groups.filter(g => !g.osm.some(s => known.has(s)));
+      if(fresh.length){
+        try{ Object.assign(out, await nearbyOverpass(pos, fresh, {...opts, limit: 600})); }
+        catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
+      }
+    }
     // Un même lieu est parfois saisi deux fois dans OpenStreetMap (point + contour) : on n'en garde qu'un
     const norm = t => String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
     Object.keys(out).forEach(k => {

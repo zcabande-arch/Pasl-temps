@@ -21,7 +21,11 @@ const SELS = [
   "shop=books","historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship","amenity=library",
   "tourism=museum","tourism=gallery","leisure=track","leisure=fitness_centre","leisure=sports_centre",
   "amenity=bar","amenity=pub","amenity=biergarten",
-  "shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli","shop=wine","shop=alcohol","shop=frozen_food"
+  "shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli","shop=wine","shop=alcohol","shop=frozen_food",
+  // Artisans (ajoutés à la fin : l'ordre des étiquettes déjà publiées ne doit pas changer)
+  "shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith","shop=tailor","craft=tailor","craft=dressmaker",
+  "shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair",
+  "shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres"
 ];
 const SEL_INDEX = new Map(SELS.map((s, i) => [s, i]));
 const KEYS = [...new Set(SELS.map(s => s.split("=")[0]))];

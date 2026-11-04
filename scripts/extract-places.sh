@@ -15,7 +15,8 @@ for rc in $REGIONS; do
     echo "::warning::$r non téléchargé, ignoré cette semaine"; continue
   fi
   osmium tags-filter "$f.osm.pbf" \
-    nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books,supermarket,convenience,greengrocer,organic,butcher,cheese,seafood,deli,wine,alcohol,frozen_food \
+    nwr/shop=bakery,pastry,ice_cream,mall,department_store,farm,gift,souvenir,books,supermarket,convenience,greengrocer,organic,butcher,cheese,seafood,deli,wine,alcohol,frozen_food,shoe_repair,locksmith,tailor,dry_cleaning,laundry,chemist,hardware,doityourself,paint,repair,computer,watches,copyshop,bicycle,car_repair,tyres \
+    nwr/craft=shoemaker,key_cutter,locksmith,tailor,dressmaker,electronics_repair,watchmaker,printer \
     nwr/amenity=cafe,fast_food,food_court,ice_cream,restaurant,marketplace,place_of_worship,library,bar,pub,biergarten \
     nwr/leisure=park,garden,nature_reserve,common,track,fitness_centre,sports_centre \
     nwr/tourism=picnic_site,viewpoint,attraction,museum,gallery \
