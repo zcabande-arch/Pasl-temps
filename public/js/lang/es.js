@@ -483,6 +483,8 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Hecho ✓ Primer recordatorio en 3 días si no abres la app antes.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "No se puede activar ahora mismo. Vuelve a intentarlo más tarde.",
   "Active les notifications": "Activa las notificaciones",
+  "Statistiques anonymes": "Estadísticas anónimas",
+  "Pour savoir si l'appli sert : des totaux par jour (ouvertures, recherches, « Je pars », sorties terminées), sans cookie, sans identifiant et sans ta position.": "Para saber si la app sirve: totales por día (aperturas, búsquedas, «Me voy», salidas terminadas), sin cookies, sin identificador y sin tu ubicación.",
   "C'est bientôt ton moment habituel : {e} {n} est ouvert à {w} min d'ici. On y va ?": "Se acerca tu momento de siempre: {e} {n} está abierto a {w} min. ¿Vamos?",
   "📍 Touche « Ma position » pour voir ce qui est autour de toi. Elle sert aussi à repérer tes habitudes (quartier et heure) pour te prévenir au bon moment : celles-ci restent sur ton téléphone.": "📍 Toca «Mi ubicación» para ver qué hay a tu alrededor. También sirve para detectar tus costumbres (barrio y hora) y avisarte en el momento justo: se quedan en tu móvil.",
   "Aucune notification. Tes habitudes ne sont plus notées.": "Sin notificaciones. Ya no se registran tus costumbres.",

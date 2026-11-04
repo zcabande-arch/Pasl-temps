@@ -481,6 +481,8 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Erledigt ✓ Erste Erinnerung in 3 Tagen, falls du die App bis dahin nicht öffnest.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Aktivieren gerade nicht möglich. Versuch es später erneut.",
   "Active les notifications": "Aktiviere Mitteilungen",
+  "Statistiques anonymes": "Anonyme Statistiken",
+  "Pour savoir si l'appli sert : des totaux par jour (ouvertures, recherches, « Je pars », sorties terminées), sans cookie, sans identifiant et sans ta position.": "Damit wir wissen, ob die App nützt: Tagessummen (Öffnungen, Suchen, „Ich gehe“, beendete Ausflüge), ohne Cookies, ohne Kennung und ohne deinen Standort.",
   "C'est bientôt ton moment habituel : {e} {n} est ouvert à {w} min d'ici. On y va ?": "Gleich ist dein üblicher Moment: {e} {n} hat geöffnet, {w} Min. entfernt. Los?",
   "📍 Touche « Ma position » pour voir ce qui est autour de toi. Elle sert aussi à repérer tes habitudes (quartier et heure) pour te prévenir au bon moment : celles-ci restent sur ton téléphone.": "📍 Tippe auf „Mein Standort“, um zu sehen, was in deiner Nähe ist. Er hilft auch, deine Gewohnheiten (Viertel und Uhrzeit) zu erkennen, damit wir uns im richtigen Moment melden: Diese bleiben auf deinem Handy.",
   "Aucune notification. Tes habitudes ne sont plus notées.": "Keine Mitteilungen. Deine Gewohnheiten werden nicht mehr erfasst.",
