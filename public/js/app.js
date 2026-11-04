@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "96";
+const APP_VERSION = "97";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -13,53 +13,66 @@ const APP_VERSION = "96";
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 const MOODS = {
   manger: {img:"img/moods/manger.jpg", d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
-    {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stay:5, q:"boulangerie"},
-    {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stay:10, q:"café"},
-    {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stay:30, q:"snack"},
-    {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stay:20, q:"glacier"},
-    {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stay:60, q:"restaurant"}]},
+    {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stays:[3,5,10], q:"boulangerie"},
+    {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stays:[5,10,20], q:"café"},
+    {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stays:[10,15,25], q:"snack"},
+    {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stays:[10,20,30], q:"glacier"},
+    {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stays:[30,60,90], q:"restaurant"}]},
   boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
-    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stay:30, q:"bar"},
-    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stay:30, q:"pub"},
-    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stay:15, q:"café"}]},
+    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stays:[15,30,60], q:"bar"},
+    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stays:[15,30,60], q:"pub"},
+    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"café"}]},
   air: {img:"img/moods/air.jpg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
-    {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stay:10, q:"parc"},
-    {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stay:15, q:"espace vert"}]},
+    {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stays:[5,10,30], q:"parc"},
+    {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stays:[5,15,40], q:"espace vert"}]},
   courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
-    {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stay:20, q:"supermarché"},
-    {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stay:10, q:"supérette"},
-    {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stay:10, q:"primeur"},
-    {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stay:10, q:"boucherie"},
-    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:15, q:"marché"},
-    {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stay:10, q:"caviste", adult:true}]},
+    {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stays:[10,20,30], q:"supermarché"},
+    {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stays:[5,10,15], q:"supérette"},
+    {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stays:[5,10,20], q:"primeur"},
+    {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stays:[5,10,20], q:"boucherie"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[10,15,30], q:"marché"},
+    {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stays:[5,10,20], q:"caviste", adult:true}]},
   shopping: {img:"img/moods/shopping.jpg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
-    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stay:15, q:"centre commercial"},
-    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stay:10, q:"marché"},
-    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stay:8, q:"boutique cadeaux"}]},
+    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stays:[10,15,45], q:"centre commercial"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
+    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"}]},
   culture: {img:"img/moods/culture.jpg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
-    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stay:10, q:"librairie"},
-    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stay:5, q:"monument"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"},
-    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stay:60, q:"musée"},
-    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stay:30, q:"galerie d'art"}]},
+    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
+    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
+    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
+    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"}]},
   poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
-    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stay:15, q:"salon de thé"},
-    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stay:10, q:"parc"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stay:15, q:"bibliothèque"}]},
+    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"salon de thé"},
+    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stays:[5,10,30], q:"parc"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"}]},
   bouger: {img:"img/moods/bouger.jpg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
-    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stay:10, q:"parc"},
-    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stay:30, q:"salle de sport", minT:45}]},
+    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
+    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45}]},
   artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), groups:[
-    {l:"Cordonniers, clés", em:"👞", h:25, osm:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith"], stay:10, q:"cordonnier"},
-    {l:"Retouches, couture", em:"🧵", h:300, osm:["shop=tailor","craft=tailor","craft=dressmaker"], stay:10, q:"retouches"},
-    {l:"Pressings, laveries", em:"👔", h:210, osm:["shop=dry_cleaning","shop=laundry"], stay:10, q:"pressing"},
-    {l:"Drogueries, quincailleries", em:"🧴", h:50, osm:["shop=chemist","shop=hardware","shop=doityourself","shop=paint"], stay:10, q:"droguerie"},
-    {l:"Réparation téléphone, informatique", em:"📱", h:240, osm:["craft=electronics_repair","shop=repair","shop=computer"], stay:15, q:"réparation téléphone"},
-    {l:"Horlogers", em:"⌚", h:280, osm:["craft=watchmaker","shop=watches"], stay:10, q:"horloger"},
-    {l:"Imprimeurs, photocopies", em:"🖨️", h:190, osm:["shop=copyshop","craft=printer"], stay:10, q:"imprimerie"},
-    {l:"Vélos, réparation", em:"🚲", h:120, osm:["shop=bicycle"], stay:15, q:"réparation vélo"},
-    {l:"Garages", em:"🚗", h:0, osm:["shop=car_repair","shop=tyres"], stay:30, q:"garage", minT:45}]}
+    {l:"Cordonniers, clés", em:"👞", h:25, osm:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith"], stays:[5,10,15], q:"cordonnier"},
+    {l:"Retouches, couture", em:"🧵", h:300, osm:["shop=tailor","craft=tailor","craft=dressmaker"], stays:[5,10,15], q:"retouches"},
+    {l:"Pressings, laveries", em:"👔", h:210, osm:["shop=dry_cleaning","shop=laundry"], stays:[5,10,15], q:"pressing"},
+    {l:"Drogueries, quincailleries", em:"🧴", h:50, osm:["shop=chemist","shop=hardware","shop=doityourself","shop=paint"], stays:[5,10,20], q:"droguerie"},
+    {l:"Réparation téléphone, informatique", em:"📱", h:240, osm:["craft=electronics_repair","shop=repair","shop=computer"], stays:[10,15,30], q:"réparation téléphone"},
+    {l:"Horlogers", em:"⌚", h:280, osm:["craft=watchmaker","shop=watches"], stays:[5,10,20], q:"horloger"},
+    {l:"Imprimeurs, photocopies", em:"🖨️", h:190, osm:["shop=copyshop","craft=printer"], stays:[5,10,20], q:"imprimerie"},
+    {l:"Vélos, réparation", em:"🚲", h:120, osm:["shop=bicycle"], stays:[10,15,30], q:"réparation vélo"},
+    {l:"Garages", em:"🚗", h:0, osm:["shop=car_repair","shop=tyres"], stays:[15,30,60], q:"garage", minT:45}]}
 };
+
+// ---------- Temps sur place réglable : « Vite fait / Normal / Tranquille » (SET.pace) ----------
+// Chaque rubrique a trois durées (stays) ; g.stay renvoie celle du réglage choisi, partout (fits, radiusFor, maxLeg,
+// HOURS.forVisit, « Choisis pour moi », chrono…). « Normal » = les valeurs d'avant (sauf « Sur le pouce » : 15 min).
+const PACES = ["quick", "normal", "easy"];
+function paceIdx(){ try{ return Math.max(0, PACES.indexOf(SET.pace || "normal")); }catch(e){ return 1; } }
+function withPace(g){
+  if(!Object.getOwnPropertyDescriptor(g, "stay")) Object.defineProperty(g, "stay", {get(){ return this.stays[paceIdx()]; }, enumerable: true});
+  return g;
+}
+Object.values(MOODS).forEach(m => m.groups.forEach(withPace));
+// Durée ajustée pour un lieu précis (fiche du lieu, avant « Je pars ») : id → minutes
+const STAY_OVR = new Map();
 
 let T = 20, M = "manger", pos = null, geoState = "wait";
 let LOADED = {};               // groupe -> {state, items, err}
@@ -264,7 +277,7 @@ const okAt = (g, t) => destMode() ? TRIP.fitsDest(g, t, directMin(), TR()) : fit
 // Zone de recherche d'une rubrique : rayon (aller-retour) ou somme des distances aux deux foyers (ellipse)
 const needFor = (stay, t = T) => destMode() ? TRIP.spanFor(stay, t, TR(), TRIP.meters(pos, DEST)) : radiusFor(stay, t);
 // Valise en mode gare : les consignes à bagages d'abord, quelle que soit l'envie
-const LUGGAGE = {l:"Consignes à bagages", em:"🧳", h:30, osm:["amenity=luggage_locker","amenity=left_luggage"], stay:5, q:"consigne à bagages", luggage:true};
+const LUGGAGE = withPace({l:"Consignes à bagages", em:"🧳", h:30, osm:["amenity=luggage_locker","amenity=left_luggage"], stays:[3,5,10], q:"consigne à bagages", luggage:true});
 const moodGroups = () => GARE.on && GARE.valise ? [LUGGAGE, ...MOODS[M].groups] : MOODS[M].groups;
 const groupsNow = () => moodGroups().filter(g => allowed(g) && okAt(g, T));
 // « Je pars » : en mode arrivée, le lieu en étape et l'arrivée en destination
@@ -310,11 +323,11 @@ function showFound(entry, groups, need){
     near.push(...cand);
     const fit = dest
       // aller + sur place + vers l'arrivée ≤ temps avant l'heure d'arrivée ; les plus petits détours d'abord
-      ? cand.map(p => { const a = legOf(p), b = legTo(p); return {...p, ...a, ...b, detour: TRIP.detourOf(a.walk, b.back, a.real && b.realB ? dm : dmEst), g:g.l, stay:g.stay, em:g.em, h:g.h}; })
-        .filter(p => TRIP.fitsVia(p.walk, g.stay, p.back, T))
+      ? cand.map(p => { const a = legOf(p), b = legTo(p); return {...p, ...a, ...b, detour: TRIP.detourOf(a.walk, b.back, a.real && b.realB ? dm : dmEst), g:g.l, stay:STAY_OVR.get(p.id) ?? g.stay, em:g.em, h:g.h}; })
+        .filter(p => TRIP.fitsVia(p.walk, p.stay, p.back, T))
         .sort((a, b) => a.detour - b.detour || a.walk - b.walk)
-      : cand.map(p => ({...p, ...legOf(p), g:g.l, stay:g.stay, em:g.em, h:g.h}))
-        .filter(p => 2*p.walk + g.stay <= T)
+      : cand.map(p => ({...p, ...legOf(p), g:g.l, stay:STAY_OVR.get(p.id) ?? g.stay, em:g.em, h:g.h}))
+        .filter(p => 2*p.walk + p.stay <= T)
         .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
@@ -423,6 +436,7 @@ function placeEl(p){
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
+      <div class="stayadj"><span>⏱️ ${tx("{s} sur place", {s:`<b>${fmtDur(p.stay)}</b>`})}${STAY_OVR.has(p.id) ? ` <small>(${tx("ajusté")})</small>` : ""}</span><button class="ghost sm" data-d="-5" ${p.stay <= 2 ? "disabled" : ""} aria-label="${tx("5 min de moins sur place")}">−5</button><button class="ghost sm" data-d="5" ${free < 5 ? "disabled" : ""} aria-label="${tx("5 min de plus sur place")}">+5</button></div>
       <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
     </div>`;
   const head = el.querySelector("button");
@@ -430,6 +444,12 @@ function placeEl(p){
     if(el.classList.contains("open") && pr && pr.est) loadPrices([p]); };
   el.querySelector(".go").addEventListener("click", () => { const h = logVisit(p); startTimer(p, h); });
   el.querySelector(".shr").onclick = e => sharePlace(p, e.currentTarget);
+  // temps sur place pour CE lieu : la liste est recalculée (aller-retour, horaires, chrono) et la fiche reste ouverte
+  el.querySelectorAll(".stayadj button").forEach(b => b.onclick = () => {
+    const v = Math.max(2, p.stay + +b.dataset.d), g = moodGroups().find(x => x.l === p.g);
+    if(g && v === g.stay) STAY_OVR.delete(p.id); else STAY_OVR.set(p.id, v);
+    search(); goToPlace(p.id);
+  });
   el.querySelector(".rep").onclick = () => openReport(p);
   el.querySelector(".fvstar").onclick = e => {
     toggleList("fav", p); const on = !!LISTS.fav[p.id], b = e.currentTarget;
@@ -887,6 +907,11 @@ $("dial").addEventListener("click", e => {
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
   const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
   search();
+});
+function renderPace(){ document.querySelectorAll("#paceSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.pace || "normal")))); }
+$("paceSeg").addEventListener("click", e => {
+  const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.pace || "normal")) return;
+  SET.pace = b.dataset.v; saveSet(); STAY_OVR.clear(); renderPace(); search();
 });
 // ---------- « Je dois être rentré·e à… » ----------
 // Une heure de retour au lieu d'une durée : le temps disponible se recalcule tout seul à chaque minute.
@@ -1987,7 +2012,7 @@ let TIMER = null, timerTick = null, vibrated = false;
 try{ TIMER = JSON.parse(localStorage.getItem("pasltemps.timer") || "null"); }catch(e){}
 function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.stringify(TIMER)) : localStorage.removeItem("pasltemps.timer"); }catch(e){} }
 function startTimer(p, h, total){
-  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
+  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), stay: p.stay || 0, mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   // mode arrivée : on repart du lieu vers l'arrivée (et non vers le point de départ), pour y être à l'heure
   if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT,
     ...(DEST.station && GARE.trainAt ? {train: GARE.trainAt} : {})});
@@ -2011,7 +2036,7 @@ function renderTimer(){
   let phase, sub, cls = "";
   const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, leaveAt = (TIMER.arrive || TIMER.start + total * 1000) - backS * 1000;
   if(el < walkS){ phase = tv.e + " " + tx("En route"); sub = tx("Arrivée dans ~{m} min", {m:Math.ceil((walkS-el)/60)}); }
-  else if(remain > backS){ phase = tx("⏱️ Sur place"); sub = TIMER.train ? tx("Retourne à la gare à {h} (train de {t})", {h:hhmm(leaveAt), t:hhmm(TIMER.train)}) : TIMER.dest ? tx("Repars à {h} pour être à {d} à {a}", {h:hhmm(leaveAt), d:TIMER.dest, a:hhmm(TIMER.arrive)}) : tx("Repars dans {m} min", {m:Math.ceil((remain-backS)/60)}); }
+  else if(remain > backS){ phase = tx("⏱️ Sur place"); sub = TIMER.train ? tx("Retourne à la gare à {h} (train de {t})", {h:hhmm(leaveAt), t:hhmm(TIMER.train)}) : TIMER.dest ? tx("Repars à {h} pour être à {d} à {a}", {h:hhmm(leaveAt), d:TIMER.dest, a:hhmm(TIMER.arrive)}) : TIMER.stay && el < walkS + TIMER.stay * 60 ? tx("Prévu : {s} sur place · encore {m} min", {s:fmtDur(TIMER.stay), m:Math.ceil((walkS + TIMER.stay * 60 - el) / 60)}) : tx("Repars dans {m} min", {m:Math.ceil((remain-backS)/60)}); }
   else if(remain > 0){ phase = TIMER.train ? tx("🚉 Retourne à la gare !") : TIMER.dest ? tx("🏃 Pars maintenant pour {d} !", {d:TIMER.dest}) : tx("🏃 C'est l'heure de repartir !"); sub = TIMER.train ? tx("{m} min {of} pour ton train de {h}", {m:TIMER.back, of:tv.of, h:hhmm(TIMER.train)}) : TIMER.dest ? tx("{m} min {of} pour y être à {a}", {m:TIMER.back, of:tv.of, a:hhmm(TIMER.arrive)}) : tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
   else { phase = tx("⏰ Temps écoulé"); sub = tx("Tu dépasses de {m} min", {m:Math.ceil(-remain/60)}); cls = "late"; }
@@ -2396,7 +2421,7 @@ function renderHistory(){
 }
 
 // ---------- Démarrage ----------
-renderTravel(); renderArrive(); renderGare();
+renderTravel(); renderArrive(); renderGare(); renderPace();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
