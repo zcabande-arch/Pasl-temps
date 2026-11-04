@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "95";
+const APP_VERSION = "96";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -203,7 +203,15 @@ const TRAVEL = {
   bike: {l:tx("Vélo"), ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:tx("de vélo"), way:tx("à vélo"),     rings:[3,5,10,15,20]},
   car:  {l:tx("Voiture"), ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:tx("de route"), way:tx("en voiture"), rings:[5,8,12,16,20]}
 };
-const TR = () => TRAVEL[SET.travel] || TRAVEL.walk;
+// Mode gare avec valise : on marche moins vite (65 m/min au lieu de 80)
+const VALISE_SPEED = 65;
+const valiseOn = () => !!(GARE.on && GARE.valise && (SET.travel || "walk") === "walk");
+const TR = () => { const t = TRAVEL[SET.travel] || TRAVEL.walk; return valiseOn() ? {...t, speed: VALISE_SPEED} : t; };
+// Les vrais temps OSRM « à pied » supposent une marche normale : on les allonge d'autant avec une valise
+const slowF = () => valiseOn() ? TRAVEL.walk.speed / VALISE_SPEED : 1;
+// ---------- Mode gare (étape 2) ----------
+// {on, station:{lat,lng,label}, trainAt (ms), margin (min), valise}
+let GARE = {on:false, station:null, trainAt:null, margin:10, valise:false, list:null};
 // Durées lisibles : 45 → « 45 min », 60 → « 1 h », 90 → « 1 h 30 »
 const fmtDur = m => { m = Math.round(m); if(m < 60) return m + " min"; const h = Math.floor(m / 60), r = m % 60; return h + " h" + (r ? " " + String(r).padStart(2, "0") : ""); };
 // Code couleur selon l'éloignement : part du trajet aller maximal possible pour le temps choisi
@@ -242,20 +250,23 @@ const destName = () => DEST ? (DEST.home ? tx("la maison") : DEST.work ? tx("le 
 function directMin(){
   if(!destMode() || !pos) return 0;
   const s = window.ROUTES ? ROUTES.known(SET.travel || "walk", pos, destPt()) : undefined;
-  return s != null ? Math.max(1, Math.round(s / 60 + TR().over)) : TRIP.travelMin(TRIP.meters(pos, DEST), TR());
+  return s != null ? Math.max(1, Math.round(s * slowF() / 60 + TR().over)) : TRIP.travelMin(TRIP.meters(pos, DEST), TR());
 }
 // Lieu → DEST (min)
 function legTo(p){
   const s = window.ROUTES ? ROUTES.knownTo(SET.travel || "walk", DEST, p) : undefined;
   if(s == null) return {back: TRIP.travelMin(TRIP.meters(p, DEST), TR()), realB: false};
-  return {back: Math.max(1, Math.round(s / 60 + TR().over)), realB: true};
+  return {back: Math.max(1, Math.round(s * slowF() / 60 + TR().over)), realB: true};
 }
 // Pas le temps de faire un détour : le trajet direct prend déjà presque tout
 const noDetour = () => destMode() && !!pos && !TRIP.roomFor(directMin(), T);
 const okAt = (g, t) => destMode() ? TRIP.fitsDest(g, t, directMin(), TR()) : fits(g, t);
 // Zone de recherche d'une rubrique : rayon (aller-retour) ou somme des distances aux deux foyers (ellipse)
 const needFor = (stay, t = T) => destMode() ? TRIP.spanFor(stay, t, TR(), TRIP.meters(pos, DEST)) : radiusFor(stay, t);
-const groupsNow = () => MOODS[M].groups.filter(g => allowed(g) && okAt(g, T));
+// Valise en mode gare : les consignes à bagages d'abord, quelle que soit l'envie
+const LUGGAGE = {l:"Consignes à bagages", em:"🧳", h:30, osm:["amenity=luggage_locker","amenity=left_luggage"], stay:5, q:"consigne à bagages", luggage:true};
+const moodGroups = () => GARE.on && GARE.valise ? [LUGGAGE, ...MOODS[M].groups] : MOODS[M].groups;
+const groupsNow = () => moodGroups().filter(g => allowed(g) && okAt(g, T));
 // « Je pars » : en mode arrivée, le lieu en étape et l'arrivée en destination
 function dirUrl(p){
   if(destMode()) return `https://www.google.com/maps/dir/?api=1&destination=${DEST.lat},${DEST.lng}&waypoints=${p.lat},${p.lng}&travelmode=${TR().gm}`;
@@ -286,7 +297,7 @@ let searchCtl = null;
 function legOf(p){
   const mode = SET.travel || "walk", s = window.ROUTES && pos ? ROUTES.known(mode, pos, p) : undefined;
   if(s == null) return {walk: travelOf(p.dist), real: false};
-  return {walk: Math.max(1, Math.round(s / 60 + TR().over)), real: true};
+  return {walk: Math.max(1, Math.round(s * slowF() / 60 + TR().over)), real: true};
 }
 let routeCtl = null;
 function showFound(entry, groups, need){
@@ -307,6 +318,8 @@ function showFound(entry, groups, need){
         .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
+  // rubriques que le service de carte n'a pas pu chercher : en erreur (« réessayer »), jamais « rien trouvé »
+  (entry.failed || []).forEach(l => { if(LOADED[l]) LOADED[l] = {state:"err", err:{code:"server_unavailable"}}; });
   if(window.NOTIF) NOTIF.writeHabitTexts();   // lieu ouvert près d'une habitude : texte gardé sur le téléphone
   // vrais itinéraires en arrière-plan, puis on remet la liste à jour
   if(!window.ROUTES || !near.length) return;
@@ -342,9 +355,9 @@ async function search(){
   // On cherche au moins pour 30 min (les petits changements de temps restent instantanés)
   // (en mode arrivée, l'heure est fixée : pas d'élargissement)
   const Tw = destMode() ? T : Math.max(T, 30);
-  const wide = Object.fromEntries(MOODS[M].groups.filter(g => okAt(g, Tw)).map(g => [g.l, Math.round(needFor(g.stay, Tw))]));
+  const wide = Object.fromEntries(moodGroups().filter(g => okAt(g, Tw)).map(g => [g.l, Math.round(needFor(g.stay, Tw))]));
   groups.forEach(g => { wide[g.l] = Math.max(wide[g.l] || 0, need[g.l]); });
-  const fetchGroups = MOODS[M].groups.filter(g => wide[g.l]);
+  const fetchGroups = moodGroups().filter(g => wide[g.l]);
   try{
     searchCtl = new AbortController();
     let radii = wide, found;
@@ -357,8 +370,9 @@ async function search(){
       radii = need;
       found = await PLACES.nearby(pos, groups.map(g => zoneOf(g, need[g.l])), {signal:searchCtl.signal, limit:24, lite:true, dest: destMode() ? DEST : null});
     }
-    const wideUsed = radii;
-    const entry = {m:M, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found, dest: destMode() ? {lat:DEST.lat, lng:DEST.lng} : null};
+    const wideUsed = {...radii}, failed = found.__failed || [];
+    failed.forEach(l => delete wideUsed[l]);          // pas en cache : on réessaiera
+    const entry = {m:M, failed, pos:{lat:pos.lat, lng:pos.lng}, at:Date.now(), radii:wideUsed, found, dest: destMode() ? {lat:DEST.lat, lng:DEST.lng} : null};
     // on remplace seulement les anciennes recherches du même endroit entièrement couvertes par celle-ci
     const covered = e => e.m === M && PLACES.meters(e.pos, entry.pos) < 80 && sameDest(e.dest) && Object.entries(e.radii).every(([g, r]) => (wideUsed[g] || 0) >= r);
     PCACHE = [entry, ...PCACHE.filter(e => !covered(e))];
@@ -598,7 +612,9 @@ async function scheduleTimerPush(){
     const events = [];
     if(TIMER){
       const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, bk = TIMER.back || TIMER.walk, back = TIMER.start + (TIMER.T - bk) * 60000, end = TIMER.start + TIMER.T * 60000;
-      if(back > Date.now() + 30e3) events.push({at: back, title: "Fissa Fissa", body: TIMER.dest
+      if(back > Date.now() + 30e3) events.push({at: back, title: "Fissa Fissa", body: TIMER.train
+        ? tx("🚉 Retourne à la gare : {m} min {of} pour ton train de {h}.", {m: bk, of: tv.of, h: hhmm(TIMER.train)})
+        : TIMER.dest
         ? tx("🏃 Pars maintenant de {n} : {m} min {of} pour être à {d} à {a}.", {n: TIMER.name, m: bk, of: tv.of, d: TIMER.dest, a: hhmm(TIMER.arrive)})
         : tx("🏃 C'est l'heure de repartir de {n} : {m} min {of} pour rentrer à l'heure.", {n: TIMER.name, m: TIMER.walk, of: tv.of})});
       events.push({at: end, title: "Fissa Fissa", body: TIMER.dest ? tx("⏰ C'est l'heure : tu devrais être à {d} !", {d: TIMER.dest}) : tx("⏰ Ta pause est finie : il est l'heure d'être rentré·e !")});
@@ -721,8 +737,9 @@ function renderResults(){
     return;
   }
 
-  const wet = g => wxNow() && wxNow().rain && isOutdoor(g) ? 1 : 0;   // sous la pluie, le dehors passe après
-  const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (wet(a.g) - wet(b.g)) || (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
+  // sous la pluie — ou en gare avec une valise — le dehors passe après ; la consigne à bagages d'abord
+  const wet = g => ((wxNow() && wxNow().rain) || (GARE.on && GARE.valise)) && isOutdoor(g) ? 1 : 0;
+  const groups = groupsNow().map((g, i) => ({g, i})).sort((a, b) => (!!b.g.luggage - !!a.g.luggage) || (wet(a.g) - wet(b.g)) || (isPreferred(b.g) - isPreferred(a.g)) || a.i - b.i).map(x => x.g);
   const renderLater = () => !destMode() && laterGroups().forEach(({g, t}) => {
     const sec = document.createElement("section"); sec.className = "group later";
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}</span></h3>
@@ -752,7 +769,7 @@ function renderResults(){
       sec.innerHTML += `<p class="note err">${esc(errText(st.err))} <button class="link retry">${tx("Réessayer")}</button> · <a class="link" target="_blank" rel="noopener" href="${mapsSearch(tx(g.q))}">Google Maps</a></p>`;
       sec.querySelector(".retry").onclick = () => search();
     } else if(!n){
-      sec.innerHTML += `<p class="note">${!all.length ? tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)}) : filtering() ? tx("Rien ne correspond à tes filtres ici.") : tx("Tout est fermé à cette heure-ci.")}</p>`;
+      sec.innerHTML += `<p class="note">${!all.length && g.luggage ? tx("Aucune consigne à bagages trouvée près d'ici dans OpenStreetMap. Renseigne-toi au guichet de la gare.") : !all.length ? tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)}) : filtering() ? tx("Rien ne correspond à tes filtres ici.") : tx("Tout est fermé à cette heure-ci.")}</p>`;
     } else {
       const SHOW = 6, all = EXPANDED.has(g.l);
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
@@ -950,7 +967,7 @@ function renderArrive(){
   $("arrClear").hidden = !(DEST || ARR_TIME);
   $("arrBox").hidden = !(DEST || ARR_TIME || $("arrBy").classList.contains("open"));
   const sel = $("arrSel"); sel.hidden = !DEST;
-  if(DEST){ sel.innerHTML = `<span class="pin">${DEST.home ? "🏠" : DEST.work ? "💼" : "📍"}</span><span class="txt"><b></b><small></small></span><span class="ok">✓</span>`; sel.querySelector("b").textContent = destName(); sel.querySelector("small").textContent = DEST.home || DEST.work ? DEST.label : ""; }
+  if(DEST){ sel.innerHTML = `<span class="pin">${DEST.home ? "🏠" : DEST.work ? "💼" : DEST.station ? "🚉" : "📍"}</span><span class="txt"><b></b><small></small></span><span class="ok">✓</span>`; sel.querySelector("b").textContent = destName(); sel.querySelector("small").textContent = DEST.home || DEST.work ? DEST.label : ""; }
   const row = $("arrRow"); row.innerHTML = "";
   const chip = (txt, d) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = txt; b.onclick = () => setArriveDest(d); row.appendChild(b); };
   if(ARR_CHOICES && !DEST){ ARR_CHOICES.forEach(r => chip("👉 " + r.label, r)); return; }
@@ -958,7 +975,7 @@ function renderArrive(){
   if(PROFILE.work && !(DEST && DEST.work)) chip("💼 " + tx("Travail"), PROFILE.work);
   ARRIVALS.filter(r => !sameSpot(r, DEST)).forEach(r => chip("🕘 " + r.label, r));
   // l'adresse choisie peut devenir « Maison » ou « Travail » (gardé dans le profil)
-  if(DEST && !DEST.home && !DEST.work){
+  if(DEST && !DEST.home && !DEST.work && !DEST.station){
     [["home", "🏠 " + tx("C'est ma maison")], ["work", "💼 " + tx("C'est mon travail")]].forEach(([k, t]) => {
       const b = document.createElement("button"); b.className = "chip save"; b.textContent = t;
       b.onclick = () => { PROFILE[k] = {lat:DEST.lat, lng:DEST.lng, label:DEST.label}; saveProfile(); DEST[k] = true; renderArrive(); renderBackBy(); if(destMode()) search(); };
@@ -970,7 +987,7 @@ function renderArrive(){
 function renderArriveChoices(list){ ARR_CHOICES = list; if(DEST){ DEST = null; ARRIVE_AT = null; } renderArrive(); }
 $("arrOpen").onclick = () => { $("arrBy").classList.toggle("open"); renderArrive(); if(!$("arrBox").hidden) $("arrInput").focus(); };
 $("arrAt").addEventListener("change", () => { $("arrBy").classList.add("open"); setArriveTime($("arrAt").value); });
-$("arrClear").onclick = () => { $("arrBy").classList.remove("open"); clearArrive(); $("dial").querySelector('button[data-t="20"]').click(); };
+$("arrClear").onclick = () => { $("arrBy").classList.remove("open"); if(GARE.on) setGare(false); clearArrive(); $("dial").querySelector('button[data-t="20"]').click(); };
 $("arrForm").addEventListener("submit", async e => {
   e.preventDefault();
   const q = $("arrInput").value.trim(); if(!q) return;
@@ -984,6 +1001,72 @@ $("arrForm").addEventListener("submit", async e => {
   }catch(err){ msg.textContent = err && err.code === "offline" ? tx("Pas de connexion internet.") : tx("La recherche d'adresse ne répond pas pour l'instant. Réessaie dans une minute."); }
 });
 setInterval(() => applyArrive(false), 30e3);
+
+// ---------- « Je suis en gare » ----------
+// La gare la plus proche (gares de TRAIN : railway=station, ou public_transport=station avec train=yes), puis l'heure du train.
+// Cela règle « Je dois être à… » : arrivée = la gare, heure = train − marge de sécurité (5 / 10 / 15 min).
+try{ const g = JSON.parse(localStorage.getItem("pasltemps.gare") || "{}"); if([5,10,15].includes(g.margin)) GARE.margin = g.margin; GARE.valise = !!g.valise; }catch(e){}
+const saveGare = () => { try{ localStorage.setItem("pasltemps.gare", JSON.stringify({margin: GARE.margin, valise: GARE.valise})); }catch(e){} };
+const GARE_R = 2500;
+async function findStations(){
+  const msg = $("gareMsg");
+  if(!pos){ msg.textContent = tx("Dis-moi d'abord où tu es (Ma position ou une adresse)."); locate(true); return; }
+  msg.textContent = tx("Je cherche la gare la plus proche…");
+  try{
+    const r = await PLACES.nearby(pos, [{l:"gares", osm:["railway=station","public_transport=station"], radius:GARE_R}], {limit:6});
+    // une même gare est souvent saisie deux fois (bâtiment + arrêt) : on garde un nom par 300 m
+    const list = [];
+    (r.gares || []).sort((a, b) => a.dist - b.dist).forEach(p => { if(!list.some(q => q.name === p.name || PLACES.meters(q, p) < 150)) list.push(p); });
+    GARE.list = list.slice(0, 4);
+    if(!GARE.list.length){ msg.textContent = tx("Aucune gare trouvée à moins de 2,5 km. Choisis ton arrivée avec « Je dois être à… »."); renderGare(); return; }
+    msg.textContent = "";
+    if(!GARE.station) GARE.station = {lat:GARE.list[0].lat, lng:GARE.list[0].lng, label:GARE.list[0].name};
+    renderGare(); applyGare();
+  }catch(e){ msg.textContent = e && e.code === "offline" ? tx("Pas de connexion internet.") : tx("La recherche de gare ne répond pas pour l'instant. Réessaie dans une minute."); }
+}
+function renderGare(){
+  $("gareBtn").setAttribute("aria-pressed", String(GARE.on));
+  $("gareBox").hidden = !GARE.on;
+  if(!GARE.on) return;
+  const row = $("gareRow"); row.innerHTML = "";
+  (GARE.list || []).forEach(p => {
+    const b = document.createElement("button"); b.className = "chip";
+    const on = GARE.station && PLACES.meters(GARE.station, p) < 60;
+    b.setAttribute("aria-pressed", String(!!on));
+    b.textContent = (on ? "✓ " : "🚉 ") + p.name + " · " + tx("{m} min", {m: travelOf(PLACES.meters(pos, p))});
+    b.onclick = () => { GARE.station = {lat:p.lat, lng:p.lng, label:p.name}; renderGare(); applyGare(); };
+    row.appendChild(b);
+  });
+  document.querySelectorAll("#marginSeg button").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === GARE.margin)));
+  $("valise").checked = GARE.valise;
+}
+function applyGare(){
+  if(!GARE.on || !GARE.station) return;
+  const v = $("trainAt").value;
+  if(!v){ $("gareMsg").textContent = tx("À quelle heure part ton train ?"); return; }
+  const [h, m] = v.split(":").map(Number), d = new Date(); d.setHours(h, m, 0, 0);
+  if(d.getTime() < Date.now()) d.setDate(d.getDate() + 1);          // train après minuit
+  GARE.trainAt = d.getTime();
+  const at = new Date(GARE.trainAt - GARE.margin * 60e3);
+  $("gareMsg").textContent = tx("Retour à la gare à {h}, {m} min avant ton train.", {h: hhmm(at.getTime()), m: GARE.margin});
+  DEST = {lat: GARE.station.lat, lng: GARE.station.lng, label: GARE.station.label, station: true};
+  ARR_CHOICES = null;
+  ARR_TIME = String(at.getHours()).padStart(2, "0") + ":" + String(at.getMinutes()).padStart(2, "0");
+  $("arrAt").value = ARR_TIME;
+  applyArriveInput();
+  if(!destMode()) $("gareMsg").textContent = tx("Ton train part trop tôt pour faire une pause : va directement à la gare.");
+}
+function setGare(on){
+  GARE.on = on;
+  if(on){ findStations(); }
+  else { GARE.station = null; GARE.trainAt = null; GARE.list = null; $("trainAt").value = ""; if(DEST && DEST.station) clearArrive(); search(); }
+  renderGare();
+}
+$("gareBtn").onclick = () => setGare(!GARE.on);
+$("gareOff").onclick = () => setGare(false);
+$("trainAt").addEventListener("change", applyGare);
+$("marginSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; GARE.margin = +b.dataset.v; saveGare(); renderGare(); applyGare(); });
+$("valise").addEventListener("change", () => { GARE.valise = $("valise").checked; saveGare(); renderGare(); search(); });
 
 // Une seule ligne, une bulle qui glisse sous le mode choisi
 function renderTravel(){
@@ -1906,7 +1989,8 @@ function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.
 function startTimer(p, h, total){
   TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   // mode arrivée : on repart du lieu vers l'arrivée (et non vers le point de départ), pour y être à l'heure
-  if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT});
+  if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT,
+    ...(DEST.station && GARE.trainAt ? {train: GARE.trainAt} : {})});
   vibrated = false; saveTimer(); renderTimer();
   // première fois : on demande l'autorisation ici (c'est le bon moment), puis on programme les notifications
   if(SET.notif !== "off" && pushReady() && Notification.permission === "default") enablePush().then(ok => ok && scheduleTimerPush());
@@ -1927,8 +2011,8 @@ function renderTimer(){
   let phase, sub, cls = "";
   const tv = TRAVEL[TIMER.mode] || TRAVEL.walk, leaveAt = (TIMER.arrive || TIMER.start + total * 1000) - backS * 1000;
   if(el < walkS){ phase = tv.e + " " + tx("En route"); sub = tx("Arrivée dans ~{m} min", {m:Math.ceil((walkS-el)/60)}); }
-  else if(remain > backS){ phase = tx("⏱️ Sur place"); sub = TIMER.dest ? tx("Repars à {h} pour être à {d} à {a}", {h:hhmm(leaveAt), d:TIMER.dest, a:hhmm(TIMER.arrive)}) : tx("Repars dans {m} min", {m:Math.ceil((remain-backS)/60)}); }
-  else if(remain > 0){ phase = TIMER.dest ? tx("🏃 Pars maintenant pour {d} !", {d:TIMER.dest}) : tx("🏃 C'est l'heure de repartir !"); sub = TIMER.dest ? tx("{m} min {of} pour y être à {a}", {m:TIMER.back, of:tv.of, a:hhmm(TIMER.arrive)}) : tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
+  else if(remain > backS){ phase = tx("⏱️ Sur place"); sub = TIMER.train ? tx("Retourne à la gare à {h} (train de {t})", {h:hhmm(leaveAt), t:hhmm(TIMER.train)}) : TIMER.dest ? tx("Repars à {h} pour être à {d} à {a}", {h:hhmm(leaveAt), d:TIMER.dest, a:hhmm(TIMER.arrive)}) : tx("Repars dans {m} min", {m:Math.ceil((remain-backS)/60)}); }
+  else if(remain > 0){ phase = TIMER.train ? tx("🚉 Retourne à la gare !") : TIMER.dest ? tx("🏃 Pars maintenant pour {d} !", {d:TIMER.dest}) : tx("🏃 C'est l'heure de repartir !"); sub = TIMER.train ? tx("{m} min {of} pour ton train de {h}", {m:TIMER.back, of:tv.of, h:hhmm(TIMER.train)}) : TIMER.dest ? tx("{m} min {of} pour y être à {a}", {m:TIMER.back, of:tv.of, a:hhmm(TIMER.arrive)}) : tx("{m} min {of} pour rentrer", {m:TIMER.walk, of:tv.of}); cls = "back";
     if(!vibrated){ vibrated = true; try{ navigator.vibrate && navigator.vibrate([200,100,200]); }catch(e){} } }
   else { phase = tx("⏰ Temps écoulé"); sub = tx("Tu dépasses de {m} min", {m:Math.ceil(-remain/60)}); cls = "late"; }
   box.className = "timer " + cls;
@@ -2178,6 +2262,7 @@ function pickForMe(list){
     if(recent.has(p.id)) w *= .25;
     const g = MOODS[M].groups.find(x => x.l === p.g), wx = wxNow();
     if(wx && isOutdoor(g)) w *= wx.rain ? .25 : wx.nice ? 1.5 : 1;
+    if(GARE.on && GARE.valise && isOutdoor(g)) w *= .3;            // avec une valise, plutôt à l'abri
     if(p.id === pickedId) w *= .05;
     return {p, w};
   });
@@ -2311,7 +2396,7 @@ function renderHistory(){
 }
 
 // ---------- Démarrage ----------
-renderTravel(); renderArrive();
+renderTravel(); renderArrive(); renderGare();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }

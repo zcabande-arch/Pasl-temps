@@ -109,3 +109,22 @@ test("monde : les continents calculés à part sont réassemblés (cases de fron
   assert.ok(idx.bbox[1] < -70 && idx.bbox[3] > 28);
   assert.deepEqual(Object.keys(JSON.parse(fs.readFileSync(path.join(dir, "out", "postcodes.json"), "utf8"))), [], "postcodes.json : France seule (ici, aucune)");
 });
+
+test("mode gare : gares de train et consignes gardées, métro et gares routières écartés", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gares-"));
+  const f = (id, properties) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[2.373, 48.844]}, properties:{"@type":"node", "@id":id, ...properties}});
+  fs.writeFileSync(path.join(dir, "in.geojsonseq"), [
+    f(1, {railway:"station", name:"Paris-Gare-de-Lyon"}),
+    f(2, {railway:"station", station:"subway", name:"Gare de Lyon (métro)"}),                 // métro : écarté
+    f(3, {railway:"station", station:"subway", train:"yes", name:"Station mixte"}),          // métro avec trains : gardé
+    f(4, {public_transport:"station", name:"Gare routière"}),                                // bus : écarté
+    f(5, {public_transport:"station", train:"yes", name:"Pôle gare"}),
+    f(6, {amenity:"luggage_locker", name:"Consigne Gare de Lyon"})
+  ].join("\n"));
+  const r = await build(path.join(dir, "in.geojsonseq"), path.join(dir, "out"));
+  const idx = JSON.parse(fs.readFileSync(path.join(dir, "out", "index.json"), "utf8"));
+  const tile = JSON.parse(fs.readFileSync(path.join(dir, "out", "t", "976_47.json"), "utf8"));
+  assert.deepEqual(tile.map(x => x[3]).sort(), ["Consigne Gare de Lyon", "Paris-Gare-de-Lyon", "Pôle gare", "Station mixte"]);
+  assert.equal(r.kept, 4);
+  assert.equal(idx.sels[tile.find(x => x[3] === "Consigne Gare de Lyon")[2]], "amenity=luggage_locker");
+});

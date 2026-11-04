@@ -1379,3 +1379,16 @@ body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;bo
 .paddr{display:flex;flex-direction:column;gap:8px}
 .paddr .ad{display:flex;align-items:center;gap:10px;background:var(--bg);border-radius:14px;padding:8px 12px}
 .paddr .ad span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Mode gare */
+.garebtn{display:inline-flex;margin:-4px 0 14px;font-size:15px;padding:8px 14px}
+.garebtn[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.garebox{background:var(--card);border-radius:20px;box-shadow:var(--sh);padding:14px 16px;margin:0 0 16px}
+.garebox .here{margin:10px 0 6px}
+.garebox .here:first-child{margin-top:0}
+.garebox .row .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.garebox .backby{margin:12px 0 4px}
+.garebox .valise{display:flex;gap:8px;align-items:center;justify-content:flex-start;flex-wrap:wrap;margin:14px 0 4px;font-weight:600;text-align:left}
+.garebox .valise small{flex-basis:100%;padding-left:26px}
+.garebox .valise small{font-weight:400;color:var(--soft)}
+.garebox .valise input{flex:none;width:18px;height:18px;padding:0;accent-color:var(--acc)}
