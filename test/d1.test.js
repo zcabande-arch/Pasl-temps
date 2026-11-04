@@ -37,3 +37,18 @@ test("l'API fonctionne avec le stockage D1", async () => {
     assert.equal(rep.reports[0].n, 1);
   } finally { srv.close(); }
 });
+
+test("prix de la communauté sur D1 ; schéma rejoué au déploiement sans perte", async () => {
+  const db = new DatabaseSync(":memory:"), schema = fs.readFileSync(path.join(__dirname, "..", "server", "schema.sql"), "utf8");
+  db.exec(schema);
+  const d1 = {prepare(sql){ const st = db.prepare(sql); return {bind(...a){ return {
+    run: async () => st.run(...a), first: async () => st.get(...a) ?? null, all: async () => ({results: st.all(...a)})
+  }; }}; }};
+  const s = d1Store(d1);
+  await s.voteSet("osm:n7", "u1", 2); await s.voteSet("osm:n7", "u2", 3); await s.voteSet("osm:n7", "u1", 1);
+  assert.deepEqual((await s.votesFor("osm:n7")).sort(), [1, 3]);
+  db.exec(schema);                                    // chaque déploiement rejoue schema.sql
+  assert.deepEqual((await s.votesFor("osm:n7")).sort(), [1, 3]);
+  await s.voteSet("osm:n7", "u2", 0);
+  assert.deepEqual(await s.votesFor("osm:n7"), [1]);
+});

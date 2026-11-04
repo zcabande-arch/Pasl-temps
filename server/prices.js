@@ -33,4 +33,12 @@ async function googlePrice(item, {key, fetchFn = fetch, lang = "fr"}){
   return {level, from, to, cur: (r.startPrice || r.endPrice || {}).currencyCode || null};
 }
 
-module.exports = { googlePrice, LEVELS };
+// Niveau de prix de la communauté : médiane des réponses (1 = €, 2 = €€, 3 = €€€), seulement à partir de `min` réponses
+function communityLevel(votes, min = 3){
+  const v = (votes || []).filter(x => x >= 1 && x <= 3).sort((a, b) => a - b);
+  if(v.length < min) return null;
+  const mid = v.length / 2, med = v.length % 2 ? v[Math.floor(mid)] : (v[mid - 1] + v[mid]) / 2;
+  return {lvl: Math.round(med), n: v.length};
+}
+
+module.exports = { googlePrice, LEVELS, communityLevel };

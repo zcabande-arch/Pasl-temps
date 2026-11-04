@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "101";
+const APP_VERSION = "102";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -331,6 +331,7 @@ function showFound(entry, groups, need){
         .sort((a, b) => a.walk - b.walk || a.dist - b.dist);
     LOADED[g.l] = {state:"ok", items: fit};
   });
+  loadCommunity(Object.values(LOADED).flatMap(x => x.items || []));
   // rubriques que le service de carte n'a pas pu chercher : en erreur (« réessayer »), jamais « rien trouvé »
   (entry.failed || []).forEach(l => { if(LOADED[l]) LOADED[l] = {state:"err", err:{code:"server_unavailable"}}; });
   if(window.NOTIF) NOTIF.writeHabitTexts();   // lieu ouvert près d'une habitude : texte gardé sur le téléphone
@@ -424,7 +425,7 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur" title="${pr.est ? tx("prix estimé") : tx("prix Google")}">${euros(pr.lvl)}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       ${dest
@@ -433,7 +434,7 @@ function placeEl(p){
       ${p.addr?`<p>${esc(p.addr)}</p>`:""}
       ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
       ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
-      ${pr?`<p class="legend prline">💶 <b>${euros(pr.lvl)}</b>${pr.g && pr.g.from != null ? ` · ${pr.g.from}${pr.g.to ? "–" + pr.g.to : "+"} ${pr.g.cur === "EUR" || !pr.g.cur ? "€" : esc(pr.g.cur)} ${tx("par personne")}` : ""} · <small>${pr.est ? tx("prix estimé") : tx("prix Google")}</small></p>`:""}
+      ${pr?`<p class="legend prline">💶 <b>${euros(pr.lvl)}</b>${pr.g && pr.g.from != null ? ` · ${pr.g.from}${pr.g.to ? "–" + pr.g.to : "+"} ${pr.g.cur === "EUR" || !pr.g.cur ? "€" : esc(pr.g.cur)} ${tx("par personne")}` : ""} · <small>${esc(priceTag(pr))}</small></p>`:""}
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
       ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
@@ -657,10 +658,14 @@ const cuisinesOf = p => p.cat ? p.cat.split(", ") : [];
 const PRICED = new Set(["Boulangeries", "Cafés, salons de thé", "Sur le pouce", "Glaciers", "Restaurants", "Bars", "Pubs, brasseries", "Cafés", "Salons de thé, cafés"]);
 const GPRICE = new Map();
 let gpriceOff = false;
+// Ordre de priorité : prix Google, puis prix de la communauté (3 réponses ou plus), puis estimation (est: true)
+const CPRICE = new Map();                 // id → {lvl, n} | null (demandé, rien de publié)
 function priceOf(p){
   if(!PRICED.has(p.g)) return null;
   const g = GPRICE.get(p.id);
   if(g && g.level) return {lvl: Math.min(g.level, 3), g};
+  const c = CPRICE.get(p.id);
+  if(c && c.lvl) return {lvl: c.lvl, c: true, n: c.n};
   if(p.g !== "Restaurants" && !/^(Bars|Pubs)/.test(p.g)) return {lvl: 1, est: true};
   const t = ((p.cat || "") + " " + p.name).toLowerCase();
   if(/fine.?dining|gastronom|étoilé|etoile|michelin/.test(t)) return {lvl: 3, est: true};
@@ -668,6 +673,27 @@ function priceOf(p){
   return {lvl: 2, est: true};
 }
 const euros = n => "€".repeat(n);
+// Prix de la communauté pour les lieux affichés (une seule demande par lieu et par session)
+let cpriceOff = false;
+async function loadCommunity(list){
+  if(cpriceOff || !window.PLT || !PLT.communityPrices) return;
+  const want = [...new Set(list.filter(p => PRICED.has(p.g) && !CPRICE.has(p.id)).map(p => p.id))];
+  if(!want.length) return;
+  want.forEach(id => CPRICE.set(id, null));
+  let got = 0;
+  for(let i = 0; i < want.length && i < 200; i += 40){          // 40 lieux par demande
+    const r = await PLT.communityPrices(want.slice(i, i + 40));
+    if(!r){ cpriceOff = true; break; }
+    Object.entries(r).forEach(([id, v]) => { CPRICE.set(id, v); if(v && v.lvl) got++; });
+  }
+  if(got) renderResults();
+}
+// Envoie une réponse « € / €€ / €€€ » ; le niveau publié revient si le lieu a assez de réponses
+function votePrice(pid, lvl){
+  if(!pid || !window.PLT || !PLT.priceVote) return;
+  PLT.priceVote(pid, lvl).then(r => { if(r && "community" in r){ CPRICE.set(pid, r.community); renderResults(); } }).catch(() => {});
+}
+const priceTag = pr => pr.est ? tx("prix estimé") : pr.c ? tx("selon {n} personnes", {n: pr.n}) : tx("prix Google");
 async function loadPrices(list){
   if(gpriceOff || !window.PLT || !PLT.prices) return;
   const want = list.filter(p => PRICED.has(p.g) && !GPRICE.has(p.id)).slice(0, 12);
@@ -707,6 +733,11 @@ function renderFilters(){
     B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="seg">` +
       `<button data-pr="0" aria-pressed="${!FILTER.pr}">${tx("Tous")}</button>` +
       [1, 2, 3].map(l => `<button data-pr="${l}" aria-pressed="${FILTER.pr === l}"${n[l-1] || FILTER.pr === l ? "" : " disabled"}>${euros(l)}</button>`).join("") + `</div>`;
+    // « dont N estimés » : combien de lieux de cette gamme n'ont qu'un prix estimé
+    if(FILTER.pr){
+      const sel = priced.filter(p => passFilter(p)), est = sel.filter(p => priceOf(p).est).length;
+      if(sel.length) B.insertAdjacentHTML("beforeend", `<small class="estn">${est ? tx("{n} lieux, dont {e} estimés", {n: sel.length, e: est}) : tx("{n} lieux, prix confirmés", {n: sel.length})}</small>`);
+    }
   }
   // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
   const count = {};
@@ -778,7 +809,8 @@ function renderResults(){
     const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
-      .sort((a, b) => rankOpen(a) - rankOpen(b) || (destMode() ? a.detour - b.detour : 0) || a.dist - b.dist);
+      // filtre budget : les prix confirmés (Google, communauté) avant les estimations
+      .sort((a, b) => (FILTER.pr ? !!(priceOf(a) || {}).est - !!(priceOf(b) || {}).est : 0) || rankOpen(a) - rankOpen(b) || (destMode() ? a.detour - b.detour : 0) || a.dist - b.dist);
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -1779,6 +1811,7 @@ function renderCompose(){
     <select class="field" id="cpFrom"><option value="">✍️ Écrire un autre lieu</option>${opts.map(h => `<option value="${esc(h.id)}">${esc(h.n)} · ${esc(whenTxt(h.at))}</option>`).join("")}</select>
     <input class="field" id="cpPlace" maxlength="80" placeholder="Nom du lieu">
     <div class="rate" id="cpRate" aria-label="Ta note">${[1,2,3,4,5].map(n => `<button type="button" data-n="${n}" aria-label="${n} étoile${n>1?"s":""}">★</button>`).join("")}<span>Ta note (facultatif)</span></div>
+    <div class="prq" id="cpPrice"><span>${tx("C'était plutôt…")}</span><div class="seg">${[1,2,3].map(l => `<button type="button" data-v="${l}">${euros(l)}</button>`).join("")}</div><small>${tx("(facultatif)")}</small></div>
     <textarea class="field" id="cpText" maxlength="500" placeholder="C'était comment ?"></textarea>
     <input class="field" id="cpHours" maxlength="40" placeholder="🕐 Horaires vus (facultatif, ex. 7h–19h)">
     <div class="btns" style="margin-bottom:12px"><label class="ghost" style="cursor:pointer">📷 Ajouter une photo<input type="file" id="cpPhoto" accept="image/*" hidden></label><button class="ghost" id="cpPhotoDel" hidden>Retirer la photo</button></div>
@@ -1790,7 +1823,8 @@ function renderCompose(){
   const sync = () => { const h = HIST.find(x => x.id === sel.value); place.hidden = !!h; };
   if(composePreset){ sel.value = ""; place.value = composePreset.name; }
   else if(composeFrom && HIST.some(h => h.id === composeFrom)) sel.value = composeFrom; else if(opts[0]) sel.value = opts[0].id;
-  let cpRating = 0;
+  let cpRating = 0, cpPrice = 0;
+  $("cpPrice").onclick = e => { const b = e.target.closest("button"); if(!b) return; cpPrice = cpPrice === +b.dataset.v ? 0 : +b.dataset.v; $("cpPrice").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.v === cpPrice))); };
   const paintRate = () => { $("cpRate").querySelectorAll("button").forEach(b => b.classList.toggle("on", +b.dataset.n <= cpRating)); $("cpRate").querySelector("span").textContent = cpRating ? ["","Bof","Moyen","Bien","Très bien","Génial !"][cpRating] : "Ta note (facultatif)"; };
   $("cpRate").onclick = e => { const b = e.target.closest("button"); if(!b) return; cpRating = cpRating === +b.dataset.n ? 0 : +b.dataset.n; paintRate(); };
   sel.onchange = sync; sync();
@@ -1820,8 +1854,9 @@ function renderCompose(){
     const pre = !h && composePreset && norm(composePreset.name) === norm(name) ? composePreset : null;
     const post = {id:"p"+Date.now().toString(36)+Math.random().toString(36).slice(2,5), at:Date.now(),
       place:name.slice(0,80), addr:h ? (h.addr||"").split(",").slice(-1)[0].trim() : pre ? pre.addr || "" : "", emoji:g ? g.em : (h && MOODS[h.mood] ? MOODS[h.mood].e : pre ? pre.em : "📍"), rating:cpRating,
-      text, with:composeWith.slice(0,10), hours:$("cpHours").value.trim().slice(0,40),
+      text, with:composeWith.slice(0,10), hours:$("cpHours").value.trim().slice(0,40), price:cpPrice || 0,
       pid:h ? (h.pid||"") : pre ? pre.pid || "" : "", lat:h && h.lat != null ? h.lat : pre && pre.lat != null ? pre.lat : null, lng:h && h.lng != null ? h.lng : pre && pre.lng != null ? pre.lng : null, photo:!!cpPic};
+    if(cpPrice && post.pid){ votePrice(post.pid, cpPrice); if(h) patch(h.id, {price: cpPrice}); }
     composeOpen = false; composeFrom = null; composePreset = null; composeWith = []; feedMode = "friends"; viewing = null;
     if(cpPic){ PHOTOS[UID + "/" + post.id] = cpPic; DB.doc("walls/" + UID + "/photos/" + post.id).set({data:cpPic}).catch(() => {}); }
     saveWall({...me, posts:[post, ...(me.posts||[])].slice(0,60)});
@@ -2448,6 +2483,7 @@ function renderHistory(){
     el.innerHTML = `<div class="row"><strong></strong><time>${whenTxt(h.at)}</time></div>
       <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(tx(h.q||""))} · ${fmtDur(h.T)}${near}</div>
       <input type="text" placeholder="${tx("Un souvenir, une note… (facultatif)")}" maxlength="120">
+      ${h.done && h.pid && PRICED.has(h.q) ? `<div class="prq"><span>${tx("C'était plutôt…")}</span><div class="seg">${[1,2,3].map(l => `<button type="button" data-v="${l}" aria-pressed="${h.price === l}">${euros(l)}</button>`).join("")}</div></div>` : ""}
       <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? tx("Fait ✓") : tx("Marquer comme fait")}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">${tx("Site web")}</a>`:""}<button class="share">${tx("Raconter")}</button><button class="del">${tx("Supprimer")}</button></div>`;
     el.querySelector("strong").textContent = h.n;
     el.querySelector(".share").onclick = () => { composeFrom = h.id; composeOpen = true; showView("blog"); renderCompose(); $("blogCompose").scrollIntoView({behavior:"smooth"}); };
@@ -2455,6 +2491,8 @@ function renderHistory(){
     inp.addEventListener("change", () => { const v = inp.value.trim(); if(v !== (h.note||"")) patch(h.id, {note:v}); });
     inp.addEventListener("keydown", ev => { if(ev.key === "Enter") inp.blur(); });
     el.querySelector(".tog").onclick = () => patch(h.id, {done: !h.done});
+    const prq = el.querySelector(".prq");
+    if(prq) prq.onclick = e => { const b = e.target.closest("button"); if(!b) return; const v = h.price === +b.dataset.v ? 0 : +b.dataset.v; patch(h.id, {price: v}); votePrice(h.pid, v); };
     el.querySelector(".del").onclick = () => removeEntry(h.id);
     L.appendChild(el);
   });
