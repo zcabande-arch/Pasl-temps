@@ -524,6 +524,8 @@
   "OK": "OK",
   "Mes adresses": "I miei indirizzi",
   "Pour « Je dois être à… » en un geste. Elles restent sur ton appareil.": "Per «Devo essere a…» con un tocco. Restano sul tuo dispositivo.",
+  "Statistiques anonymes": "Statistiche anonime",
+  "Pour savoir si l'appli sert : des totaux par jour (ouvertures, recherches, « Je pars », sorties terminées), sans cookie, sans identifiant et sans ta position.": "Per sapere se l'app è utile: totali giornalieri (aperture, ricerche, «Parto», uscite concluse), senza cookie, senza identificativo e senza la tua posizione.",
   "C'est bientôt ton moment habituel : {e} {n} est ouvert à {w} min d'ici. On y va ?": "Sta arrivando il tuo solito momento: {e} {n} è aperto a {w} min da qui. Andiamo?",
   "📍 Touche « Ma position » pour voir ce qui est autour de toi. Elle sert aussi à repérer tes habitudes (quartier et heure) pour te prévenir au bon moment : celles-ci restent sur ton téléphone.": "📍 Tocca «La mia posizione» per vedere cosa c'è intorno a te. Serve anche a riconoscere le tue abitudini (quartiere e ora) per avvisarti al momento giusto: restano sul tuo telefono.",
   "Aucune notification. Tes habitudes ne sont plus notées.": "Nessuna notifica. Le tue abitudini non vengono più registrate.",

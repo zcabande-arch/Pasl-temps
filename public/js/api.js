@@ -129,5 +129,11 @@
       const j = await r.json(); return r.ok && j && j.prices ? j.prices : null;
     }catch(e){ return null; }
   }
-  window.PLT = {connect, account, push: pushApi, prices};
+  // Mesure d'audience anonyme : +1 au total du jour pour un événement (open, search, go, done), sans identifiant.
+  // Envoyée en arrière-plan, jamais bloquante ; rien si le serveur n'est pas configuré.
+  function stat(ev, dim){
+    if(!BASE) return;
+    try{ fetch(BASE + "/api/stats", {method: "POST", keepalive: true, headers: {"Content-Type": "application/json"}, body: JSON.stringify({ev, dim: dim || ""})}).catch(() => {}); }catch(e){}
+  }
+  window.PLT = {connect, account, push: pushApi, prices, stat};
 })();

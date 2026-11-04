@@ -75,6 +75,8 @@ const { googlePrice } = require("./prices");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
+// Mesure d'audience : les seuls événements comptés, et la durée de conservation (25 mois, recommandation CNIL)
+const STAT_EVENTS = ["open", "search", "go", "done"], STAT_KEEP_DAYS = 760;
 const DEFAULT_ORIGINS = ["https://fissafissa.app", "https://zcabande-arch.github.io"];
 
 // opts : {adminToken, reportThreshold, rateLimit, sendMail({to, subject, html, text}), appOrigins: [origines autorisées]}
@@ -192,6 +194,19 @@ function createApi(store, opts = {}){
 
     if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
 
+    // ---------- Mesure d'audience (anonyme, sans cookie) ----------
+    // {ev, dim} → +1 au total du jour. Rien d'autre n'est gardé : ni identifiant, ni adresse IP, ni position.
+    if(path === "/api/stats" && method === "POST"){
+      if(!limited("stats:" + req.ip, 1, 120, 120 / 3600)) return ok({ok:false});   // au-delà : ignoré sans bruit
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {}, ev = String(v.ev || ""), dim = String(v.dim || "");
+      if(!STAT_EVENTS.includes(ev) || !/^[a-z]{0,12}$/.test(dim)) return fail(400, "bad_stat");
+      const day = new Date().toISOString().slice(0, 10);
+      await store.statAdd(day, ev, dim);
+      if(Math.random() < 0.02) await store.statPurge(new Date(Date.now() - STAT_KEEP_DAYS * 864e5).toISOString().slice(0, 10));
+      return ok({ok:true});
+    }
+
     // Contenus masqués par la modération (public)
     if(path === "/api/hidden" && method === "GET") return ok({targets: await store.hidden()});
 
@@ -206,6 +221,11 @@ function createApi(store, opts = {}){
           return {...r, owner, author: w.pseudo || "", preview: item ? [item.place, item.text].filter(Boolean).join(" — ").slice(0, 300) : kind === "user" ? "(profil)" : "(supprimé)"};
         }));
         return ok({reports, threshold});
+      }
+      // Mesure d'audience : totaux par jour sur les N derniers jours
+      if(path === "/api/admin/stats" && method === "GET"){
+        const days = Math.min(400, Math.max(1, +url.searchParams.get("days") || 30));
+        return ok({days, rows: await store.statRange(new Date(Date.now() - (days - 1) * 864e5).toISOString().slice(0, 10))});
       }
       const b = await body(req); if(b.error) return b.error;
       const target = b.value && b.value.target;

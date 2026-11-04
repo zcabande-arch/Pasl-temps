@@ -517,6 +517,8 @@
   "OK": "OK",
   "Mes adresses": "Mijn adressen",
   "Pour « Je dois être à… » en un geste. Elles restent sur ton appareil.": "Voor „Ik moet zijn in…” met één tik. Ze blijven op je apparaat.",
+  "Statistiques anonymes": "Anonieme statistieken",
+  "Pour savoir si l'appli sert : des totaux par jour (ouvertures, recherches, « Je pars », sorties terminées), sans cookie, sans identifiant et sans ta position.": "Om te weten of de app nut heeft: totalen per dag (openingen, zoekopdrachten, „Ik ga”, afgeronde uitjes), zonder cookies, zonder ID en zonder je locatie.",
   "C'est bientôt ton moment habituel : {e} {n} est ouvert à {w} min d'ici. On y va ?": "Je vaste moment komt eraan: {e} {n} is open, op {w} min van hier. Gaan we?",
   "📍 Touche « Ma position » pour voir ce qui est autour de toi. Elle sert aussi à repérer tes habitudes (quartier et heure) pour te prévenir au bon moment : celles-ci restent sur ton téléphone.": "📍 Tik op „Mijn locatie” om te zien wat er bij jou in de buurt is. Hij helpt ook je gewoontes (buurt en tijd) te herkennen zodat we je op het juiste moment een seintje geven: die blijven op je telefoon.",
   "Aucune notification. Tes habitudes ne sont plus notées.": "Geen meldingen. Je gewoontes worden niet meer bijgehouden.",

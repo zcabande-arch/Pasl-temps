@@ -54,6 +54,10 @@ function openStore(file){
     pushState(endpoint){ return q.stateGet.get(endpoint) || {seen: 0, day: ""}; },
     pushSeen(endpoint, at){ q.stateSeen.run(endpoint, at); },
     pushDay(endpoint, day){ q.stateDay.run(endpoint, day); },
+    // Mesure d'audience (totaux par jour)
+    statAdd(day, ev, dim){ q.statAdd.run(day, ev, dim); },
+    statRange(from){ return q.statRange.all(from); },
+    statPurge(before){ q.statPurge.run(before); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

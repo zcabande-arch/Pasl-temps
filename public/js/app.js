@@ -328,6 +328,7 @@ async function search(){
   if(searchCtl) searchCtl.abort();
   const groups = groupsNow();
   if(!pos){ renderResults(); return; }
+  stat("search", M);
   if(noDetour()){ renderResults(); return; }
   if(destMode() && window.ROUTES) ROUTES.fill(SET.travel || "walk", pos, [destPt()]).then(a => { if(a && my === runId) search(); }).catch(() => {});
   const need = Object.fromEntries(groups.map(g => [g.l, Math.round(needFor(g.stay))]));
@@ -1144,6 +1145,19 @@ function applyTheme(){
   const meta = document.querySelector('meta[name="theme-color"]'); if(meta) meta.content = vals[0];
 }
 function saveSet(){ try{ localStorage.setItem(SET_KEY, JSON.stringify(SET)); }catch(e){} scheduleBackup(); }
+// ---------- Mesure d'audience (anonyme, sans cookie, refusable dans les réglages) ----------
+// On compte seulement : ouvertures (1 par jour et par appareil), recherches, « Je pars » et sorties terminées.
+const statsOn = () => SET.stats !== "off" && navigator.doNotTrack !== "1" && window.PLT && PLT.stat;
+const STAT_SEEN = new Map();   // pas deux fois la même recherche en 10 min
+function stat(ev, dim){
+  if(!statsOn()) return;
+  if(ev === "open"){
+    const d = new Date().toISOString().slice(0, 10);
+    try{ if(localStorage.getItem("pasltemps.statday") === d) return; localStorage.setItem("pasltemps.statday", d); }catch(e){ return; }
+  }
+  if(ev === "search"){ const k = dim + "|" + T, t = STAT_SEEN.get(k); if(t && Date.now() - t < 600e3) return; STAT_SEEN.set(k, Date.now()); }
+  PLT.stat(ev, dim);
+}
 function renderSettings(){
   const dark = document.documentElement.getAttribute("data-theme") === "dark";
   $("swatches").innerHTML = Object.entries(THEMES).map(([k,t]) => {
@@ -1159,6 +1173,7 @@ function renderSettings(){
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
   renderNotifSet();
+  document.querySelectorAll("#statsSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.stats === "off" ? "off" : "on"))));
 }
 // Notifications : interrupteur, état, et effacement des habitudes (gardées sur l'appareil)
 function renderNotifSet(){
@@ -1178,6 +1193,7 @@ $("notifSeg").addEventListener("click", async e => {
   else if(pushReady()) await enablePush();
   renderNotifSet();
 });
+$("statsSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.stats = b.dataset.v; saveSet(); renderSettings(); });
 $("habitClear").addEventListener("click", async () => {
   if(!confirm(tx("Effacer les habitudes notées sur ce téléphone (quartiers et heures) ?"))) return;
   if(window.NOTIF) await NOTIF.clear();
@@ -1904,6 +1920,7 @@ let TIMER = null, timerTick = null, vibrated = false;
 try{ TIMER = JSON.parse(localStorage.getItem("pasltemps.timer") || "null"); }catch(e){}
 function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.stringify(TIMER)) : localStorage.removeItem("pasltemps.timer"); }catch(e){} }
 function startTimer(p, h, total){
+  stat("go", M);
   TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
   // mode arrivée : on repart du lieu vers l'arrivée (et non vers le point de départ), pour y être à l'heure
   if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT});
@@ -2264,7 +2281,7 @@ function logVisit(p){
   syncDerived();
   return e;
 }
-function patch(id, p){ const e = HIST.find(h => h.id === id); if(!e) return; Object.assign(e, p); renderHistory(); renderResults(); write(id, () => store.set(id, HIST.find(h => h.id === id))); syncDerived(); }
+function patch(id, p){ const e = HIST.find(h => h.id === id); if(!e) return; if(p.done && !e.done) stat("done", e.mood || ""); Object.assign(e, p); renderHistory(); renderResults(); write(id, () => store.set(id, HIST.find(h => h.id === id))); syncDerived(); }
 function removeEntry(id){ GONE.add(id); saveGone(); RETRY.delete(id); HIST = HIST.filter(h => h.id !== id); renderHistory(); renderResults(); write(id, () => store.remove(id)); syncDerived(); }
 function whenTxt(t){
   const d = new Date(t), now = new Date(), day = x => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
@@ -2318,6 +2335,7 @@ if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECEN
 HIST = lsLoad().filter(h => !GONE.has(h.id));
 renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();
+stat("open");
 
 // Hors connexion
 function renderOnline(){ $("offline").hidden = navigator.onLine !== false; }
