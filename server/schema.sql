@@ -108,3 +108,13 @@ CREATE TABLE IF NOT EXISTS stats (
   n   INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (day, ev, dim)
 );
+-- Journal de l'espace admin : qui a fait quoi, et quand (masquer, rétablir, bannir, annonce)
+CREATE TABLE IF NOT EXISTS admin_log (
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  at     INTEGER NOT NULL,
+  who    TEXT NOT NULL,
+  action TEXT NOT NULL,
+  target TEXT NOT NULL DEFAULT '',
+  detail TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS admin_log_at ON admin_log(at);

@@ -41,6 +41,7 @@ function readBody(req){
 function createServer(store, opts = {}){
   const api = createApi(store, {
     adminToken: opts.adminToken ?? process.env.ADMIN_TOKEN,
+    adminEmail: opts.adminEmail ?? process.env.ADMIN_EMAIL, adminCodeHash: opts.adminCodeHash ?? process.env.ADMIN_CODE_HASH,
     reportThreshold: +process.env.REPORT_THRESHOLD || 3,
     rateLimit: opts.rateLimit,
     // E-mails de connexion : MAIL_WEBHOOK_URL + MAIL_WEBHOOK_KEY (Gmail) ou BREVO_API_KEY ; APP_ORIGINS = adresses de l'appli

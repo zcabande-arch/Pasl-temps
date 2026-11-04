@@ -58,6 +58,9 @@ function openStore(file){
     statAdd(day, ev, dim){ q.statAdd.run(day, ev, dim); },
     statRange(from){ return q.statRange.all(from); },
     statPurge(before){ q.statPurge.run(before); },
+    // Journal de l'espace admin
+    logAdd(who, action, target, detail){ q.logAdd.run(Date.now(), who, action, target || "", detail || ""); },
+    logList(limit){ return q.logList.all(limit); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },
