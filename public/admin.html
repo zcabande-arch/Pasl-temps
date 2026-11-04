@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>Modération · Fissa Fissa</title>
+<title>Administration · Fissa Fissa</title>
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <style>
 :root{--bg:#F4ECDF;--card:#FBF7F0;--ink:#141210;--soft:#6E655A;--acc:#E60A00;--line:#DDD2C1}
@@ -25,13 +25,50 @@ button.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5p
 .tag{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:1px 8px;border:1.5px solid var(--ink)}
 .tag.h{background:var(--ink);color:var(--bg)}
 #msg{color:var(--soft);font-size:14px}
+h2{font-size:19px;margin:28px 0 8px}
+.per{display:flex;gap:6px;margin-bottom:12px}
+.per button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.per button{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;padding:10px 12px}
+.kpi b{display:block;font-size:26px;line-height:1.1}
+.kpi span{font-size:13px;color:var(--soft)}
+.kpi small{display:block;font-size:12px;color:var(--soft);margin-top:2px}
+.card{background:var(--card);border:1.5px solid var(--ink);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--soft);margin-bottom:8px}
+.leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.days{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.day{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:center}
+.day .d{color:var(--soft);font-variant-numeric:tabular-nums}
+.bars{display:flex;flex-direction:column;gap:2px}
+.bars i{display:block;height:5px;border-radius:3px;min-width:1px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
+.tbl td{padding:4px 0;border-bottom:1px solid var(--line)}
+.tbl td.n{text-align:right;font-variant-numeric:tabular-nums;width:70px}
+.c-open{background:#8A7F72}.c-search{background:#2F6FDE}.c-go{background:#E60A00}.c-done{background:#2E9E5B}
 </style>
 </head>
 <body>
 <main>
-  <h1>Modération</h1>
+  <h1>Administration</h1>
+  <p class="lead" id="who">Connecte-toi d'abord dans l'appli avec ton adresse administrateur, puis entre ton code personnel.</p>
+  <form id="f"><input id="tok" type="password" placeholder="Ton code personnel" autocomplete="current-password"><button>Ouvrir</button></form>
+  <section id="aud" hidden>
+    <h2>Audience</h2>
+    <p class="lead">Totaux anonymes par jour (sans cookie ni identifiant). « Ouvertures » = appareils différents par jour, additionnés sur la période.</p>
+    <div class="per" id="per"><button data-d="7">7 jours</button><button data-d="30" aria-pressed="true">30 jours</button><button data-d="90">90 jours</button><button data-d="365">1 an</button></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card"><div class="leg"><span><i class="c-open"></i>Ouvertures</span><span><i class="c-search"></i>Recherches</span><span><i class="c-go"></i>« Je pars »</span><span><i class="c-done"></i>Sorties terminées</span></div><div class="days" id="days"></div></div>
+    <div class="card"><b>Par envie</b><table class="tbl" id="byMood"></table></div>
+    <p id="smsg" class="lead"></p>
+  </section>
+  <section id="logBox" hidden>
+    <h2>Journal</h2>
+    <p class="lead">Les 200 dernières actions de l'espace admin : qui, quoi, quand.</p>
+    <div class="card"><table class="tbl" id="logT"></table></div>
+  </section>
+  <h2>Modération</h2>
   <p class="lead">Les contenus signalés. Au-delà du seuil, ils sont masqués automatiquement : vous pouvez les rétablir, les masquer vous-même ou bannir l'auteur.</p>
-  <form id="f"><input id="tok" type="password" placeholder="Code de modération (ADMIN_TOKEN)" autocomplete="off"><button>Voir les signalements</button></form>
   <p id="msg"></p>
   <div id="list"></div>
 </main>
@@ -42,9 +79,13 @@ const $ = id => document.getElementById(id);
 const REASONS = {spam:"Spam, pub", insulte:"Insultant", inapproprie:"Inapproprié", faux:"Faux lieu", autre:"Autre"};
 let tok = ""; try{ tok = sessionStorage.getItem("pasltemps.admin") || ""; }catch(e){}
 $("tok").value = tok;
+// Profil administrateur : la session de l'appli (même site, donc même stockage) + le code personnel.
+// (Tant que le profil n'est pas configuré sur le serveur, le même champ sert d'ancien code partagé.)
+let session = null; try{ session = JSON.parse(localStorage.getItem("pasltemps.auth") || "null"); }catch(e){}
 async function api(path, body){
-  const r = await fetch(BASE + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Token": tok, "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
-  if(r.status === 403) throw new Error("Code de modération incorrect.");
+  const r = await fetch(BASE + path, {method: body ? "POST" : "GET", headers:{"X-Admin-Code": tok, "X-Admin-Token": tok,
+    ...(session && session.token ? {"Authorization": "Bearer " + session.token} : {}), "Content-Type":"application/json"}, body: body && JSON.stringify(body)});
+  if(r.status === 403) throw new Error(session && session.email ? "Accès refusé : code incorrect, ou ce compte (" + session.email + ") n'est pas administrateur. Après 10 essais ratés, attends une heure." : "Accès refusé : connecte-toi d'abord dans l'appli avec ton adresse administrateur, puis entre ton code.");
   if(!r.ok) throw new Error("Le serveur ne répond pas.");
   return r.json();
 }
@@ -66,15 +107,59 @@ async function load(){
       el.querySelector(".acts").onclick = async e => {
         const a = e.target.closest("button"); if(!a) return;
         if(a.dataset.a === "ban" && !confirm(`Bannir ${r.author || "cette personne"} ? Son profil et tous ses posts seront supprimés, et elle ne pourra plus publier.`)) return;
-        try{ await api("/api/admin/" + a.dataset.a, a.dataset.a === "ban" ? {uid:r.owner} : {target:r.target}); load(); }
+        try{ await api("/api/admin/" + a.dataset.a, a.dataset.a === "ban" ? {uid:r.owner} : {target:r.target}); load(); loadWho(); }
         catch(err){ $("msg").textContent = err.message; }
       };
       $("list").appendChild(el);
     });
   }catch(err){ $("msg").textContent = err.message; $("list").innerHTML = ""; }
 }
-$("f").onsubmit = e => { e.preventDefault(); tok = $("tok").value.trim(); try{ sessionStorage.setItem("pasltemps.admin", tok); }catch(_){} load(); };
-if(tok) load();
+// ---------- Audience ----------
+const MOODS = {manger:"Manger", boire:"Boire un verre", air:"Prendre l'air", courses:"Courses", shopping:"Shopping", culture:"Culture", poser:"Au calme", bouger:"Bouger", artisans:"Artisans"};
+const EVS = ["open", "search", "go", "done"];
+let days = 30;
+const fmt = n => n.toLocaleString("fr-FR"), pct = (a, b) => b ? Math.round(a / b * 100) + " %" : "–";
+async function loadStats(){
+  $("smsg").textContent = "Chargement…";
+  try{
+    const r = await api("/api/admin/stats?days=" + days);
+    $("aud").hidden = false; $("smsg").textContent = r.rows.length ? "" : "Aucune donnée pour cette période.";
+    const list = [];
+    for(let i = days - 1; i >= 0; i--) list.push(new Date(Date.now() - i * 864e5).toISOString().slice(0, 10));
+    const per = Object.fromEntries(list.map(d => [d, {open:0, search:0, go:0, done:0}])), tot = {open:0, search:0, go:0, done:0}, mood = {};
+    r.rows.forEach(x => {
+      if(per[x.day] && x.ev in per[x.day]) per[x.day][x.ev] += x.n;
+      if(x.ev in tot) tot[x.ev] += x.n;
+      if(x.dim && (x.ev === "search" || x.ev === "go")){ mood[x.dim] = mood[x.dim] || {search:0, go:0}; mood[x.dim][x.ev] += x.n; }
+    });
+    $("kpis").innerHTML = [
+      ["open", "Ouvertures", "≈ " + fmt(Math.round(tot.open / days)) + " par jour"],
+      ["search", "Recherches", (tot.open ? (tot.search / tot.open).toFixed(1).replace(".", ",") : "–") + " par ouverture"],
+      ["go", "« Je pars »", pct(tot.go, tot.search) + " des recherches"],
+      ["done", "Sorties terminées", pct(tot.done, tot.go) + " des « Je pars »"]
+    ].map(([k, l, s]) => `<div class="kpi"><b>${fmt(tot[k])}</b><span>${l}</span><small>${s}</small></div>`).join("");
+    const max = Math.max(1, ...list.map(d => Math.max(...EVS.map(e => per[d][e]))));
+    $("days").innerHTML = list.slice().reverse().filter((d, i) => days <= 90 || i < 90).map(d => `<div class="day" title="${d} · ${EVS.map(e => e + " " + per[d][e]).join(" · ")}"><span class="d">${d.slice(8)}/${d.slice(5, 7)}</span><span class="bars">${EVS.map(e => `<i class="c-${e}" style="width:${(per[d][e] / max * 100).toFixed(1)}%"></i>`).join("")}</span></div>`).join("");
+    const rows = Object.entries(mood).sort((a, b) => b[1].search - a[1].search);
+    $("byMood").innerHTML = `<tr><td></td><td class="n">Recherches</td><td class="n">« Je pars »</td></tr>` + rows.map(([k, v]) => `<tr><td>${MOODS[k] || k}</td><td class="n">${fmt(v.search)}</td><td class="n">${fmt(v.go)}</td></tr>`).join("");
+  }catch(err){ $("smsg").textContent = err.message; }
+}
+$("per").onclick = e => { const b = e.target.closest("button"); if(!b) return; days = +b.dataset.d; $("per").querySelectorAll("button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); loadStats(); };
+// ---------- Qui est connecté, et journal ----------
+const ACT = {masquer: "a masqué", "rétablir": "a rétabli", bannir: "a banni", annonce: "a envoyé l'annonce"};
+async function loadWho(){
+  try{
+    const r = await api("/api/admin/check");
+    $("who").textContent = r.personal ? "✓ Connecté·e en administrateur : " + r.who : "Mode transitoire : ancien code partagé (configure ton profil administrateur, voir le README).";
+    const {log} = await api("/api/admin/log");
+    $("logBox").hidden = false;
+    $("logT").innerHTML = log.length ? log.map(x => `<tr><td>${new Date(x.at).toLocaleString("fr-FR")}</td><td><b></b> ${ACT[x.action] || x.action} <code></code> <small></small></td></tr>`).join("") : "<tr><td>Rien pour l'instant.</td></tr>";
+    $("logT").querySelectorAll("tr").forEach((tr, i) => { const x = log[i]; if(!x) return; tr.querySelector("b").textContent = x.who; tr.querySelector("code").textContent = x.target; tr.querySelector("small").textContent = x.detail ? "— " + x.detail : ""; });
+  }catch(err){ $("who").textContent = err.message; $("logBox").hidden = true; }
+}
+const openAll = () => { loadWho(); load(); loadStats(); };
+$("f").onsubmit = e => { e.preventDefault(); tok = $("tok").value.trim(); try{ sessionStorage.setItem("pasltemps.admin", tok); }catch(_){} openAll(); };
+if(tok) openAll();
 </script>
 </body>
 </html>
