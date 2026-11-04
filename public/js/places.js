@@ -119,16 +119,25 @@
     return tileCache.get(key);
   }
   // → mêmes résultats que la recherche Overpass, ou null si on est hors de la zone couverte par les tuiles
-  async function nearbyFromTiles(pos, groups, limit){
+  // dest (facultatif) : arrivée ailleurs ; les groupes portent alors `span` (somme maximale des distances
+  // pos → lieu → dest, l'ellipse) au lieu de `radius`
+  const reachOf = (pos, dest, p) => dest ? meters(pos, p) + meters(p, dest) : meters(pos, p);
+  const limitOf = (g, dest) => dest ? g.span : g.radius;
+  async function nearbyFromTiles(pos, groups, limit, dest){
     const idx = await tileIndex();
     if(!idx || !idx.cell) return null;
     const [aLat, aLng, bLat, bLng] = idx.bbox, m = 0.05;
     if(pos.lat < aLat - m || pos.lat > bLat + m || pos.lng < aLng - m || pos.lng > bLng + m) return null;
-    const maxR = Math.max(...groups.map(g => g.radius));
-    const dLat = maxR / 111320, dLng = maxR / (111320 * Math.cos(rad(pos.lat))), c = idx.cell;
-    const keys = [];
-    for(let i = Math.floor((pos.lat - dLat) / c); i <= Math.floor((pos.lat + dLat) / c); i++)
-      for(let j = Math.floor((pos.lng - dLng) / c); j <= Math.floor((pos.lng + dLng) / c); j++) keys.push(i + "_" + j);
+    const c = idx.cell, keys = [];
+    let box;
+    if(dest){ box = TRIP.ellipseBox(pos, dest, Math.max(...groups.map(g => g.span))); }   // toutes les cases sous l'ellipse
+    else{
+      const maxR = Math.max(...groups.map(g => g.radius));
+      const dLat = maxR / 111320, dLng = maxR / (111320 * Math.cos(rad(pos.lat)));
+      box = {minLat: pos.lat - dLat, maxLat: pos.lat + dLat, minLng: pos.lng - dLng, maxLng: pos.lng + dLng};
+    }
+    for(let i = Math.floor(box.minLat / c); i <= Math.floor(box.maxLat / c); i++)
+      for(let j = Math.floor(box.minLng / c); j <= Math.floor(box.maxLng / c); j++) keys.push(i + "_" + j);
     const files = await Promise.all(keys.map(tile));
     const rows = files.flatMap(f => f || []);
     // Aucune donnée ni sur la case où l'on est, ni autour : zone non couverte (ex. juste après la frontière)
@@ -140,16 +149,16 @@
     for(const r of rows){
       const [lat, lng, sel, name, addr, oh, web, phone, cuisine, wc, id] = r;
       const sels = (Array.isArray(sel) ? sel : [sel]).map(i => idx.sels[i]);
-      let dist = -1;
+      let dist = -1, reach = -1;
       groups.forEach((g, gi) => {
         if(!sels.some(x => want[gi].has(x))) return;
-        if(dist < 0) dist = meters(pos, {lat, lng});
-        if(dist > g.radius * 1.05) return;
+        if(dist < 0){ dist = meters(pos, {lat, lng}); reach = reachOf(pos, dest, {lat, lng}); }
+        if(reach > limitOf(g, dest) * 1.05) return;
         out[g.l].push({id: "osm:" + id, name, cat: cuisineFr(cuisine), addr: addr || "", phone: phone || "", url: fixUrl(web),
-          hours: hoursFr(oh), oh: oh || "", wheelchair: wc === 1, lat, lng, dist});
+          hours: hoursFr(oh), oh: oh || "", wheelchair: wc === 1, lat, lng, dist, reach});
       });
     }
-    Object.keys(out).forEach(k => { out[k].sort((a, b) => a.dist - b.dist); out[k] = out[k].slice(0, limit || 12); });
+    Object.keys(out).forEach(k => { out[k].sort((a, b) => a.reach - b.reach); out[k] = out[k].slice(0, limit || 12); });
     return out;
   }
 
@@ -191,7 +200,7 @@
   async function nearby(pos, groups, opts){
     opts = opts || {};
     let out = null;
-    try{ out = await nearbyFromTiles(pos, groups, 6000); }
+    try{ out = await nearbyFromTiles(pos, groups, 6000, opts.dest); }
     catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
     if(!out) out = await nearbyOverpass(pos, groups, {...opts, limit: 600});
     else{
@@ -214,13 +223,15 @@
     return out;
   }
   async function nearbyOverpass(pos, groups, opts){
-    const around = r => `(around:${Math.round(r)},${pos.lat.toFixed(5)},${pos.lng.toFixed(5)})`;
+    // arrivée ailleurs : autour du segment pos → dest (rayon = demi-petit axe de l'ellipse, qui la contient toute)
+    const dest = opts.dest, ll = p => p.lat.toFixed(5) + "," + p.lng.toFixed(5);
+    const around = r => dest ? `(around:${Math.round(TRIP.ellipseBox(pos, dest, r).B)},${ll(pos)},${ll(dest)})` : `(around:${Math.round(r)},${ll(pos)})`;
     const parts = [];
     // Les « relations » (grands parcs…) sont lentes à calculer : seulement pour les espaces verts,
     // et jamais en recherche allégée (opts.lite).
     groups.forEach(g => g.osm.forEach(sel => {
       const [k, v] = pair(sel), type = !opts.lite && k === "leisure" ? "nwr" : "nw";
-      parts.push(`${type}["${k}"="${v}"]["name"]${around(g.radius)};`);
+      parts.push(`${type}["${k}"="${v}"]["name"]${around(limitOf(g, dest))};`);
     }));
     const q = `[out:json][timeout:25];(${parts.join("")});out center tags 400;`;
     const data = await overpass(q, opts.signal, opts.quick);
@@ -233,19 +244,19 @@
       if(!isFinite(lat) || !isFinite(lng) || !t.name) return;
       if(t.access === "private" || t.disused || t["disused:shop"]) return;
       const id = "osm:" + el.type[0] + el.id;
-      const dist = meters(pos, {lat, lng});
+      const dist = meters(pos, {lat, lng}), reach = reachOf(pos, dest, {lat, lng});
       groups.forEach(g => {
-        if(dist > g.radius * 1.05 || !g.osm.some(s => matches(t, s))) return;
+        if(reach > limitOf(g, dest) * 1.05 || !g.osm.some(s => matches(t, s))) return;
         const key = g.l + "|" + id; if(seen.has(key)) return; seen.add(key);
         out[g.l].push({
           id, name: t.name, cat: cuisineFr(t.cuisine), addr: addrOf(t),
           phone: t.phone || t["contact:phone"] || "", url: fixUrl(t.website || t["contact:website"] || t.url),
           hours: hoursFr(t.opening_hours), oh: t.opening_hours || "", wheelchair: t.wheelchair === "yes",
-          lat, lng, dist
+          lat, lng, dist, reach
         });
       });
     });
-    Object.keys(out).forEach(k => { out[k].sort((a, b) => a.dist - b.dist); out[k] = out[k].slice(0, opts.limit || 12); });
+    Object.keys(out).forEach(k => { out[k].sort((a, b) => a.reach - b.reach); out[k] = out[k].slice(0, opts.limit || 12); });
     return out;
   }
 

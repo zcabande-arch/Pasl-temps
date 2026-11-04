@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="94">
+<meta name="app-version" content="95">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -80,6 +80,19 @@
     <span class="atbox"><input type="time" id="atIn" step="300"><button class="link" id="atClear" hidden aria-label="Revenir au choix en minutes">✕</button></span>
   </div>
   <p class="msg" id="atMsg"></p>
+  <div class="backby arrby" id="arrBy">
+    <button class="link lbl" id="arrOpen" type="button">📍 Je dois être à…</button>
+    <span class="atbox"><input type="time" id="arrAt" step="300" aria-label="Heure d'arrivée"><button class="link" id="arrClear" hidden aria-label="Ne plus finir ailleurs">✕</button></span>
+  </div>
+  <div class="where arrbox" id="arrBox" hidden>
+    <form id="arrForm" autocomplete="off">
+      <input id="arrInput" type="text" placeholder="Adresse d'arrivée (maison, client, gare…)" aria-label="Adresse d'arrivée" enterkeyhint="search">
+      <button class="go" type="submit">OK</button>
+    </form>
+    <div class="wheresel" id="arrSel" hidden></div>
+    <div class="row" id="arrRow"></div>
+    <p class="msg" id="arrMsg"></p>
+  </div>
   <div class="seg travel" id="travelSeg" role="group" aria-label="Moyen de transport"></div>
 
   <div class="where" id="where">
@@ -155,6 +168,11 @@
       <div class="pprefs" id="pPrefs" role="group" aria-label="Endroits préférés"></div>
     </section>
     <section class="pcard">
+      <h2>Mes adresses</h2>
+      <p class="phelp">Pour « Je dois être à… » en un geste. Elles restent sur ton appareil.</p>
+      <div class="paddr" id="pAddr"></div>
+    </section>
+    <section class="pcard">
       <h2 id="recTitle">Code de récupération</h2>
       <div class="rec" id="rec"></div>
     </section>
@@ -226,6 +244,7 @@
 <script src="config.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
+<script src="js/trip.js"></script>
 <script src="js/places.js"></script>
 <script src="js/hours.js"></script>
 <script src="js/routes.js"></script>

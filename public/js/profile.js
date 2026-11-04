@@ -27,8 +27,17 @@
     document.querySelectorAll("#pGender button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === PROFILE.gender)));
     $("pPrefs").innerHTML = PREF_TYPES.map(t =>
       `<button data-k="${t.k}" aria-pressed="${PROFILE.prefs.includes(t.k)}">${ICONS.ico(t.ico, 22)}<span>${esc(t.l)}</span></button>`).join("");
+    // Maison / Travail (pour « Je dois être à… »)
+    const ads = [["home", "🏠", tx("Maison")], ["work", "💼", tx("Travail")]];
+    $("pAddr").innerHTML = ads.map(([k, e, l]) => PROFILE[k]
+      ? `<div class="ad"><b>${e} ${l}</b><span>${esc(PROFILE[k].label || "")}</span><button class="link" data-k="${k}" aria-label="${tx("Retirer")}">✕</button></div>`
+      : `<div class="ad"><b>${e} ${l}</b><span class="phelp">${tx("Pas encore enregistrée : choisis une adresse dans « Je dois être à… ».")}</span></div>`).join("");
     renderRec();
   };
+  $("pAddr").addEventListener("click", e => {
+    const b = e.target.closest("button[data-k]"); if(!b) return;
+    PROFILE[b.dataset.k] = null; saveProfile(); renderProfile(); if(typeof renderArrive === "function") renderArrive();
+  });
 
   $("pName").addEventListener("input", () => { PROFILE.name = $("pName").value.trim().slice(0, 30); saveProfile(); hello(); saved(); });
   $("pAge").addEventListener("input", () => {
