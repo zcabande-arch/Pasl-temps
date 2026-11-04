@@ -12,12 +12,16 @@ function ask(question){
     process.stdout.write(question);
     if(!stdin.isTTY){ let s = ""; stdin.on("data", d => s += d).on("end", () => ok(s.split("\n")[0])); return; }
     stdin.setRawMode(true); stdin.resume(); stdin.setEncoding("utf8");
-    let s = "";
-    const on = c => {
-      if(c === "\r" || c === "\n"){ stdin.setRawMode(false); stdin.pause(); stdin.off("data", on); process.stdout.write("\n"); ok(s); }
-      else if(c === "\u0003"){ process.stdout.write("\n"); process.exit(1); }
-      else if(c === "\u007f"){ s = s.slice(0, -1); }
-      else s += c;
+    let s = "", done = false;
+    // les touches peuvent arriver une par une ou en paquet (copier-coller, terminal intégré) : on lit caractère par caractère
+    const on = chunk => {
+      for(const c of String(chunk)){
+        if(done) return;
+        if(c === "\r" || c === "\n"){ done = true; stdin.setRawMode(false); stdin.pause(); stdin.off("data", on); process.stdout.write("\n"); ok(s); }
+        else if(c === "\u0003"){ process.stdout.write("\n"); process.exit(1); }
+        else if(c === "\u007f" || c === "\b"){ if(s){ s = s.slice(0, -1); process.stdout.write("\b \b"); } }
+        else if(c >= " "){ s += c; process.stdout.write("•"); }     // un point par caractère : on voit qu'on tape
+      }
     };
     stdin.on("data", on);
   });
