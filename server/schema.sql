@@ -99,3 +99,12 @@ CREATE TABLE IF NOT EXISTS push_state (
   seen     INTEGER NOT NULL DEFAULT 0,
   day      TEXT NOT NULL DEFAULT ''
 );
+-- Mesure d'audience maison (exemptée de consentement par la CNIL) : seulement des totaux par jour,
+-- sans identifiant, sans adresse IP, gardés 25 mois au plus. ev : open, search, go, done ; dim : envie ou moyen de transport.
+CREATE TABLE IF NOT EXISTS stats (
+  day TEXT NOT NULL,
+  ev  TEXT NOT NULL,
+  dim TEXT NOT NULL DEFAULT '',
+  n   INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (day, ev, dim)
+);

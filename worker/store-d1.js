@@ -47,6 +47,9 @@ function d1Store(db){
     async pushState(endpoint){ return (await first("stateGet", endpoint)) || {seen: 0, day: ""}; },
     async pushSeen(endpoint, at){ await run("stateSeen", endpoint, at); },
     async pushDay(endpoint, day){ await run("stateDay", endpoint, day); },
+    async statAdd(day, ev, dim){ await run("statAdd", day, ev, dim); },
+    async statRange(from){ return all("statRange", from); },
+    async statPurge(before){ await run("statPurge", before); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;
