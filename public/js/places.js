@@ -23,7 +23,14 @@
 
   // "shop=bakery" → ["shop","bakery"]
   const pair = s => s.split("=");
-  const matches = (tags, sel) => { const [k, v] = pair(sel); return tags[k] === v; };
+  // Gares de train seulement (mêmes règles que scripts/build-places.js) : pas le métro ni le tram, sauf avec des trains
+  const NOT_TRAIN = /^(subway|light_rail|monorail|tram|funicular)$/;
+  const matches = (tags, sel) => {
+    const [k, v] = pair(sel); if(tags[k] !== v) return false;
+    if(sel === "railway=station") return !NOT_TRAIN.test(tags.station || "") || tags.train === "yes";
+    if(sel === "public_transport=station") return tags.train === "yes";
+    return true;
+  };
 
   function fixUrl(u){
     if(!u) return ""; u = String(u).trim().split(";")[0];
@@ -209,8 +216,14 @@
       const idx = await tileIndex().catch(() => null), known = new Set((idx && idx.sels) || []);
       const fresh = groups.filter(g => !g.osm.some(s => known.has(s)));
       if(fresh.length){
-        try{ Object.assign(out, await nearbyOverpass(pos, fresh, {...opts, limit: 600})); }
-        catch(e){ if(opts.signal && opts.signal.aborted) throw {code:"aborted"}; }
+        // au plus 15 s : les autres rubriques (déjà trouvées dans les tuiles) ne doivent pas attendre un service surchargé
+        const late = new Promise((_, ko) => setTimeout(() => ko({code:"server_unavailable"}), 15000));
+        try{ Object.assign(out, await Promise.race([nearbyOverpass(pos, fresh, {...opts, limit: 600, quick: true}), late])); }
+        catch(e){
+          if(opts.signal && opts.signal.aborted) throw {code:"aborted"};
+          // échec : on le dit (rubrique en erreur) plutôt que d'afficher « rien trouvé »
+          Object.defineProperty(out, "__failed", {value: fresh.map(g => g.l), enumerable: false});
+        }
       }
     }
     // Un même lieu est parfois saisi deux fois dans OpenStreetMap (point + contour) : on n'en garde qu'un

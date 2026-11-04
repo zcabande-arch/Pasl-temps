@@ -25,8 +25,14 @@ const SELS = [
   // Artisans (ajoutés à la fin : l'ordre des étiquettes déjà publiées ne doit pas changer)
   "shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith","shop=tailor","craft=tailor","craft=dressmaker",
   "shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair",
-  "shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres"
+  "shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres",
+  // Mode gare : gares de train et consignes à bagages
+  "railway=station","public_transport=station","amenity=luggage_locker","amenity=left_luggage"
 ];
+// Gares de TRAIN seulement : pas les stations de métro ou de tram (sauf si elles ont aussi des trains)
+const NOT_TRAIN = /^(subway|light_rail|monorail|tram|funicular)$/;
+const trainOk = (sel, t) => sel === "railway=station" ? (!NOT_TRAIN.test(t.station || "") || t.train === "yes")
+  : sel === "public_transport=station" ? t.train === "yes" : true;
 const SEL_INDEX = new Map(SELS.map((s, i) => [s, i]));
 const KEYS = [...new Set(SELS.map(s => s.split("=")[0]))];
 
@@ -70,7 +76,7 @@ async function build(inputs, outDir){
     const t = f.properties || {};
     if(!t.name || t.access === "private" || t.disused || t["disused:shop"] || t["disused:amenity"]) continue;
     const sels = [];
-    for(const k of KEYS){ const i = SEL_INDEX.get(k + "=" + t[k]); if(i !== undefined) sels.push(i); }
+    for(const k of KEYS){ const s = k + "=" + t[k], i = SEL_INDEX.get(s); if(i !== undefined && trainOk(s, t)) sels.push(i); }
     if(!sels.length) continue;
     const c = center(f.geometry);
     if(!c || !isFinite(c[0]) || !isFinite(c[1])) continue;
