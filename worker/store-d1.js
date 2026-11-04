@@ -49,6 +49,11 @@ function d1Store(db){
     async pushDay(endpoint, day){ await run("stateDay", endpoint, day); },
     async voteSet(place, uid, lvl){ lvl ? await run("voteSet", place, uid, lvl, Date.now()) : await run("voteDel", place, uid); },
     async votesFor(place){ return (await all("votesFor", place)).map(r => r.lvl); },
+    async statAdd(day, ev, dim){ await run("statAdd", day, ev, dim); },
+    async statRange(from){ return all("statRange", from); },
+    async statPurge(before){ await run("statPurge", before); },
+    async logAdd(who, action, target, detail){ await run("logAdd", Date.now(), who, action, target || "", detail || ""); },
+    async logList(limit){ return all("logList", limit); },
     async report(target, reporter, reason){
       await run("report", target, reporter, reason, Date.now());
       return (await first("reportCount", target)).n;

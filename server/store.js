@@ -57,6 +57,13 @@ function openStore(file){
     // Prix de la communauté
     voteSet(place, uid, lvl){ lvl ? q.voteSet.run(place, uid, lvl, Date.now()) : q.voteDel.run(place, uid); },
     votesFor(place){ return q.votesFor.all(place).map(r => r.lvl); },
+    // Mesure d'audience (totaux par jour)
+    statAdd(day, ev, dim){ q.statAdd.run(day, ev, dim); },
+    statRange(from){ return q.statRange.all(from); },
+    statPurge(before){ q.statPurge.run(before); },
+    // Journal de l'espace admin
+    logAdd(who, action, target, detail){ q.logAdd.run(Date.now(), who, action, target || "", detail || ""); },
+    logList(limit){ return q.logList.all(limit); },
     // Modération
     report(target, reporter, reason){ q.report.run(target, reporter, reason, Date.now()); return q.reportCount.get(target).n; },
     reports(){ return q.reportList.all().map(r => ({...r, hidden: !!r.hidden})); },

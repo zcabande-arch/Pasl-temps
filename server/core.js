@@ -72,11 +72,14 @@ const fail = (status, error) => ({status, body:{error}});
 const { loginMail } = require("./mail");
 const push = require("./push");
 const { googlePrice, communityLevel } = require("./prices");
+const { checkCode } = require("./admin");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
-// Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
 // Identifiant d'un lieu (OpenStreetMap ou Google), pour les prix de la communauté
 const PLACE_ID = /^(osm:[nwr]?\d{1,15}|[A-Za-z0-9:_-]{3,80})$/;
+// Mesure d'audience : les seuls événements comptés, et la durée de conservation (25 mois, recommandation CNIL)
+const STAT_EVENTS = ["open", "search", "go", "done"], STAT_KEEP_DAYS = 760;
+// Adresses où l'appli est servie : le lien de l'e-mail ne peut ramener que vers l'une d'elles
 const DEFAULT_ORIGINS = ["https://fissafissa.app", "https://zcabande-arch.github.io"];
 
 // opts : {adminToken, reportThreshold, rateLimit, sendMail({to, subject, html, text}), appOrigins: [origines autorisées]}
@@ -86,7 +89,24 @@ function createApi(store, opts = {}){
   const threshold = opts.reportThreshold || 3;
   const admin = opts.adminToken || "";
   const limited = (key, cost, cap, refill) => opts.rateLimit === false || allow(key, cost, cap, refill);
-  const isAdmin = req => !!admin && req.header("x-admin-token") === admin;
+  // Espace admin : profil personnel (compte ADMIN_EMAIL connecté + code personnel, vérifié contre l'empreinte
+  // ADMIN_CODE_HASH) ; tant qu'il n'est pas configuré, l'ancien code partagé ADMIN_TOKEN reste accepté.
+  const ADMIN_EMAIL = String(opts.adminEmail || "").trim().toLowerCase(), personal = !!(ADMIN_EMAIL && opts.adminCodeHash);
+  const adminFails = new Map();          // adresse IP → {n, t} : 10 mauvais codes par heure au plus
+  async function adminOf(req){
+    if(!personal) return admin && req.header("x-admin-token") === admin ? {who: "code partagé"} : null;
+    const uid = await whoIs(req); if(!uid) return null;
+    const email = String((await store.accountEmail(uid)) || "").toLowerCase();
+    if(!email || email !== ADMIN_EMAIL) return null;
+    const f = adminFails.get(req.ip);
+    if(f && f.n >= 10 && Date.now() - f.t < 3600e3) return null;
+    if(!(await checkCode(req.header("x-admin-code") || "", opts.adminCodeHash))){
+      adminFails.set(req.ip, {n: (f && Date.now() - f.t < 3600e3 ? f.n : 0) + 1, t: Date.now()});
+      return null;
+    }
+    adminFails.delete(req.ip);
+    return {who: email};
+  }
   async function whoIs(req){
     const m = /^Bearer ([A-Za-z0-9_-]{20,100})$/.exec(req.header("authorization") || "");
     return m ? store.userFor(await sha(m[1])) : null;
@@ -203,12 +223,34 @@ function createApi(store, opts = {}){
 
     if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
 
+    // ---------- Mesure d'audience (anonyme, sans cookie) ----------
+    // {ev, dim} → +1 au total du jour. Rien d'autre n'est gardé : ni identifiant, ni adresse IP, ni position.
+    if(path === "/api/stats" && method === "POST"){
+      if(!limited("stats:" + req.ip, 1, 120, 120 / 3600)) return ok({ok:false});   // au-delà : ignoré sans bruit
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {}, ev = String(v.ev || ""), dim = String(v.dim || "");
+      if(!STAT_EVENTS.includes(ev) || !/^[a-z]{0,12}$/.test(dim)) return fail(400, "bad_stat");
+      const day = new Date().toISOString().slice(0, 10);
+      await store.statAdd(day, ev, dim);
+      if(Math.random() < 0.02) await store.statPurge(new Date(Date.now() - STAT_KEEP_DAYS * 864e5).toISOString().slice(0, 10));
+      return ok({ok:true});
+    }
+
     // Contenus masqués par la modération (public)
     if(path === "/api/hidden" && method === "GET") return ok({targets: await store.hidden()});
 
-    // Espace modération : réservé à qui connaît le code administrateur
+    // L'appli demande si le compte connecté est celui de l'administrateur (pour afficher « Espace admin ») — sans le code
+    if(path === "/api/admin/me" && method === "GET"){
+      const uid = await whoIs(req), email = uid ? String((await store.accountEmail(uid)) || "").toLowerCase() : "";
+      return ok({account: personal && !!email && email === ADMIN_EMAIL, personal});
+    }
+    // Espace admin : profil personnel (e-mail + code), ou ancien code partagé tant que le profil n'est pas configuré
     if(path.startsWith("/api/admin/")){
-      if(!isAdmin(req)) return fail(403, "forbidden");
+      const A = await adminOf(req);
+      if(!A) return fail(403, "forbidden");
+      if(path === "/api/admin/check" && method === "GET") return ok({ok:true, who: A.who, personal});
+      // Journal : les 200 dernières actions
+      if(path === "/api/admin/log" && method === "GET") return ok({log: await store.logList(200)});
       if(path === "/api/admin/reports" && method === "GET"){
         // Joint un aperçu du contenu signalé pour pouvoir décider
         const reports = await Promise.all((await store.reports()).map(async r => {
@@ -218,18 +260,27 @@ function createApi(store, opts = {}){
         }));
         return ok({reports, threshold});
       }
+      // Mesure d'audience : totaux par jour sur les N derniers jours
+      if(path === "/api/admin/stats" && method === "GET"){
+        const days = Math.min(400, Math.max(1, +url.searchParams.get("days") || 30));
+        return ok({days, rows: await store.statRange(new Date(Date.now() - (days - 1) * 864e5).toISOString().slice(0, 10))});
+      }
       const b = await body(req); if(b.error) return b.error;
       const target = b.value && b.value.target;
       if(path === "/api/admin/push"){
         const title = String(b.value && b.value.title || "Fissa Fissa").slice(0, 80), text = String(b.value && b.value.body || "").slice(0, 200);
         if(!text) return fail(400, "bad_request");
-        return ok(await push.broadcast(store, {title, body: text, tag: "pasltemps-annonce", url: "./"}));
+        const r = await push.broadcast(store, {title, body: text, tag: "pasltemps-annonce", url: "./"});
+        await store.logAdd(A.who, "annonce", "", text.slice(0, 120));
+        return ok(r);
       }
-      if(path === "/api/admin/hide" && TARGET.test(target || "")){ await store.hide(target, "admin"); return ok({ok:true}); }
-      if(path === "/api/admin/unhide" && TARGET.test(target || "")){ await store.unhide(target); await store.clearReports(target); return ok({ok:true}); }
+      const why = String(b.value && b.value.why || "").slice(0, 120);
+      if(path === "/api/admin/hide" && TARGET.test(target || "")){ await store.hide(target, A.who); await store.logAdd(A.who, "masquer", target, why); return ok({ok:true}); }
+      if(path === "/api/admin/unhide" && TARGET.test(target || "")){ await store.unhide(target); await store.clearReports(target); await store.logAdd(A.who, "rétablir", target, why); return ok({ok:true}); }
       if(path === "/api/admin/ban" && /^[A-Za-z0-9_-]{1,80}$/.test(b.value && b.value.uid || "")){
         const uid = b.value.uid;
-        await store.ban(uid); await store.hide("user:" + uid, "admin"); await store.del("walls/" + uid);
+        await store.ban(uid); await store.hide("user:" + uid, A.who); await store.del("walls/" + uid);
+        await store.logAdd(A.who, "bannir", "user:" + uid, why);
         return ok({ok:true});
       }
       return fail(400, "bad_request");
@@ -372,7 +423,7 @@ function createApi(store, opts = {}){
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, PUT, PATCH, DELETE, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Admin-Token",
+  "Access-Control-Allow-Headers": "Authorization, Content-Type, X-Admin-Token, X-Admin-Code",
   "Access-Control-Max-Age": "86400"
 };
 
