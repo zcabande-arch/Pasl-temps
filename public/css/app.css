@@ -129,7 +129,7 @@ h2{font-size:14px;font-weight:600;color:var(--soft);margin:0 0 10px}
 .entry strong{font-size:17px}
 .entry time{font-size:13px;color:var(--soft);white-space:nowrap}
 .entry .sub{font-size:14px;color:var(--soft);margin:2px 0 10px}
-.entry input{width:100%;font:inherit;font-size:15px;padding:9px 12px;border-radius:12px;border:0;background:var(--bg);color:var(--ink);margin-bottom:10px}
+.entry input{width:100%;font:inherit;font-size:16px;padding:9px 12px;border-radius:12px;border:0;background:var(--bg);color:var(--ink);margin-bottom:10px}
 .entry .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .entry .acts button{border:0;background:var(--accsoft);border-radius:999px;padding:7px 13px;font-size:14px;font-weight:600}
 .entry .acts button.on{background:var(--leaf);color:var(--card)}
@@ -285,7 +285,7 @@ body.timing main{padding-top:118px}
 .cm b{font-weight:700;margin-right:4px}
 .cm .rm{border:0;background:none;color:var(--soft);font-size:12px;padding:0 0 0 6px}
 .cform{display:flex;gap:6px}
-.cform input{flex:1;min-width:0;font:inherit;font-size:15px;border:0;border-radius:999px;background:var(--bg);color:var(--ink);padding:8px 12px}
+.cform input{flex:1;min-width:0;font:inherit;font-size:16px;border:0;border-radius:999px;background:var(--bg);color:var(--ink);padding:8px 12px}
 .cform button{border:0;border-radius:999px;background:var(--acc);color:var(--accink);font-weight:700;padding:0 14px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 14px}
 .stats div{background:var(--bg);border-radius:16px;padding:10px 6px;text-align:center}
@@ -1416,3 +1416,7 @@ body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;bo
 .prq .seg button{min-width:52px;padding:5px 10px;font-size:14px}
 .prq .seg button[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
 .budget{flex-wrap:wrap}
+
+/* Pas de zoom : ni double-toucher, ni zoom automatique sur les champs (iPhone : 16 px minimum) */
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+input,textarea,select{font-size:max(16px,1em)}
