@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "104";
+const APP_VERSION = "105";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -428,18 +428,23 @@ function placeEl(p){
   el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
-      ${dest
-        ? `<p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Jusqu'à {dest} {b} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay), dest:esc(destName()), b:p.back})} <b>${fmtDur(total)}</b> · ${tx("détour de {x} min", {x:p.detour})}${free?" · " + tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}):""}</p>`
-        : `<p class="legend">${tx("{e} Aller {w} min · ⏱️ Sur place {s} minimum · {e} Retour {w} min =", {e:TR().e, w:p.walk, s:fmtDur(p.stay)})} <b>${fmtDur(total)}</b>${free?" · " + tx("il te restera {d}", {d:fmtDur(free)}):""}</p>`}
-      ${p.addr?`<p>${esc(p.addr)}</p>`:""}
-      ${p.phone?`<p><a href="tel:${esc(p.phone.replace(/\s/g,""))}">${esc(p.phone)}</a></p>`:""}
-      ${p.hours?`<p class="legend">🕐 ${esc(p.hours)}</p>`:""}
+      <p class="dsum"><b>${fmtDur(total)}</b>${dest ? ` · ${tx("détour de {x} min", {x:p.detour})}` : ""}${free ? ` · <span class="free">${dest ? tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}) : tx("il te restera {d}", {d:fmtDur(free)})}</span>` : ""}</p>
+      <p class="dlegs">${dest ? tx("{e} Aller {w} min · {e} Jusqu'à {dest} {b} min", {e:TR().e, w:p.walk, dest:esc(destName()), b:p.back}) : tx("{e} Aller {w} min · {e} Retour {w} min", {e:TR().e, w:p.walk})}</p>
+      <div class="stayadj"><span>⏱️ ${tx("{s} sur place", {s:`<b>${fmtDur(p.stay)}</b>`})}${STAY_OVR.has(p.id) ? ` <small>(${tx("ajusté")})</small>` : ""}</span><button class="ghost sm" data-d="-5" ${p.stay <= 2 ? "disabled" : ""} aria-label="${tx("5 min de moins sur place")}">−5</button><button class="ghost sm" data-d="5" ${free < 5 ? "disabled" : ""} aria-label="${tx("5 min de plus sur place")}">+5</button></div>
+      ${p.open && p.open.text ? `<button class="dhrs oh-${p.open.level}" type="button" aria-expanded="false"${p.hours || hrs ? "" : " disabled"}>${esc(p.open.text)}${p.hours || hrs ? ` <span class="chev" aria-hidden="true">▾</span>` : ""}</button>` : ""}
+      ${p.hours || hrs ? `<div class="dhrsfull" hidden>${p.hours ? `<p>🕐 ${esc(p.hours)}</p>` : ""}${hrs ? `<p>🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>` : ""}</div>` : ""}
+      ${p.addr ? `<p class="daddr">${esc(p.addr)}</p>` : ""}
       ${pr?`<p class="legend prline">💶 <b>${euros(pr.lvl)}</b>${pr.g && pr.g.from != null ? ` · ${pr.g.from}${pr.g.to ? "–" + pr.g.to : "+"} ${pr.g.cur === "EUR" || !pr.g.cur ? "€" : esc(pr.g.cur)} ${tx("par personne")}` : ""} · <small>${esc(priceTag(pr))}</small></p>`:""}
       ${p.cat||p.wheelchair?`<div class="tags">${p.cat?`<span>🍽️ ${esc(p.cat.split(", ").map(c => tx(c)).join(", "))}</span>`:""}${p.wheelchair?`<span>${tx("♿ accessible")}</span>`:""}</div>`:""}
-      ${hrs?`<p class="legend">🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>`:""}
       <div class="rvs"></div>
-      <div class="stayadj"><span>⏱️ ${tx("{s} sur place", {s:`<b>${fmtDur(p.stay)}</b>`})}${STAY_OVR.has(p.id) ? ` <small>(${tx("ajusté")})</small>` : ""}</span><button class="ghost sm" data-d="-5" ${p.stay <= 2 ? "disabled" : ""} aria-label="${tx("5 min de moins sur place")}">−5</button><button class="ghost sm" data-d="5" ${free < 5 ? "disabled" : ""} aria-label="${tx("5 min de plus sur place")}">+5</button></div>
-      <div class="acts"><a class="go" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a><button class="ghost tog2 td" aria-pressed="${!!LISTS.todo[p.id]}">📌 ${tx("À tester")}</button>${p.url?`<a class="ghost" target="_blank" rel="noopener" href="${esc(p.url)}">${tx("Site web")}</a>`:""}<button class="ghost shr">${tx("Envoyer à un pote")}</button><button class="ghost rep">${tx("🚫 Signaler")}</button></div>
+      <a class="go gowide" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a>
+      <div class="iacts">
+        ${p.phone ? `<a class="ia" href="tel:${esc(p.phone.replace(/\s/g,""))}" title="${esc(p.phone)}"><span class="ii" aria-hidden="true">📞</span><span>${tx("Appeler")}</span></a>` : ""}
+        <button class="ia td" type="button" aria-pressed="${!!LISTS.todo[p.id]}"><span class="ii" aria-hidden="true">📌</span><span>${tx("À tester")}</span></button>
+        ${p.url ? `<a class="ia" target="_blank" rel="noopener" href="${esc(p.url)}"><span class="ii" aria-hidden="true">🌐</span><span>${tx("Site web")}</span></a>` : ""}
+        <button class="ia shr" type="button"><span class="ii" aria-hidden="true">↗</span><span>${tx("Envoyer")}</span></button>
+      </div>
+      <button class="rep replink" type="button">${tx("Signaler ce lieu")}</button>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open")));
@@ -453,6 +458,9 @@ function placeEl(p){
     search(); goToPlace(p.id);
   });
   el.querySelector(".rep").onclick = () => openReport(p);
+  // horaires complets au toucher sur le statut
+  const dh = el.querySelector(".dhrs"), dfull = el.querySelector(".dhrsfull");
+  if(dh && dfull) dh.onclick = () => { dfull.hidden = !dfull.hidden; dh.setAttribute("aria-expanded", String(!dfull.hidden)); };
   el.querySelector(".fvstar").onclick = e => {
     toggleList("fav", p); const on = !!LISTS.fav[p.id], b = e.currentTarget;
     b.setAttribute("aria-pressed", String(on)); b.textContent = on ? "★" : "☆";

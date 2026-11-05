@@ -1420,3 +1420,26 @@ body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;bo
 /* Pas de zoom : ni double-toucher, ni zoom automatique sur les champs (iPhone : 16 px minimum) */
 html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 input,textarea,select{font-size:max(16px,1em)}
+
+/* Carte de détail simplifiée : résumé en tête, un seul réglage du temps, statut des horaires, « Je pars » seul bouton plein */
+.det .dsum{margin:14px 0 2px;font-size:22px;line-height:1.2;font-weight:700;color:var(--ink)}
+.det .dsum b{font-weight:800}
+.det .dsum .free{color:var(--leaf)}
+.det .dlegs{margin:2px 0 0;font-size:13px;color:var(--soft)}
+.det .stayadj{margin:12px 0 4px}
+.det .stayadj .sm{min-height:44px;min-width:56px}
+.det .dhrs{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin-top:4px;padding:0;border:0;background:none;font:inherit;font-size:15px;font-weight:700;text-align:left}
+.det .dhrs[disabled]{cursor:default;opacity:1}
+.det .dhrs .chev{font-size:12px;transition:transform .2s}
+.det .dhrs[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.det .dhrs.oh-closed{color:var(--soft)}
+.det .dhrsfull p{margin:2px 0 6px;font-size:13px;color:var(--soft)}
+.det .daddr{font-size:14px;color:var(--soft)}
+.det .gowide{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin-top:16px;font-size:17px;box-sizing:border-box}
+.det .gowide::after{content:" →"}
+.det .iacts{display:flex;justify-content:space-around;gap:4px;margin-top:8px}
+.det .ia{flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:56px;min-width:44px;padding:4px 2px;border:0;background:none;color:var(--ink);text-decoration:none;font:inherit;font-size:12px;font-weight:600;border-radius:14px}
+.det .ia .ii{font-size:20px;line-height:1}
+.det .ia:active{background:var(--accsoft)}
+.det .ia[aria-pressed="true"]{color:var(--acc)}
+.det .replink{display:block;min-height:44px;margin:4px auto 0;padding:0 12px;border:0;background:none;font:inherit;font-size:13px;color:var(--soft);text-decoration:underline;text-underline-offset:3px}
