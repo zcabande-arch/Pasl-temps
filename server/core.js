@@ -242,7 +242,9 @@ function createApi(store, opts = {}){
     // L'appli demande si le compte connecté est celui de l'administrateur (pour afficher « Espace admin ») — sans le code
     if(path === "/api/admin/me" && method === "GET"){
       const uid = await whoIs(req), email = uid ? String((await store.accountEmail(uid)) || "").toLowerCase() : "";
-      return ok({account: personal && !!email && email === ADMIN_EMAIL, personal});
+      // (rien d'autre n'est dit : quelqu'un d'autre ne sait même pas qu'un espace admin est configuré)
+      const isAdmin = personal && !!email && email === ADMIN_EMAIL;
+      return ok(isAdmin ? {account: true, personal: true} : {account: false});
     }
     // Espace admin : profil personnel (e-mail + code), ou ancien code partagé tant que le profil n'est pas configuré
     if(path.startsWith("/api/admin/")){

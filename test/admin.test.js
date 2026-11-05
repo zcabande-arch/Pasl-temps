@@ -42,7 +42,7 @@ test("espace admin : il faut le bon compte ET le bon code ; l'ancien code partag
     assert.equal((await call(null, "/api/admin/check", {token: "ancien"})).status, 403);      // ancien code partagé
     // l'appli sait afficher « Espace admin » au bon compte seulement (sans le code)
     assert.deepEqual(await (await call(admin, "/api/admin/me")).json(), {account: true, personal: true});
-    assert.deepEqual(await (await call(other, "/api/admin/me")).json(), {account: false, personal: true});
+    assert.deepEqual(await (await call(other, "/api/admin/me")).json(), {account: false});
   } finally { srv.close(); }
 });
 

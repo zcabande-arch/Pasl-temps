@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "102";
+const APP_VERSION = "103";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -1313,7 +1313,6 @@ function renderSettings(){
   document.querySelectorAll("#motionSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === SET.motion)));
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.lang || "auto"))));
   renderNotifSet();
-  document.querySelectorAll("#statsSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.stats === "off" ? "off" : "on"))));
 }
 // Notifications : interrupteur, état, et effacement des habitudes (gardées sur l'appareil)
 function renderNotifSet(){
@@ -1333,7 +1332,6 @@ $("notifSeg").addEventListener("click", async e => {
   else if(pushReady()) await enablePush();
   renderNotifSet();
 });
-$("statsSeg").addEventListener("click", e => { const b = e.target.closest("button"); if(!b) return; SET.stats = b.dataset.v; saveSet(); renderSettings(); });
 $("habitClear").addEventListener("click", async () => {
   if(!confirm(tx("Effacer les habitudes notées sur ce téléphone (quartiers et heures) ?"))) return;
   if(window.NOTIF) await NOTIF.clear();
