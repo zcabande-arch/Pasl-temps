@@ -218,6 +218,7 @@
     "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Done ✓ First reminder in 3 days if you don't open the app before then.",
     "Activation impossible pour l'instant. Réessaie plus tard.": "Can't turn it on right now. Try again later.",
     "🔔": "🔔", "Active les notifications": "Turn on notifications", "Autoriser": "Allow", "Plus tard": "Later",
+    "Signaler": "Report",
     "{e} Aller {w} min · {e} Jusqu'à {dest} {b} min": "{e} There {w} min · {e} To {dest} {b} min", "{e} Aller {w} min · {e} Retour {w} min": "{e} There {w} min · {e} Back {w} min", "Appeler": "Call", "Envoyer": "Send", "Signaler ce lieu": "Report this place",
     "selon {n} personnes": "according to {n} people", "estimé": "estimated", "{n} lieux, dont {e} estimés": "{n} places, {e} of them estimated", "{n} lieux, prix confirmés": "{n} places, confirmed prices", "C'était plutôt…": "Was it rather…", "(facultatif)": "(optional)",
     "⚡ Vite fait": "⚡ Quick", "Normal": "Normal", "🌿 Tranquille": "🌿 Relaxed", "Temps sur place": "Time on site", "ajusté": "adjusted", "5 min de moins sur place": "5 min less on site", "5 min de plus sur place": "5 min more on site", "Prévu : {s} sur place · encore {m} min": "Planned: {s} on site · {m} min left",

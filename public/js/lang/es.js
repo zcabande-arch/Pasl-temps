@@ -483,6 +483,7 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Hecho ✓ Primer recordatorio en 3 días si no abres la app antes.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "No se puede activar ahora mismo. Vuelve a intentarlo más tarde.",
   "Active les notifications": "Activa las notificaciones",
+  "Signaler": "Denunciar",
   "{e} Aller {w} min · {e} Jusqu'à {dest} {b} min": "{e} Ida {w} min · {e} Hasta {dest} {b} min",
   "{e} Aller {w} min · {e} Retour {w} min": "{e} Ida {w} min · {e} Vuelta {w} min",
   "Appeler": "Llamar",

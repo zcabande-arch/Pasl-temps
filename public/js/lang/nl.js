@@ -474,6 +474,7 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Klaar ✓ Eerste herinnering over 3 dagen als je de app niet eerder opent.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Aanzetten lukt nu niet. Probeer het later opnieuw.",
   "Active les notifications": "Zet meldingen aan",
+  "Signaler": "Melden",
   "{e} Aller {w} min · {e} Jusqu'à {dest} {b} min": "{e} Heen {w} min · {e} Naar {dest} {b} min",
   "{e} Aller {w} min · {e} Retour {w} min": "{e} Heen {w} min · {e} Terug {w} min",
   "Appeler": "Bellen",

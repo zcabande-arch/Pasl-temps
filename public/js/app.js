@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "105";
+const APP_VERSION = "106";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -439,12 +439,12 @@ function placeEl(p){
       <div class="rvs"></div>
       <a class="go gowide" target="_blank" rel="noopener" href="${dirUrl(p)}">${TR().e} ${tx("Je pars")}</a>
       <div class="iacts">
-        ${p.phone ? `<a class="ia" href="tel:${esc(p.phone.replace(/\s/g,""))}" title="${esc(p.phone)}"><span class="ii" aria-hidden="true">📞</span><span>${tx("Appeler")}</span></a>` : ""}
-        <button class="ia td" type="button" aria-pressed="${!!LISTS.todo[p.id]}"><span class="ii" aria-hidden="true">📌</span><span>${tx("À tester")}</span></button>
-        ${p.url ? `<a class="ia" target="_blank" rel="noopener" href="${esc(p.url)}"><span class="ii" aria-hidden="true">🌐</span><span>${tx("Site web")}</span></a>` : ""}
-        <button class="ia shr" type="button"><span class="ii" aria-hidden="true">↗</span><span>${tx("Envoyer")}</span></button>
+        ${p.phone ? `<a class="ia" href="tel:${esc(p.phone.replace(/\s/g,""))}" title="${esc(p.phone)}"><span class="ii" aria-hidden="true">${ICONS.ico("phone", 26)}</span><span>${tx("Appeler")}</span></a>` : ""}
+        <button class="ia td" type="button" aria-pressed="${!!LISTS.todo[p.id]}"><span class="ii" aria-hidden="true">${ICONS.ico("thumbtack", 26)}</span><span>${tx("À tester")}</span></button>
+        ${p.url ? `<a class="ia" target="_blank" rel="noopener" href="${esc(p.url)}"><span class="ii" aria-hidden="true">${ICONS.ico("globeF", 26)}</span><span>${tx("Site web")}</span></a>` : ""}
+        <button class="ia shr" type="button"><span class="ii" aria-hidden="true">${ICONS.ico("plane", 26)}</span><span>${tx("Envoyer")}</span></button>
+        <button class="ia rep" type="button" aria-label="${tx("Signaler ce lieu")}"><span class="ii" aria-hidden="true">${ICONS.ico("dots", 26)}</span><span>${tx("Signaler")}</span></button>
       </div>
-      <button class="rep replink" type="button">${tx("Signaler ce lieu")}</button>
     </div>`;
   const head = el.querySelector("button");
   head.onclick = () => { el.classList.toggle("open"); head.setAttribute("aria-expanded", String(el.classList.contains("open")));

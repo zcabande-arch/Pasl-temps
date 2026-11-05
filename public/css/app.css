@@ -1443,3 +1443,11 @@ input,textarea,select{font-size:max(16px,1em)}
 .det .ia:active{background:var(--accsoft)}
 .det .ia[aria-pressed="true"]{color:var(--acc)}
 .det .replink{display:block;min-height:44px;margin:4px auto 0;padding:0 12px;border:0;background:none;font:inherit;font-size:13px;color:var(--soft);text-decoration:underline;text-underline-offset:3px}
+
+/* Icônes de la carte : dessins rouges et noirs sur tuiles crème (comme la référence) */
+.det .ia .ii{display:grid;place-items:center;width:46px;height:46px;border-radius:14px;background:#F3EAD9;--ico-a:#E94F3D;--ico-k:#1C1512;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+.det .ia .ii .ico{width:26px;height:26px}
+.det .ia{min-height:70px;gap:4px}
+.det .ia[aria-pressed="true"] .ii{box-shadow:0 0 0 2.5px #E94F3D}
+.det .ia .ii .ico{--ico-a:#E94F3D;--ico-k:#1C1512}
+.det .ia .ii .ico path[stroke]{stroke-width:3}

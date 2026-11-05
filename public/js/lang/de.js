@@ -481,6 +481,7 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Erledigt ✓ Erste Erinnerung in 3 Tagen, falls du die App bis dahin nicht öffnest.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Aktivieren gerade nicht möglich. Versuch es später erneut.",
   "Active les notifications": "Aktiviere Mitteilungen",
+  "Signaler": "Melden",
   "{e} Aller {w} min · {e} Jusqu'à {dest} {b} min": "{e} Hin {w} Min. · {e} Bis {dest} {b} Min.",
   "{e} Aller {w} min · {e} Retour {w} min": "{e} Hin {w} Min. · {e} Zurück {w} Min.",
   "Appeler": "Anrufen",
