@@ -474,6 +474,8 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Klaar ✓ Eerste herinnering over 3 dagen als je de app niet eerder opent.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Aanzetten lukt nu niet. Probeer het later opnieuw.",
   "Active les notifications": "Zet meldingen aan",
+  "Ce soir": "Vanavond",
+  "Ce week-end": "Dit weekend",
   "Jeux et créatif": "Spellen en creatief",
   "Escape games, jeux, ateliers, yoga": "Escape rooms, spellen, workshops, yoga",
   "Cinéma, concerts, musées, expos": "Bioscoop, concerten, musea, tentoonstellingen",

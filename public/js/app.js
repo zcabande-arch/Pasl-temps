@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "109";
+const APP_VERSION = "110";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -942,13 +942,19 @@ setInterval(() => {
 // « Boire un verre » n'est pas proposé aux moins de 18 ans (âge du profil)
 const isMinor = () => { const a = parseInt(PROFILE.age, 10); return a > 0 && a < 18; };
 const moodShown = k => !(MOODS[k].adult && isMinor());
+// l'ordre des envies dépend de l'heure : on le revoit toutes les 10 minutes
+setInterval(() => { if(document.visibilityState === "visible") renderMoods(); }, 10 * 60e3);
 function renderMoods(){
   if(!moodShown(M)) M = "manger";
   let sep = false;
-  $("moods").innerHTML = Object.entries(MOODS).filter(([k]) => moodShown(k)).map(([k,v]) => {
+  // ordre selon le moment (js/rank.js) : « Se poser » en tête le soir en semaine, « Sorties » en tête le week-end
+  const now = new Date(), feat = RANK.featured(now);
+  const keys = RANK.moodOrder(Object.keys(MOODS), now, Object.keys(MOODS).filter(k => MOODS[k].practical));
+  $("moods").innerHTML = keys.map(k => [k, MOODS[k]]).filter(([k]) => moodShown(k)).map(([k,v]) => {
     // « Pratique » (courses, artisans) : en bas, sous un petit titre
     const head = v.practical && !sep ? (sep = true, `<p class="moodsep">${tx("Pratique")}</p>`) : "";
-    const ok = `<span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span>`;
+    const ok = `<span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span>`
+      + (k === feat ? `<span class="nowtag">${RANK.isWeekend(now) ? tx("Ce week-end") : tx("Ce soir")}</span>` : "");
     return head + (v.img
       ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')">${ok}<b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
       // envie sans photo (pour l'instant) : même tuile, avec son dessin en grand

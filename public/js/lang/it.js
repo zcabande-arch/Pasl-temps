@@ -481,6 +481,8 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Fatto ✓ Primo promemoria tra 3 giorni se non apri l'app prima.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Impossibile attivarle ora. Riprova più tardi.",
   "Active les notifications": "Attiva le notifiche",
+  "Ce soir": "Stasera",
+  "Ce week-end": "Questo weekend",
   "Jeux et créatif": "Giochi e creatività",
   "Escape games, jeux, ateliers, yoga": "Escape room, giochi, laboratori, yoga",
   "Cinéma, concerts, musées, expos": "Cinema, concerti, musei, mostre",
