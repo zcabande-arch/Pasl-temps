@@ -1461,3 +1461,6 @@ input,textarea,select{font-size:max(16px,1em)}
 
 /* Envie mise en avant selon le moment (« Ce soir », « Ce week-end ») */
 .moods button.photo .nowtag{position:absolute;top:12px;left:12px;z-index:2;background:var(--acc);color:var(--accink);font-size:12px;font-weight:800;letter-spacing:.02em;padding:4px 10px;border-radius:999px}
+
+/* Lieu vérifié récemment (horaires ou présence, moins d'un an) */
+.sticker.ok{background:var(--leafbg,#E3F3E8);color:var(--leaf,#2E9E5B)}

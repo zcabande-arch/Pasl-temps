@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "110";
+const APP_VERSION = "111";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -446,7 +446,7 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${verifiedNow(p) ? `<span class="sticker ok" title="${esc(tx("Vérifié le {d}", {d: new Date(checkedOf(p)).toLocaleDateString(I18N.lang)}))}">${tx("✓ vérifié")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       <p class="dsum"><b>${fmtDur(total)}</b>${dest ? ` · ${tx("détour de {x} min", {x:p.detour})}` : ""}${free ? ` · <span class="free">${dest ? tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}) : tx("il te restera {d}", {d:fmtDur(free)})}</span>` : ""}</p>
@@ -839,7 +839,7 @@ function renderResults(){
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
       // filtre budget : les prix confirmés (Google, communauté) avant les estimations
-      .sort((a, b) => (FILTER.pr ? !!(priceOf(a) || {}).est - !!(priceOf(b) || {}).est : 0) || rankOpen(a) - rankOpen(b) || (destMode() ? a.detour - b.detour : 0) || a.dist - b.dist);
+      .sort((a, b) => (FILTER.pr ? !!(priceOf(a) || {}).est - !!(priceOf(b) || {}).est : 0) || RANK.placeCompare(sortKey(a), sortKey(b), Date.now()));
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -853,7 +853,7 @@ function renderResults(){
     } else if(!n){
       sec.innerHTML += `<p class="note">${!all.length && g.luggage ? tx("Aucune consigne à bagages trouvée près d'ici dans OpenStreetMap. Renseigne-toi au guichet de la gare.") : !all.length ? tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)}) : filtering() ? tx("Rien ne correspond à tes filtres ici.") : tx("Tout est fermé à cette heure-ci.")}</p>`;
     } else {
-      const SHOW = 6, all = EXPANDED.has(g.l);
+      const SHOW = 4, all = EXPANDED.has(g.l);           // moins de choix, mais les meilleurs : 4 puis « Voir plus »
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
       if(items.length > SHOW){
         const more = document.createElement("button"); more.className = "more-btn";
@@ -913,6 +913,14 @@ function whereTitle(){
 }
 
 const rankOpen = p => p.open.level === "closed" ? 2 : p.open.level === "unknown" ? 1 : 0;
+// Date de vérification d'un lieu : OpenStreetMap (check_date…) ou horaires signalés par la communauté (la plus récente)
+function checkedOf(p){
+  const rv = reviewsFor(p).find(r => r.hours), c = rv ? new Date(rv.at).toISOString().slice(0, 10) : "";
+  return [p.checked || "", c].sort().pop();
+}
+const verifiedNow = p => RANK.recentlyChecked(checkedOf(p), Date.now());
+// Tri dans une rubrique (js/rank.js, testé) : fermé en bas ; le moins cher ; vérifié récemment ; le plus proche (ou le plus petit détour)
+const sortKey = p => ({open: rankOpen(p), lvl: (priceOf(p) || {}).lvl || null, checked: checkedOf(p), near: destMode() && p.detour != null ? p.detour * 1e6 + p.dist : p.dist});
 const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []).filter(p => !reportHidden(p)); }
 

@@ -128,3 +128,21 @@ test("mode gare : gares de train et consignes gardées, métro et gares routièr
   assert.equal(r.kept, 4);
   assert.equal(idx.sels[tile.find(x => x[3] === "Consigne Gare de Lyon")[2]], "amenity=luggage_locker");
 });
+
+test("date de vérification : gardée seulement si elle existe (check_date, survey:date)", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "verif-"));
+  const f = (id, properties) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[1.444, 43.6045]}, properties:{"@type":"node", "@id":id, ...properties}});
+  fs.writeFileSync(path.join(dir, "in.geojsonseq"), [
+    f(1, {amenity:"cafe", name:"Vérifié", check_date:"2025-03-02", "check_date:opening_hours":"2026-06-14"}),
+    f(2, {amenity:"cafe", name:"Mois seul", "survey:date":"2024-09"}),
+    f(3, {amenity:"cafe", name:"Jamais vérifié"}),
+    f(4, {amenity:"cafe", name:"Date bizarre", check_date:"hier"})
+  ].join("\n"));
+  await build(path.join(dir, "in.geojsonseq"), path.join(dir, "out"));
+  const tile = JSON.parse(fs.readFileSync(path.join(dir, "out", "t", "872_28.json"), "utf8"));
+  const by = n => tile.find(x => x[3] === n);
+  assert.equal(by("Vérifié")[11], "2026-06-14");          // la plus récente
+  assert.equal(by("Mois seul")[11], "2024-09-01");
+  assert.equal(by("Jamais vérifié").length, 11);           // rien d'ajouté
+  assert.equal(by("Date bizarre").length, 11);
+});

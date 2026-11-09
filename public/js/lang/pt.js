@@ -482,6 +482,8 @@
   "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Pronto ✓ Primeiro lembrete em 3 dias se você não abrir o app antes.",
   "Activation impossible pour l'instant. Réessaie plus tard.": "Não dá para ativar agora. Tente de novo mais tarde.",
   "Active les notifications": "Ative as notificações",
+  "✓ vérifié": "✓ verificado",
+  "Vérifié le {d}": "Verificado em {d}",
   "Ce soir": "Esta noite",
   "Ce week-end": "Este fim de semana",
   "Jeux et créatif": "Jogos e criatividade",

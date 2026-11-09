@@ -218,6 +218,7 @@
     "C'est noté ✓ Premier rappel dans 3 jours si tu n'ouvres pas l'appli d'ici là.": "Done ✓ First reminder in 3 days if you don't open the app before then.",
     "Activation impossible pour l'instant. Réessaie plus tard.": "Can't turn it on right now. Try again later.",
     "🔔": "🔔", "Active les notifications": "Turn on notifications", "Autoriser": "Allow", "Plus tard": "Later",
+    "✓ vérifié": "✓ verified", "Vérifié le {d}": "Verified on {d}",
     "Ce soir": "Tonight", "Ce week-end": "This weekend",
     "Jeux et créatif": "Games and creative", "Escape games, jeux, ateliers, yoga": "Escape games, games, workshops, yoga",
     "Cinéma, concerts, musées, expos": "Cinema, concerts, museums, exhibitions",

@@ -54,6 +54,11 @@ function center(g){
   for(const [lx, ly] of ring){ x += lx; y += ly; }
   return [x / ring.length, y / ring.length];
 }
+// Date de la dernière vérification sur le terrain (OpenStreetMap : check_date…), « AAAA-MM-JJ » ou ""
+function checkedOf(t){
+  const d = [t["check_date:opening_hours"], t["check_date"], t["survey:date"]].map(x => String(x || "").trim()).filter(x => /^\d{4}-\d{2}(-\d{2})?$/.test(x)).sort().pop();
+  return d ? (d.length === 7 ? d + "-01" : d) : "";
+}
 const clip = (s, n) => (s && String(s).length > n ? String(s).slice(0, n) : s || "");
 function addr(t){
   const street = [t["addr:housenumber"], t["addr:street"] || t["addr:place"]].filter(Boolean).join(" ");
@@ -91,6 +96,7 @@ async function build(inputs, outDir){
     const row = [lat, lng, sels.length === 1 ? sels[0] : sels, clip(t.name, 80), clip(addr(t), 100),
       clip(t.opening_hours, 160), clip(t.website || t["contact:website"] || t.url, 120),
       clip(t.phone || t["contact:phone"], 30), clip(t.cuisine, 40), t.wheelchair === "yes" ? 1 : 0, id];
+    const ck = checkedOf(t); if(ck) row.push(ck);     // date de vérification seulement si elle existe (tuiles plus légères)
     // Codes postaux : centre des lieux qui portent ce code (et cette commune)
     const pc = String(t["addr:postcode"] || "").trim();
     if(/^\d{5}$/.test(pc)){

@@ -154,7 +154,7 @@
     groups.forEach(g => out[g.l] = []);
     const want = groups.map(g => new Set(g.osm));
     for(const r of rows){
-      const [lat, lng, sel, name, addr, oh, web, phone, cuisine, wc, id] = r;
+      const [lat, lng, sel, name, addr, oh, web, phone, cuisine, wc, id, checked] = r;
       const sels = (Array.isArray(sel) ? sel : [sel]).map(i => idx.sels[i]);
       let dist = -1, reach = -1;
       groups.forEach((g, gi) => {
@@ -162,7 +162,7 @@
         if(dist < 0){ dist = meters(pos, {lat, lng}); reach = reachOf(pos, dest, {lat, lng}); }
         if(reach > limitOf(g, dest) * 1.05) return;
         out[g.l].push({id: "osm:" + id, name, cat: cuisineFr(cuisine), addr: addr || "", phone: phone || "", url: fixUrl(web),
-          hours: hoursFr(oh), oh: oh || "", wheelchair: wc === 1, lat, lng, dist, reach});
+          hours: hoursFr(oh), oh: oh || "", wheelchair: wc === 1, lat, lng, dist, reach, checked: checked || ""});
       });
     }
     Object.keys(out).forEach(k => { out[k].sort((a, b) => a.reach - b.reach); out[k] = out[k].slice(0, limit || 12); });
@@ -265,6 +265,7 @@
           id, name: t.name, cat: cuisineFr(t.cuisine), addr: addrOf(t),
           phone: t.phone || t["contact:phone"] || "", url: fixUrl(t.website || t["contact:website"] || t.url),
           hours: hoursFr(t.opening_hours), oh: t.opening_hours || "", wheelchair: t.wheelchair === "yes",
+          checked: [t["check_date:opening_hours"], t["check_date"], t["survey:date"]].filter(x => /^\d{4}-\d{2}/.test(x || "")).sort().pop() || "",
           lat, lng, dist, reach
         });
       });

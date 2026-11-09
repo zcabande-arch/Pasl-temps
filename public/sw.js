@@ -1,5 +1,5 @@
 /* Fissa Fissa — service worker : l'appli s'ouvre même hors connexion */
-const VERSION = "pasltemps-v110";
+const VERSION = "pasltemps-v111";
 const CORE = [
   "./",
   "./index.html",
