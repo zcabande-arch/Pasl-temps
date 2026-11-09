@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "108";
+const APP_VERSION = "109";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -47,7 +47,7 @@ const MOODS = {
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"},
     {l:"Brocantes, dépôts-ventes", em:"🏺", h:25, osm:["shop=second_hand","shop=antiques","shop=charity"], stays:[10,20,40], q:"brocante"}]},
-  jeux: {d:tx("Escape games, jeux, ateliers, yoga"), e:"🎲", l:tx("Jeux et créatif"), sl:tx("Jeux et créatif"), groups:[
+  jeux: {img:"img/moods/jeux.jpg", d:tx("Escape games, jeux, ateliers, yoga"), e:"🎲", l:tx("Jeux et créatif"), sl:tx("Jeux et créatif"), groups:[
     {l:"Escape games", em:"🔐", h:270, osm:["leisure=escape_game"], stays:[60,70,90], q:"escape game"},
     {l:"Jeux de société", em:"🎲", h:60, osm:["shop=games"], stays:[10,20,45], q:"jeux de société"},
     {l:"Jeux vidéo, arcades", em:"🕹️", h:250, osm:["leisure=amusement_arcade","shop=video_games"], stays:[15,30,60], q:"salle d'arcade"},
