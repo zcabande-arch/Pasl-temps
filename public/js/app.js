@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "107";
+const APP_VERSION = "108";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -11,7 +11,8 @@ const APP_VERSION = "107";
 })();
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
-// Ordre des envies : celui du questionnaire (66 utilisateurs), puis « Se poser », puis « Pratique » (courses, artisans).
+// Ordre des envies : celui du questionnaire (66 utilisateurs) — cinéma et concerts rangés dans Culture, à la place
+// du cinéma —, puis « Se poser », puis « Pratique » (courses, artisans).
 // Les clés d'avant sont gardées (boire, manger, air…) : historique, favoris et préférences restent reliés.
 const MOODS = {
   boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, boîtes de nuit"), e:"🍸", l:tx("Sorties entre amis, bars"), sl:tx("Sorties entre amis"), groups:[
@@ -25,16 +26,19 @@ const MOODS = {
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stays:[10,15,25], q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stays:[10,20,30], q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stays:[30,60,90], q:"restaurant"}]},
-  cinema: {d:tx("Cinémas"), e:"🎬", l:tx("Cinéma"), sl:tx("Cinéma"), groups:[
-    {l:"Cinémas", em:"🎬", h:350, osm:["amenity=cinema"], stays:[95,115,140], q:"cinéma"}]},
+  culture: {img:"img/moods/culture.jpg", d:tx("Cinéma, concerts, musées, expos"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
+    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
+    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
+    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
+    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"},
+    {l:"Cinémas", em:"🎬", h:350, osm:["amenity=cinema"], stays:[95,115,140], q:"cinéma"},
+    {l:"Salles de concert", em:"🎵", h:300, osm:["amenity=music_venue"], stays:[60,90,150], q:"concert"},
+    {l:"Théâtres, spectacles", em:"🎭", h:320, osm:["amenity=theatre"], stays:[60,90,150], q:"théâtre"}]},
   bouger: {img:"img/moods/bouger.jpg", d:tx("Salles de sport, piscines, parcs"), e:"🏃", l:tx("Sport, fitness"), sl:tx("Sport"), groups:[
     {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
     {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45},
     {l:"Piscines", em:"🏊", h:195, osm:["leisure=swimming_pool"], stays:[30,45,90], q:"piscine", minT:60}]},
-  concerts: {d:tx("Salles de concert, spectacles, marchés"), e:"🎵", l:tx("Concerts et événements"), sl:tx("Concerts, événements"), groups:[
-    {l:"Salles de concert", em:"🎵", h:300, osm:["amenity=music_venue"], stays:[60,90,150], q:"concert"},
-    {l:"Théâtres, spectacles", em:"🎭", h:320, osm:["amenity=theatre"], stays:[60,90,150], q:"théâtre"},
-    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[10,15,30], q:"marché"}]},
   air: {img:"img/moods/air.jpg", d:tx("Balades, nature, points de vue"), e:"🌳", l:tx("Plein air"), sl:tx("Plein air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stays:[5,10,30], q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stays:[5,15,40], q:"espace vert"}]},
@@ -43,18 +47,11 @@ const MOODS = {
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
     {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"},
     {l:"Brocantes, dépôts-ventes", em:"🏺", h:25, osm:["shop=second_hand","shop=antiques","shop=charity"], stays:[10,20,40], q:"brocante"}]},
-  culture: {img:"img/moods/culture.jpg", d:tx("Musées, expos, lecture"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
-    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
-    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
-    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
-    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"}]},
-  jeux: {d:tx("Escape games, jeux de société, jeux vidéo"), e:"🎲", l:tx("Jeux"), sl:tx("Jeux"), groups:[
+  jeux: {d:tx("Escape games, jeux, ateliers, yoga"), e:"🎲", l:tx("Jeux et créatif"), sl:tx("Jeux et créatif"), groups:[
     {l:"Escape games", em:"🔐", h:270, osm:["leisure=escape_game"], stays:[60,70,90], q:"escape game"},
     {l:"Jeux de société", em:"🎲", h:60, osm:["shop=games"], stays:[10,20,45], q:"jeux de société"},
     {l:"Jeux vidéo, arcades", em:"🕹️", h:250, osm:["leisure=amusement_arcade","shop=video_games"], stays:[15,30,60], q:"salle d'arcade"},
-    {l:"Bowlings", em:"🎳", h:210, osm:["leisure=bowling_alley"], stays:[45,60,90], q:"bowling"}]},
-  creatif: {d:tx("Yoga, ateliers, art, bien-être"), e:"🎨", l:tx("Créatif et bien-être"), sl:tx("Créatif, bien-être"), groups:[
+    {l:"Bowlings", em:"🎳", h:210, osm:["leisure=bowling_alley"], stays:[45,60,90], q:"bowling"},
     {l:"Yoga", em:"🧘", h:140, osm:["sport=yoga"], stays:[45,60,90], q:"yoga"},
     {l:"Centres d'art, ateliers", em:"🎨", h:15, osm:["amenity=arts_centre","craft=pottery"], stays:[30,60,120], q:"atelier"},
     {l:"Spas, hammams", em:"♨️", h:190, osm:["leisure=sauna","amenity=public_bath"], stays:[45,60,120], q:"spa"}]},

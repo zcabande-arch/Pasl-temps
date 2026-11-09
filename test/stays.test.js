@@ -28,9 +28,9 @@ test("temps sur place : 3 durées croissantes par rubrique, « Normal » inchang
   }
 });
 
-test("envies : ordre du questionnaire, puis Se poser, puis « Pratique » ; anciennes clés gardées", () => {
+test("envies : ordre du questionnaire (cinéma et concerts dans Culture), puis Se poser, puis « Pratique » ; anciennes clés gardées", () => {
   const keys = [...app.matchAll(/^  ([a-z]+): \{(?:img|d):/gm)].map(m => m[1]);
-  assert.deepEqual(keys, ["boire", "manger", "cinema", "bouger", "concerts", "air", "shopping", "culture", "jeux", "creatif", "poser", "courses", "artisans"]);
+  assert.deepEqual(keys, ["boire", "manger", "culture", "bouger", "air", "shopping", "jeux", "poser", "courses", "artisans"]);
   // les anciennes rubriques existent toujours (historique, favoris, préférences restent reliés)
   for(const l of Object.keys(BEFORE)) assert.ok(groups.some(g => g.l === l), "rubrique perdue : " + l);
 });
