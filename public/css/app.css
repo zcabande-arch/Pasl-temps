@@ -1451,3 +1451,10 @@ input,textarea,select{font-size:max(16px,1em)}
 .det .ia[aria-pressed="true"] .ii{box-shadow:0 0 0 2.5px #E94F3D}
 .det .ia .ii .ico{--ico-a:#E94F3D;--ico-k:#1C1512}
 .det .ia .ii .ico path[stroke]{stroke-width:3}
+
+/* Envies sans photo : même tuile que les autres, dessin en grand ; titre « Pratique » au-dessus de courses et artisans */
+.moods button.photo.nophoto{background:var(--accsoft)!important;color:var(--ink)}
+.moods button.photo.nophoto .big{position:absolute;top:14px;left:14px}
+.moods button.photo.nophoto b,.moods button.photo.nophoto small{color:var(--ink);text-shadow:none}
+.moods .moodsep{grid-column:1 / -1;margin:14px 2px 0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.moods button.photo.nophoto::before{display:none}

@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "106";
+const APP_VERSION = "107";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -11,45 +11,65 @@ const APP_VERSION = "106";
 })();
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
+// Ordre des envies : celui du questionnaire (66 utilisateurs), puis « Se poser », puis « Pratique » (courses, artisans).
+// Les clés d'avant sont gardées (boire, manger, air…) : historique, favoris et préférences restent reliés.
 const MOODS = {
-  manger: {img:"img/moods/manger.jpg", d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
+  boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, boîtes de nuit"), e:"🍸", l:tx("Sorties entre amis, bars"), sl:tx("Sorties entre amis"), groups:[
+    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stays:[15,30,60], q:"bar", adult:true},
+    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stays:[15,30,60], q:"pub", adult:true},
+    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"café"},
+    {l:"Boîtes de nuit", em:"🪩", h:290, osm:["amenity=nightclub"], stays:[60,90,180], q:"boîte de nuit", adult:true, minT:90}]},
+  manger: {img:"img/moods/manger.jpg", d:tx("Restaurants, snacks, boulangeries"), e:"🥐", l:tx("Food, restaurants"), sl:tx("Food"), groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stays:[3,5,10], q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stays:[5,10,20], q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stays:[10,15,25], q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stays:[10,20,30], q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stays:[30,60,90], q:"restaurant"}]},
-  boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
-    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stays:[15,30,60], q:"bar"},
-    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stays:[15,30,60], q:"pub"},
-    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"café"}]},
-  air: {img:"img/moods/air.jpg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
+  cinema: {d:tx("Cinémas"), e:"🎬", l:tx("Cinéma"), sl:tx("Cinéma"), groups:[
+    {l:"Cinémas", em:"🎬", h:350, osm:["amenity=cinema"], stays:[95,115,140], q:"cinéma"}]},
+  bouger: {img:"img/moods/bouger.jpg", d:tx("Salles de sport, piscines, parcs"), e:"🏃", l:tx("Sport, fitness"), sl:tx("Sport"), groups:[
+    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
+    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45},
+    {l:"Piscines", em:"🏊", h:195, osm:["leisure=swimming_pool"], stays:[30,45,90], q:"piscine", minT:60}]},
+  concerts: {d:tx("Salles de concert, spectacles, marchés"), e:"🎵", l:tx("Concerts et événements"), sl:tx("Concerts, événements"), groups:[
+    {l:"Salles de concert", em:"🎵", h:300, osm:["amenity=music_venue"], stays:[60,90,150], q:"concert"},
+    {l:"Théâtres, spectacles", em:"🎭", h:320, osm:["amenity=theatre"], stays:[60,90,150], q:"théâtre"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[10,15,30], q:"marché"}]},
+  air: {img:"img/moods/air.jpg", d:tx("Balades, nature, points de vue"), e:"🌳", l:tx("Plein air"), sl:tx("Plein air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stays:[5,10,30], q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stays:[5,15,40], q:"espace vert"}]},
-  courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
+  shopping: {img:"img/moods/shopping.jpg", d:tx("Boutiques, brocantes, cadeaux"), e:"🛍️", l:tx("Shopping, brocantes"), sl:tx("Shopping"), groups:[
+    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stays:[10,15,45], q:"centre commercial"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
+    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"},
+    {l:"Brocantes, dépôts-ventes", em:"🏺", h:25, osm:["shop=second_hand","shop=antiques","shop=charity"], stays:[10,20,40], q:"brocante"}]},
+  culture: {img:"img/moods/culture.jpg", d:tx("Musées, expos, lecture"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
+    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
+    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
+    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
+    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"}]},
+  jeux: {d:tx("Escape games, jeux de société, jeux vidéo"), e:"🎲", l:tx("Jeux"), sl:tx("Jeux"), groups:[
+    {l:"Escape games", em:"🔐", h:270, osm:["leisure=escape_game"], stays:[60,70,90], q:"escape game"},
+    {l:"Jeux de société", em:"🎲", h:60, osm:["shop=games"], stays:[10,20,45], q:"jeux de société"},
+    {l:"Jeux vidéo, arcades", em:"🕹️", h:250, osm:["leisure=amusement_arcade","shop=video_games"], stays:[15,30,60], q:"salle d'arcade"},
+    {l:"Bowlings", em:"🎳", h:210, osm:["leisure=bowling_alley"], stays:[45,60,90], q:"bowling"}]},
+  creatif: {d:tx("Yoga, ateliers, art, bien-être"), e:"🎨", l:tx("Créatif et bien-être"), sl:tx("Créatif, bien-être"), groups:[
+    {l:"Yoga", em:"🧘", h:140, osm:["sport=yoga"], stays:[45,60,90], q:"yoga"},
+    {l:"Centres d'art, ateliers", em:"🎨", h:15, osm:["amenity=arts_centre","craft=pottery"], stays:[30,60,120], q:"atelier"},
+    {l:"Spas, hammams", em:"♨️", h:190, osm:["leisure=sauna","amenity=public_bath"], stays:[45,60,120], q:"spa"}]},
+  poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs, bibliothèques"), e:"🛋️", l:tx("Se poser"), sl:tx("Se poser"), groups:[
+    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"salon de thé"},
+    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stays:[5,10,30], q:"parc"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"}]},
+  courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), practical:true, groups:[
     {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stays:[10,20,30], q:"supermarché"},
     {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stays:[5,10,15], q:"supérette"},
     {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stays:[5,10,20], q:"primeur"},
     {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stays:[5,10,20], q:"boucherie"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[10,15,30], q:"marché"},
     {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stays:[5,10,20], q:"caviste", adult:true}]},
-  shopping: {img:"img/moods/shopping.jpg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
-    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stays:[10,15,45], q:"centre commercial"},
-    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
-    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"}]},
-  culture: {img:"img/moods/culture.jpg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
-    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
-    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
-    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
-    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"}]},
-  poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
-    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"salon de thé"},
-    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stays:[5,10,30], q:"parc"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"}]},
-  bouger: {img:"img/moods/bouger.jpg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
-    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
-    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45}]},
-  artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), groups:[
+  artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), practical:true, groups:[
     {l:"Cordonniers, clés", em:"👞", h:25, osm:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith"], stays:[5,10,15], q:"cordonnier"},
     {l:"Retouches, couture", em:"🧵", h:300, osm:["shop=tailor","craft=tailor","craft=dressmaker"], stays:[5,10,15], q:"retouches"},
     {l:"Pressings, laveries", em:"👔", h:210, osm:["shop=dry_cleaning","shop=laundry"], stays:[5,10,15], q:"pressing"},
@@ -202,6 +222,10 @@ const PREF_TYPES = [
   {k:"bar",     l:tx("Bars, pubs"),          ico:"cocktail", sels:["amenity=bar","amenity=pub","amenity=biergarten"]},
   {k:"courses", l:tx("Courses"),             ico:"cart",     sels:["shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli"]},
   {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]},
+  {k:"cinema",  l:tx("Cinéma"),              ico:"🎬",       sels:["amenity=cinema"]},
+  {k:"concerts",l:tx("Concerts, spectacles"), ico:"🎵",      sels:["amenity=music_venue","amenity=theatre"]},
+  {k:"jeux",    l:tx("Jeux"),                ico:"dice",     sels:["leisure=escape_game","shop=games","leisure=amusement_arcade","shop=video_games","leisure=bowling_alley"]},
+  {k:"creatif", l:tx("Créatif et bien-être"), ico:"🎨",      sels:["sport=yoga","amenity=arts_centre","craft=pottery","leisure=sauna","amenity=public_bath"]},
   {k:"artisans",l:tx("Artisans"),            ico:"wrench",   sels:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith","shop=tailor","craft=tailor","craft=dressmaker","shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair","shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres"]}
 ];
 function isPreferred(g){
@@ -859,7 +883,7 @@ function renderResults(){
     const ring = `${MOODS[M].l} · ${tx("{d} {way}, retour compris", {d:fmtDur(T), way:TR().way})} · `;
     bn.insertAdjacentHTML("afterbegin", `<div class="circ" style="background-image:url('${moodImg(M, true)}'), url('${moodImg(M)}')"><svg viewBox="0 0 300 300" aria-hidden="true"><path id="ringPath" d="M150 150 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0" fill="none"/><text><textPath href="#ringPath" textLength="800"></textPath></text></svg></div>`);
     bn.querySelector("textPath").textContent = (ring + ring).slice(0, 90);
-    if(MOODS[M].adult) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
+    if(MOODS[M].adult || groupsNow().some(g => g.adult)) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
     $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
@@ -923,17 +947,23 @@ const isMinor = () => { const a = parseInt(PROFILE.age, 10); return a > 0 && a <
 const moodShown = k => !(MOODS[k].adult && isMinor());
 function renderMoods(){
   if(!moodShown(M)) M = "manger";
-  $("moods").innerHTML = Object.entries(MOODS).filter(([k]) => moodShown(k)).map(([k,v]) =>
-    v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
-      : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
+  let sep = false;
+  $("moods").innerHTML = Object.entries(MOODS).filter(([k]) => moodShown(k)).map(([k,v]) => {
+    // « Pratique » (courses, artisans) : en bas, sous un petit titre
+    const head = v.practical && !sep ? (sep = true, `<p class="moodsep">${tx("Pratique")}</p>`) : "";
+    const ok = `<span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span>`;
+    return head + (v.img
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')">${ok}<b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
+      // envie sans photo (pour l'instant) : même tuile, avec son dessin en grand
+      : `<button class="photo nophoto" data-m="${k}" aria-pressed="${k===M}">${ok}<span class="big" aria-hidden="true">${ICONS.ico(v.e, 56)}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`);
+  }).join("");
 }
 // Rubriques de l'envie qui ne tiennent pas dans le temps choisi, avec la durée qu'il faudrait (parmi les choix proposés)
 function laterGroups(){
   return MOODS[M].groups.filter(g => allowed(g) && !fits(g, T)).map(g => ({g, t: TIMES.find(t => t > T && fits(g, t))})).filter(x => x.t);
 }
 // Choix du temps : jusqu'à 2 h
-const TIMES = [10, 20, 30, 45, 60, 90, 120];
+const TIMES = [10, 20, 30, 45, 60, 90, 120, 150, 180];   // jusqu'à 3 h : un film + le trajet ne tient pas dans 2 h
 // Temps habituel (choisi au premier lancement) : c'est lui qui est proposé à l'ouverture
 try{ const t0 = +JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").time; if(TIMES.includes(t0)) T = t0; }catch(e){}
 // Ouverture depuis une notification de créneau (./?t=30) : la durée est déjà choisie
@@ -2514,7 +2544,11 @@ function renderHistory(){
 renderTravel(); renderArrive(); renderGare(); renderPace();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
+// Ville par défaut : Toulouse (place du Capitole), tant que ni le GPS ni une adresse n'ont donné mieux.
+// On en change comme avant : « Ma position » ou une adresse dans « Où es-tu ? ».
+const DEFAULT_PLACE = {lat:43.6045, lng:1.4440, label:"Toulouse"};
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
+else { pos = {lat:DEFAULT_PLACE.lat, lng:DEFAULT_PLACE.lng}; posLabel = DEFAULT_PLACE.label; geoState = "ok"; }
 HIST = lsLoad().filter(h => !GONE.has(h.id));
 renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();

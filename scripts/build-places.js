@@ -27,7 +27,11 @@ const SELS = [
   "shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair",
   "shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres",
   // Mode gare : gares de train et consignes à bagages
-  "railway=station","public_transport=station","amenity=luggage_locker","amenity=left_luggage"
+  "railway=station","public_transport=station","amenity=luggage_locker","amenity=left_luggage",
+  // Nouvelles envies (questionnaire) : sorties, cinéma, sport, concerts, brocantes, jeux, créatif et bien-être
+  "amenity=nightclub","amenity=cinema","leisure=swimming_pool","amenity=music_venue","amenity=theatre",
+  "shop=second_hand","shop=antiques","shop=charity","leisure=escape_game","shop=games","leisure=amusement_arcade",
+  "shop=video_games","leisure=bowling_alley","sport=yoga","amenity=arts_centre","craft=pottery","leisure=sauna","amenity=public_bath"
 ];
 // Gares de TRAIN seulement : pas les stations de métro ou de tram (sauf si elles ont aussi des trains)
 const NOT_TRAIN = /^(subway|light_rail|monorail|tram|funicular)$/;

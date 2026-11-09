@@ -23,6 +23,14 @@ test("temps sur place : 3 durées croissantes par rubrique, « Normal » inchang
   for(const g of groups){
     assert.ok(g.s[0] < g.s[1] && g.s[1] < g.s[2], g.l + " : " + g.s);
     if(g.l === "Sur le pouce") assert.deepEqual(g.s, [10, 15, 25]);
-    else assert.ok(BEFORE[g.l] && BEFORE[g.l].includes(g.s[1]), g.l + " : normal " + g.s[1]);
+    else if(BEFORE[g.l]) assert.ok(BEFORE[g.l].includes(g.s[1]), g.l + " : normal " + g.s[1]);   // rubriques d'avant : inchangées
+    // (rubriques ajoutées ensuite : seulement les 3 durées croissantes)
   }
+});
+
+test("envies : ordre du questionnaire, puis Se poser, puis « Pratique » ; anciennes clés gardées", () => {
+  const keys = [...app.matchAll(/^  ([a-z]+): \{(?:img|d):/gm)].map(m => m[1]);
+  assert.deepEqual(keys, ["boire", "manger", "cinema", "bouger", "concerts", "air", "shopping", "culture", "jeux", "creatif", "poser", "courses", "artisans"]);
+  // les anciennes rubriques existent toujours (historique, favoris, préférences restent reliés)
+  for(const l of Object.keys(BEFORE)) assert.ok(groups.some(g => g.l === l), "rubrique perdue : " + l);
 });
