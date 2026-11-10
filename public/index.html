@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="106">
+<meta name="app-version" content="107">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -173,7 +173,7 @@
         <button data-v="femme">Femme</button><button data-v="homme">Homme</button><button data-v="nonbinaire">Non binaire</button>
       </div>
       <p class="psaved" id="pSaved"></p>
-      <p id="pAdmin" hidden><a class="go" href="admin.html">🛡️ Espace admin</a></p>
+      <p id="pAdmin" class="web-only" hidden><a class="go" href="admin.html">🛡️ Espace admin</a></p>
     </section>
     <section class="pcard">
       <h2>Tes endroits préférés</h2>
@@ -237,14 +237,14 @@
   <div class="seg" id="langSeg"><button data-v="auto">Auto</button><button data-v="fr">Français</button><button data-v="en">English</button><button data-v="es">Español</button><button data-v="de">Deutsch</button><button data-v="it">Italiano</button><button data-v="pt">Português</button><button data-v="nl">Nederlands</button></div>
   <h4>Animations</h4>
   <div class="seg" id="motionSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
-  <h4>Notifications</h4>
-  <div class="seg" id="notifSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
-  <p class="setnote" id="notifNote"></p>
-  <p class="setnote"><button class="link" id="habitClear">Effacer mon historique</button></p>
+  <h4 class="web-only">Notifications</h4>
+  <div class="seg web-only" id="notifSeg"><button data-v="on">Activées</button><button data-v="off">Désactivées</button></div>
+  <p class="setnote web-only" id="notifNote"></p>
+  <p class="setnote web-only"><button class="link" id="habitClear">Effacer mon historique</button></p>
   <h4>Nous contacter</h4>
   <div class="rec contactBox"></div>
-  <h4>Installer l'appli</h4>
-  <div class="rec" id="install"></div>
+  <h4 class="web-only">Installer l'appli</h4>
+  <div class="rec web-only" id="install"></div>
   <p class="credits">Fissa Fissa · Données des lieux © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">les contributeurs d'OpenStreetMap</a><br><a href="legal.html">Mentions légales · Confidentialité · Conditions</a></p>
   <button class="done" id="sheetDone">Terminé</button>
 </div>
