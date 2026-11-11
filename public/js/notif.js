@@ -4,7 +4,7 @@
 // Vie privée : la position ne quitte jamais le téléphone. Le serveur reçoit seulement les heures prévues et la durée
 // proposée ; le texte avec le lieu est écrit ici et gardé pour le service worker (IndexedDB), qui l'affiche.
 // Limites (appliquées par le serveur) : 1 notification par jour, rien entre 21 h et 8 h, rien dans l'heure qui suit une ouverture.
-// Debug (console) : NOTIF.simulate("midi" | "soir" | "samedi" | "habitude"), NOTIF.plan(), NOTIF.habits(), NOTIF.fakeHabit() ;
+// Debug (console, en local seulement) : NOTIF.simulate("midi" | "soir" | "samedi" | "habitude"), NOTIF.plan(), NOTIF.habits(), NOTIF.fakeHabit() ;
 // ou ajoute ?notif=midi (etc.) à l'adresse de l'appli.
 (function(){
   const KEY = "pasltemps.habits", CELL = 0.005, BUCKET = 30, KEEP_DAYS = 60;
@@ -124,8 +124,11 @@
     return habits();
   }
 
-  window.NOTIF = {note, habits, plan, sync, clear, simulate, fakeHabit, writeHabitTexts, count: () => habits().length};
-  // ?notif=midi : notification de test quelques secondes après l'ouverture
-  const dbg = new URLSearchParams(location.search).get("notif");
-  if(dbg) setTimeout(() => simulate(dbg).then(r => console.log("NOTIF.simulate", r)), 3000);
+  window.NOTIF = {note, habits, plan, sync, clear, writeHabitTexts, count: () => habits().length};
+  // Outils de test (simulate, fakeHabit, ?notif=midi) : seulement en local, jamais sur le site publié ni dans l'appli
+  if(/^(localhost|127\.0\.0\.1)$/.test(location.hostname)){
+    Object.assign(window.NOTIF, {simulate, fakeHabit});
+    const dbg = new URLSearchParams(location.search).get("notif");
+    if(dbg) setTimeout(() => simulate(dbg).then(r => console.log("NOTIF.simulate", r)), 3000);
+  }
 })();

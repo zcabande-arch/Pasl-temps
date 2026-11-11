@@ -1451,3 +1451,4 @@ input,textarea,select{font-size:max(16px,1em)}
 .det .ia[aria-pressed="true"] .ii{box-shadow:0 0 0 2.5px #E94F3D}
 .det .ia .ii .ico{--ico-a:#E94F3D;--ico-k:#1C1512}
 .det .ia .ii .ico path[stroke]{stroke-width:3}
+.store-app .web-only{display:none !important}
