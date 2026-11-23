@@ -1451,4 +1451,32 @@ input,textarea,select{font-size:max(16px,1em)}
 .det .ia[aria-pressed="true"] .ii{box-shadow:0 0 0 2.5px #E94F3D}
 .det .ia .ii .ico{--ico-a:#E94F3D;--ico-k:#1C1512}
 .det .ia .ii .ico path[stroke]{stroke-width:3}
+
+/* Envies sans photo : même tuile que les autres, dessin en grand ; titre « Pratique » au-dessus de courses et artisans */
+.moods button.photo.nophoto{background:var(--accsoft)!important;color:var(--ink)}
+.moods button.photo.nophoto .big{position:absolute;top:14px;left:14px}
+.moods button.photo.nophoto b,.moods button.photo.nophoto small{color:var(--ink);text-shadow:none}
+.moods .moodsep{grid-column:1 / -1;margin:14px 2px 0;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+.moods button.photo.nophoto::before{display:none}
+
+/* Envie mise en avant selon le moment (« Ce soir », « Ce week-end ») */
+.moods button.photo .nowtag{position:absolute;top:12px;left:12px;z-index:2;background:var(--acc);color:var(--accink);font-size:12px;font-weight:800;letter-spacing:.02em;padding:4px 10px;border-radius:999px}
+
+/* Lieu vérifié récemment (horaires ou présence, moins d'un an) */
+.sticker.ok{background:var(--leafbg,#E3F3E8);color:var(--leaf,#2E9E5B)}
+
+/* Filtres : budget en montants (pastilles, « Gratuit » en vert), moment, trajet maximal */
+.budget{flex-wrap:wrap}
+.budget .bchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1 1 100%;padding-bottom:2px}
+.budget .bchips::-webkit-scrollbar{display:none}
+.budget .bchips .chip{min-height:40px;padding:8px 12px;font-weight:700}
+.budget .bchips .chip small{font-weight:600;opacity:.6}
+.budget .bchips .chip.free{background:var(--leafbg,#E3F3E8);color:var(--leaf,#2E9E5B)}
+.budget .bchips .chip[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.budget .bchips .chip.free[aria-pressed="true"]{background:var(--leaf,#2E9E5B);color:#fff}
+.budget .bchips .chip:disabled{opacity:.35}
+.chip.when[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.legrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 10px;font-size:14px}
+.legrow label{white-space:nowrap}
+.legrow input[type=range]{flex:1;min-width:150px;height:32px;accent-color:var(--acc)}
 .store-app .web-only{display:none !important}

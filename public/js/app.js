@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "107";
+const APP_VERSION = "113";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -23,45 +23,62 @@ const IN_STORE_APP = (() => {
 document.documentElement.classList.toggle("store-app", IN_STORE_APP);
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
+// Ordre des envies : celui du questionnaire (66 utilisateurs) — cinéma et concerts rangés dans Culture, à la place
+// du cinéma —, puis « Se poser », puis « Pratique » (courses, artisans).
+// Les clés d'avant sont gardées (boire, manger, air…) : historique, favoris et préférences restent reliés.
 const MOODS = {
-  manger: {img:"img/moods/manger.jpg", d:tx("Boulangeries, cafés, snacks"), e:"🥐", l:tx("Manger"), sl:tx("Manger"), groups:[
+  boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, boîtes de nuit"), e:"🍸", l:tx("Sorties entre amis, bars"), sl:tx("Sorties entre amis"), groups:[
+    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stays:[15,30,60], q:"bar", adult:true},
+    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stays:[15,30,60], q:"pub", adult:true},
+    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"café"},
+    {l:"Boîtes de nuit", em:"🪩", h:290, osm:["amenity=nightclub"], stays:[60,90,180], q:"boîte de nuit", adult:true, minT:90}]},
+  manger: {img:"img/moods/manger.jpg", d:tx("Restaurants, snacks, boulangeries"), e:"🥐", l:tx("Food, restaurants"), sl:tx("Food"), groups:[
     {l:"Boulangeries", em:"🥖", h:35, osm:["shop=bakery","shop=pastry"], stays:[3,5,10], q:"boulangerie"},
     {l:"Cafés, salons de thé", em:"☕", h:20, osm:["amenity=cafe"], stays:[5,10,20], q:"café"},
     {l:"Sur le pouce", em:"🌯", h:5, osm:["amenity=fast_food","amenity=food_court"], stays:[10,15,25], q:"snack"},
     {l:"Glaciers", em:"🍦", h:320, osm:["amenity=ice_cream","shop=ice_cream"], stays:[10,20,30], q:"glacier"},
     {l:"Restaurants", em:"🍝", h:0, osm:["amenity=restaurant"], stays:[30,60,90], q:"restaurant"}]},
-  boire: {img:"img/moods/boire.jpg", d:tx("Bars, pubs, cafés"), e:"🍸", l:tx("Boire un verre"), sl:tx("Boire un verre"), adult:true, groups:[
-    {l:"Bars", em:"🍸", h:330, osm:["amenity=bar"], stays:[15,30,60], q:"bar"},
-    {l:"Pubs, brasseries", em:"🍺", h:40, osm:["amenity=pub","amenity=biergarten"], stays:[15,30,60], q:"pub"},
-    {l:"Cafés", em:"☕", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"café"}]},
-  air: {img:"img/moods/air.jpg", d:tx("Parcs, jardins, points de vue"), e:"🌳", l:tx("Prendre l'air"), sl:tx("Prendre l'air"), groups:[
+  culture: {img:"img/moods/culture.jpg", d:tx("Cinéma, concerts, musées, expos"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
+    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
+    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
+    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
+    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"},
+    {l:"Cinémas", em:"🎬", h:350, osm:["amenity=cinema"], stays:[95,115,140], q:"cinéma"},
+    {l:"Salles de concert", em:"🎵", h:300, osm:["amenity=music_venue"], stays:[60,90,150], q:"concert"},
+    {l:"Théâtres, spectacles", em:"🎭", h:320, osm:["amenity=theatre"], stays:[60,90,150], q:"théâtre"}]},
+  bouger: {img:"img/moods/bouger.jpg", d:tx("Salles de sport, piscines, parcs"), e:"🏃", l:tx("Sport, fitness"), sl:tx("Sport"), groups:[
+    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
+    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45},
+    {l:"Piscines", em:"🏊", h:195, osm:["leisure=swimming_pool"], stays:[30,45,90], q:"piscine", minT:60}]},
+  air: {img:"img/moods/air.jpg", d:tx("Balades, nature, points de vue"), e:"🌳", l:tx("Plein air"), sl:tx("Plein air"), groups:[
     {l:"Parcs, jardins", em:"🌳", h:130, osm:["leisure=park","leisure=garden","tourism=picnic_site"], stays:[5,10,30], q:"parc"},
     {l:"Espaces verts, points de vue", em:"🌲", h:150, osm:["leisure=nature_reserve","tourism=viewpoint","leisure=common"], stays:[5,15,40], q:"espace vert"}]},
-  courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), groups:[
+  shopping: {img:"img/moods/shopping.jpg", d:tx("Boutiques, brocantes, cadeaux"), e:"🛍️", l:tx("Shopping, brocantes"), sl:tx("Shopping"), groups:[
+    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stays:[10,15,45], q:"centre commercial"},
+    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
+    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"},
+    {l:"Brocantes, dépôts-ventes", em:"🏺", h:25, osm:["shop=second_hand","shop=antiques","shop=charity"], stays:[10,20,40], q:"brocante"}]},
+  jeux: {img:"img/moods/jeux.jpg", d:tx("Escape games, jeux, ateliers, yoga"), e:"🎲", l:tx("Jeux et créatif"), sl:tx("Jeux et créatif"), groups:[
+    {l:"Escape games", em:"🔐", h:270, osm:["leisure=escape_game"], stays:[60,70,90], q:"escape game"},
+    {l:"Jeux de société", em:"🎲", h:60, osm:["shop=games"], stays:[10,20,45], q:"jeux de société"},
+    {l:"Jeux vidéo, arcades", em:"🕹️", h:250, osm:["leisure=amusement_arcade","shop=video_games"], stays:[15,30,60], q:"salle d'arcade"},
+    {l:"Bowlings", em:"🎳", h:210, osm:["leisure=bowling_alley"], stays:[45,60,90], q:"bowling"},
+    {l:"Yoga", em:"🧘", h:140, osm:["sport=yoga"], stays:[45,60,90], q:"yoga"},
+    {l:"Centres d'art, ateliers", em:"🎨", h:15, osm:["amenity=arts_centre","craft=pottery"], stays:[30,60,120], q:"atelier"},
+    {l:"Spas, hammams", em:"♨️", h:190, osm:["leisure=sauna","amenity=public_bath"], stays:[45,60,120], q:"spa"}]},
+  poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs, bibliothèques"), e:"🛋️", l:tx("Se poser"), sl:tx("Se poser"), groups:[
+    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"salon de thé"},
+    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stays:[5,10,30], q:"parc"},
+    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"}]},
+  courses: {img:"img/moods/courses.jpg", d:tx("Supermarchés, épiceries, primeurs"), e:"🛒", l:tx("Faire les courses"), sl:tx("Courses"), practical:true, groups:[
     {l:"Supermarchés", em:"🛒", h:200, osm:["shop=supermarket"], stays:[10,20,30], q:"supermarché"},
     {l:"Supérettes, épiceries", em:"🏪", h:30, osm:["shop=convenience","shop=frozen_food"], stays:[5,10,15], q:"supérette"},
     {l:"Primeurs, bio", em:"🥕", h:110, osm:["shop=greengrocer","shop=organic"], stays:[5,10,20], q:"primeur"},
     {l:"Boucheries, fromageries, poissonneries", em:"🧀", h:15, osm:["shop=butcher","shop=cheese","shop=seafood","shop=deli"], stays:[5,10,20], q:"boucherie"},
     {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[10,15,30], q:"marché"},
     {l:"Cavistes", em:"🍷", h:340, osm:["shop=wine","shop=alcohol"], stays:[5,10,20], q:"caviste", adult:true}]},
-  shopping: {img:"img/moods/shopping.jpg", d:tx("Galeries, marchés, cadeaux"), e:"🛍️", l:tx("Galerie marchande"), sl:tx("Shopping"), groups:[
-    {l:"Centres commerciaux, grands magasins", em:"🛍️", h:270, osm:["shop=mall","shop=department_store"], stays:[10,15,45], q:"centre commercial"},
-    {l:"Marchés", em:"🧺", h:45, osm:["amenity=marketplace","shop=farm"], stays:[5,10,25], q:"marché"},
-    {l:"Cadeaux, souvenirs", em:"🎁", h:340, osm:["shop=gift","shop=souvenir"], stays:[5,8,20], q:"boutique cadeaux"}]},
-  culture: {img:"img/moods/culture.jpg", d:tx("Musées, librairies, monuments"), e:"📚", l:tx("Culture"), sl:tx("Culture"), groups:[
-    {l:"Librairies", em:"📖", h:210, osm:["shop=books"], stays:[5,10,25], q:"librairie"},
-    {l:"Monuments, curiosités", em:"🏛️", h:190, osm:["historic=monument","tourism=attraction","historic=castle","amenity=place_of_worship"], stays:[3,5,15], q:"monument"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"},
-    {l:"Musées", em:"🏺", h:260, osm:["tourism=museum"], stays:[30,60,90], q:"musée"},
-    {l:"Galeries d'art", em:"🖼️", h:280, osm:["tourism=gallery"], stays:[15,30,45], q:"galerie d'art"}]},
-  poser: {img:"img/moods/poser.jpg", d:tx("Salons de thé, parcs"), e:"🛋️", l:tx("Se poser au calme"), sl:tx("Au calme"), groups:[
-    {l:"Salons de thé, cafés", em:"🫖", h:20, osm:["amenity=cafe"], stays:[10,15,30], q:"salon de thé"},
-    {l:"Parcs", em:"🌳", h:130, osm:["leisure=park","leisure=garden"], stays:[5,10,30], q:"parc"},
-    {l:"Bibliothèques", em:"📚", h:230, osm:["amenity=library"], stays:[10,15,45], q:"bibliothèque"}]},
-  bouger: {img:"img/moods/bouger.jpg", d:tx("Parcs, salles de sport"), e:"🏃", l:tx("Bouger"), sl:tx("Bouger"), groups:[
-    {l:"Parcs pour marcher ou courir", em:"👟", h:130, osm:["leisure=park","leisure=track","leisure=nature_reserve"], stays:[5,10,30], q:"parc"},
-    {l:"Salles de sport", em:"🏋️", h:200, osm:["leisure=fitness_centre","leisure=sports_centre"], stays:[20,30,60], q:"salle de sport", minT:45}]},
-  artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), groups:[
+  artisans: {img:"img/moods/artisans.jpg", d:tx("Cordonniers, garages, drogueries"), e:"🔧", l:tx("Artisans"), sl:tx("Artisans"), practical:true, groups:[
     {l:"Cordonniers, clés", em:"👞", h:25, osm:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith"], stays:[5,10,15], q:"cordonnier"},
     {l:"Retouches, couture", em:"🧵", h:300, osm:["shop=tailor","craft=tailor","craft=dressmaker"], stays:[5,10,15], q:"retouches"},
     {l:"Pressings, laveries", em:"👔", h:210, osm:["shop=dry_cleaning","shop=laundry"], stays:[5,10,15], q:"pressing"},
@@ -214,6 +231,10 @@ const PREF_TYPES = [
   {k:"bar",     l:tx("Bars, pubs"),          ico:"cocktail", sels:["amenity=bar","amenity=pub","amenity=biergarten"]},
   {k:"courses", l:tx("Courses"),             ico:"cart",     sels:["shop=supermarket","shop=convenience","shop=greengrocer","shop=organic","shop=butcher","shop=cheese","shop=seafood","shop=deli"]},
   {k:"sport",   l:tx("Sport"),               ico:"dumbbell", sels:["leisure=fitness_centre","leisure=sports_centre","leisure=track"]},
+  {k:"cinema",  l:tx("Cinéma"),              ico:"🎬",       sels:["amenity=cinema"]},
+  {k:"concerts",l:tx("Concerts, spectacles"), ico:"🎵",      sels:["amenity=music_venue","amenity=theatre"]},
+  {k:"jeux",    l:tx("Jeux"),                ico:"dice",     sels:["leisure=escape_game","shop=games","leisure=amusement_arcade","shop=video_games","leisure=bowling_alley"]},
+  {k:"creatif", l:tx("Créatif et bien-être"), ico:"🎨",      sels:["sport=yoga","amenity=arts_centre","craft=pottery","leisure=sauna","amenity=public_bath"]},
   {k:"artisans",l:tx("Artisans"),            ico:"wrench",   sels:["shop=shoe_repair","craft=shoemaker","craft=key_cutter","shop=locksmith","craft=locksmith","shop=tailor","craft=tailor","craft=dressmaker","shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair","shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres"]}
 ];
 function isPreferred(g){
@@ -224,7 +245,7 @@ function isPreferred(g){
 
 // Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
 const TRAVEL = {
-  walk: {l:tx("À pied"), ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:tx("de marche"), way:tx("à pied"),     rings:[2,5,10,15,20]},
+  walk: {l:tx("À pied"), ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3700, gm:"walking",   of:tx("de marche"), way:tx("à pied"),     rings:[2,5,10,15,20]},
   bike: {l:tx("Vélo"), ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:tx("de vélo"), way:tx("à vélo"),     rings:[3,5,10,15,20]},
   car:  {l:tx("Voiture"), ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:tx("de route"), way:tx("en voiture"), rings:[5,8,12,16,20]}
 };
@@ -437,7 +458,7 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${verifiedNow(p) ? `<span class="sticker ok" title="${esc(tx("Vérifié le {d}", {d: new Date(checkedOf(p)).toLocaleDateString(I18N.lang)}))}">${tx("✓ vérifié")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       <p class="dsum"><b>${fmtDur(total)}</b>${dest ? ` · ${tx("détour de {x} min", {x:p.detour})}` : ""}${free ? ` · <span class="free">${dest ? tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}) : tx("il te restera {d}", {d:fmtDur(free)})}</span>` : ""}</p>
@@ -666,7 +687,19 @@ async function scheduleTimerPush(){
 }
 
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
-const FILTER = {q:"", cu:"", pr:0};
+// Filtres : nom, cuisine, budget (tranche en €, rien de présélectionné), moment (« Ce soir », « Ce week-end »),
+// trajet maximal (minutes, 0 = selon le temps disponible)
+const FILTER = {q:"", cu:"", bud:"", when:"", leg:0};
+// Rubriques d'ordinaire gratuites (parcs, nature, monuments, lieux de culte, bibliothèques, marchés) : « supposé gratuit »
+const FREE_SELS = new Set(["leisure=park","leisure=garden","tourism=picnic_site","leisure=nature_reserve","tourism=viewpoint","leisure=common","leisure=track","historic=monument","historic=castle","amenity=place_of_worship","amenity=library","amenity=marketplace"]);
+// Tranche de budget d'un lieu (js/rank.js) : {b, est} ou null si on ne sait pas
+function budgetInfo(p){
+  const pr = priceOf(p), g = pr && pr.g, eur = g && (g.cur === "EUR" || !g.cur);
+  const grp = moodGroups().find(x => x.l === p.g) || Object.values(MOODS).flatMap(m => m.groups).find(x => x.l === p.g);
+  return RANK.budgetOf({fee: p.fee || 0, freeCat: !!grp && grp.osm.every(s => FREE_SELS.has(s)),
+    from: eur && g.from != null ? +g.from : null, to: eur && g.to ? +g.to : null, lvl: pr ? pr.lvl : null, est: !!(pr && pr.est)});
+}
+const BUDGET_LABELS = {free: "🆓 " + tx("Gratuit"), lt10: tx("moins de 10 €"), "10-25": "10–25 €", "25-50": "25–50 €", gt50: tx("plus de 50 €")};
 const isNight = () => { const h = new Date().getHours(); return h >= 20 || h < 7; };
 // Pas de choix fait : « Ouverts seulement » s'active tout seul le soir et la nuit
 const openOnlyNow = () => SET.openOnly === true || (SET.openOnly == null && isNight());
@@ -729,11 +762,14 @@ function passFilter(p, anyCuisine){
   if(openOnlyNow() && o.level === "closed") return false;
   if(SET.wcOnly && !p.wheelchair) return false;
   if(FILTER.cu && !anyCuisine && !cuisinesOf(p).includes(FILTER.cu)) return false;
-  if(FILTER.pr && PRICED.has(p.g) && priceOf(p).lvl !== FILTER.pr) return false;
+  if(FILTER.bud){ const b = budgetInfo(p); if(!b || b.b !== FILTER.bud) return false; }
+  // « Ce soir » / « Ce week-end » : on écarte ce qui sera fermé à ce moment-là (horaires inconnus : gardés)
+  if(FILTER.when && p.oh && HOURS.at(p.oh, RANK.momentDate(FILTER.when, Date.now())).state === "closed") return false;
+  if(FILTER.leg && p.walk > FILTER.leg) return false;
   if(FILTER.q && !norm(p.name).includes(norm(FILTER.q))) return false;
   return true;
 }
-const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q || FILTER.pr);
+const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q || FILTER.bud || FILTER.when || FILTER.leg);
 function renderFilters(){
   const F = $("filters"), list = allLoaded();
   F.hidden = !pos || !list.length && !filtering();
@@ -743,22 +779,32 @@ function renderFilters(){
     chips.push(`<button class="chip" data-f="open" aria-pressed="${openOnlyNow()}">🕐 ${tx("Ouverts à ton arrivée")}</button>`);
   if(list.some(p => p.wheelchair) || SET.wcOnly)
     chips.push(`<button class="chip" data-f="wc" aria-pressed="${!!SET.wcOnly}">${tx("♿ Accessible")}</button>`);
-  // Budget : une ligne à part, bien visible (restaurants, cafés, bars…), avec le nombre de lieux par gamme
-  const B = $("budget"), priced = [...new Map(list.filter(p => PRICED.has(p.g)).map(p => [p.id, p])).values()];
-  B.hidden = !priced.length;
-  if(priced.length){
-    const pr0 = FILTER.pr; FILTER.pr = 0;
-    const n = [1, 2, 3].map(l => priced.filter(p => passFilter(p) && priceOf(p).lvl === l).length);
-    FILTER.pr = pr0;
-    B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="seg">` +
-      `<button data-pr="0" aria-pressed="${!FILTER.pr}">${tx("Tous")}</button>` +
-      [1, 2, 3].map(l => `<button data-pr="${l}" aria-pressed="${FILTER.pr === l}"${n[l-1] || FILTER.pr === l ? "" : " disabled"}>${euros(l)}</button>`).join("") + `</div>`;
-    // « dont N estimés » : combien de lieux de cette gamme n'ont qu'un prix estimé
-    if(FILTER.pr){
-      const sel = priced.filter(p => passFilter(p)), est = sel.filter(p => priceOf(p).est).length;
+  if(list.some(p => p.oh))
+    [["weekend", "📅 " + tx("Ce week-end")], ["tonight", "🌙 " + tx("Ce soir")]].forEach(([k, l]) =>   // (ajoutés devant : « Ce soir » en premier)
+      chips.unshift(`<button class="chip when" data-when="${k}" aria-pressed="${FILTER.when === k}">${l}</button>`));
+  // Budget en montants (rien de présélectionné ; « Gratuit » en premier, bien visible), avec le nombre de lieux par tranche
+  const B = $("budget"), uniq = [...new Map(list.map(p => [p.id, p])).values()];
+  const bud0 = FILTER.bud; FILTER.bud = "";
+  const base = uniq.filter(p => passFilter(p)), info = new Map(base.map(p => [p.id, budgetInfo(p)]));
+  FILTER.bud = bud0;
+  const n = Object.fromEntries(RANK.BUCKETS.map(k => [k, base.filter(p => (info.get(p.id) || {}).b === k).length]));
+  B.hidden = !RANK.BUCKETS.some(k => n[k]) && !FILTER.bud;
+  if(!B.hidden){
+    B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="bchips">` +
+      `<button class="chip" data-bud="" aria-pressed="${!FILTER.bud}">${tx("Tous")}</button>` +
+      RANK.BUCKETS.map(k => `<button class="chip${k === "free" ? " free" : ""}" data-bud="${k}" aria-pressed="${FILTER.bud === k}"${n[k] || FILTER.bud === k ? "" : " disabled"}>${BUDGET_LABELS[k]} <small>${n[k]}</small></button>`).join("") + `</div>`;
+    // « dont N estimés » : prix supposés (catégorie gratuite, niveau estimé)
+    if(FILTER.bud){
+      const sel = base.filter(p => (info.get(p.id) || {}).b === FILTER.bud), est = sel.filter(p => info.get(p.id).est).length;
       if(sel.length) B.insertAdjacentHTML("beforeend", `<small class="estn">${est ? tx("{n} lieux, dont {e} estimés", {n: sel.length, e: est}) : tx("{n} lieux, prix confirmés", {n: sel.length})}</small>`);
     }
   }
+  // Distance : trajet maximal réglable, jusqu'à 1 h (dans la limite du temps choisi)
+  const maxL = Math.min(60, Math.max(5, Math.ceil(maxLeg() / 5) * 5)), cur = FILTER.leg && FILTER.leg < maxL ? FILTER.leg : maxL;
+  $("legRow").hidden = !list.length;
+  $("legRow").innerHTML = `<label for="legIn">${tx("Jusqu'à {d} de trajet", {d: `<b>${fmtDur(cur)}</b>`})}</label><input id="legIn" type="range" min="5" max="${maxL}" step="5" value="${cur}" aria-label="${tx("Trajet maximal")}">`;
+  $("legIn").oninput = e => { $("legRow").querySelector("b").textContent = fmtDur(+e.target.value); };
+  $("legIn").onchange = e => { const v = +e.target.value; FILTER.leg = v >= maxL ? 0 : v; renderResults(); };
   // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
   const count = {};
   new Map(list.filter(p => passFilter(p, true)).map(p => [p.id, p])).forEach(p => cuisinesOf(p).forEach(c => count[c] = (count[c] || 0) + 1));
@@ -769,16 +815,17 @@ function renderFilters(){
 }
 $("fchips").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
-  if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
+  if(b.dataset.when){ FILTER.when = FILTER.when === b.dataset.when ? "" : b.dataset.when; }
+  else if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
   else if(b.dataset.f === "wc"){ SET.wcOnly = !SET.wcOnly; saveSet(); }
   else if(b.dataset.cu != null) FILTER.cu = FILTER.cu === b.dataset.cu ? "" : b.dataset.cu;
   renderResults();
 });
 $("budget").addEventListener("click", e => {
-  const b = e.target.closest("button[data-pr]"); if(!b || b.disabled) return;
-  const n = +b.dataset.pr; FILTER.pr = FILTER.pr === n ? 0 : n;
+  const b = e.target.closest("button[data-bud]"); if(!b || b.disabled) return;
+  FILTER.bud = FILTER.bud === b.dataset.bud ? "" : b.dataset.bud;
   // vrais prix Google (si disponibles) pour les lieux les plus proches de chaque rubrique
-  if(FILTER.pr) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4)));
+  if(FILTER.bud) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4)));
   renderResults();
 });
 $("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); renderResults(); });
@@ -830,7 +877,7 @@ function renderResults(){
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
       // filtre budget : les prix confirmés (Google, communauté) avant les estimations
-      .sort((a, b) => (FILTER.pr ? !!(priceOf(a) || {}).est - !!(priceOf(b) || {}).est : 0) || rankOpen(a) - rankOpen(b) || (destMode() ? a.detour - b.detour : 0) || a.dist - b.dist);
+      .sort((a, b) => (FILTER.bud ? !!(budgetInfo(a) || {}).est - !!(budgetInfo(b) || {}).est : 0) || RANK.placeCompare(sortKey(a), sortKey(b), Date.now()));
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -844,7 +891,7 @@ function renderResults(){
     } else if(!n){
       sec.innerHTML += `<p class="note">${!all.length && g.luggage ? tx("Aucune consigne à bagages trouvée près d'ici dans OpenStreetMap. Renseigne-toi au guichet de la gare.") : !all.length ? tx("Rien d'assez proche pour {d}.", {d:fmtDur(T)}) : filtering() ? tx("Rien ne correspond à tes filtres ici.") : tx("Tout est fermé à cette heure-ci.")}</p>`;
     } else {
-      const SHOW = 6, all = EXPANDED.has(g.l);
+      const SHOW = 4, all = EXPANDED.has(g.l);           // moins de choix, mais les meilleurs : 4 puis « Voir plus »
       (all ? items : items.slice(0, SHOW)).forEach(p => sec.appendChild(placeEl(p)));
       if(items.length > SHOW){
         const more = document.createElement("button"); more.className = "more-btn";
@@ -871,7 +918,7 @@ function renderResults(){
     const ring = `${MOODS[M].l} · ${tx("{d} {way}, retour compris", {d:fmtDur(T), way:TR().way})} · `;
     bn.insertAdjacentHTML("afterbegin", `<div class="circ" style="background-image:url('${moodImg(M, true)}'), url('${moodImg(M)}')"><svg viewBox="0 0 300 300" aria-hidden="true"><path id="ringPath" d="M150 150 m-128 0 a128 128 0 1 1 256 0 a128 128 0 1 1 -256 0" fill="none"/><text><textPath href="#ringPath" textLength="800"></textPath></text></svg></div>`);
     bn.querySelector("textPath").textContent = (ring + ring).slice(0, 90);
-    if(MOODS[M].adult) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
+    if(MOODS[M].adult || groupsNow().some(g => g.adult)) bn.insertAdjacentHTML("beforeend", `<small class="evin">${tx("L'abus d'alcool est dangereux pour la santé. À consommer avec modération.")}</small>`);
     $("bannerBox").appendChild(bn);
   }
   $("idea").classList.toggle("on", total > 0);
@@ -904,6 +951,14 @@ function whereTitle(){
 }
 
 const rankOpen = p => p.open.level === "closed" ? 2 : p.open.level === "unknown" ? 1 : 0;
+// Date de vérification d'un lieu : OpenStreetMap (check_date…) ou horaires signalés par la communauté (la plus récente)
+function checkedOf(p){
+  const rv = reviewsFor(p).find(r => r.hours), c = rv ? new Date(rv.at).toISOString().slice(0, 10) : "";
+  return [p.checked || "", c].sort().pop();
+}
+const verifiedNow = p => RANK.recentlyChecked(checkedOf(p), Date.now());
+// Tri dans une rubrique (js/rank.js, testé) : fermé en bas ; le moins cher ; vérifié récemment ; le plus proche (ou le plus petit détour)
+const sortKey = p => ({open: rankOpen(p), lvl: (priceOf(p) || {}).lvl || null, checked: checkedOf(p), near: destMode() && p.detour != null ? p.detour * 1e6 + p.dist : p.dist});
 const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []).filter(p => !reportHidden(p)); }
 
@@ -933,19 +988,31 @@ setInterval(() => {
 // « Boire un verre » n'est pas proposé aux moins de 18 ans (âge du profil)
 const isMinor = () => { const a = parseInt(PROFILE.age, 10); return a > 0 && a < 18; };
 const moodShown = k => !(MOODS[k].adult && isMinor());
+// l'ordre des envies dépend de l'heure : on le revoit toutes les 10 minutes
+setInterval(() => { if(document.visibilityState === "visible") renderMoods(); }, 10 * 60e3);
 function renderMoods(){
   if(!moodShown(M)) M = "manger";
-  $("moods").innerHTML = Object.entries(MOODS).filter(([k]) => moodShown(k)).map(([k,v]) =>
-    v.img
-      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')"><span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
-      : `<button data-m="${k}" aria-pressed="${k===M}"><span>${ICONS.ico(v.e, 36)}</span>${v.sl||v.l}</button>`).join("");
+  let sep = false;
+  // ordre selon le moment (js/rank.js) : « Se poser » en tête le soir en semaine, « Sorties » en tête le week-end
+  const now = new Date(), feat = RANK.featured(now);
+  const keys = RANK.moodOrder(Object.keys(MOODS), now, Object.keys(MOODS).filter(k => MOODS[k].practical));
+  $("moods").innerHTML = keys.map(k => [k, MOODS[k]]).filter(([k]) => moodShown(k)).map(([k,v]) => {
+    // « Pratique » (courses, artisans) : en bas, sous un petit titre
+    const head = v.practical && !sep ? (sep = true, `<p class="moodsep">${tx("Pratique")}</p>`) : "";
+    const ok = `<span class="ok" aria-hidden="true">${k===M ? "✓" : v.groups.some(isPreferred) ? "♥" : "+"}</span>`
+      + (k === feat ? `<span class="nowtag">${RANK.isWeekend(now) ? tx("Ce week-end") : tx("Ce soir")}</span>` : "");
+    return head + (v.img
+      ? `<button class="photo" data-m="${k}" aria-pressed="${k===M}" style="background:url('${moodImg(k)}') center/cover no-repeat;--lg:url('${new URL(moodImg(k, true), location.href).href}')">${ok}<b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`
+      // envie sans photo (pour l'instant) : même tuile, avec son dessin en grand
+      : `<button class="photo nophoto" data-m="${k}" aria-pressed="${k===M}">${ok}<span class="big" aria-hidden="true">${ICONS.ico(v.e, 56)}</span><b>${v.sl||v.l}</b><small>${v.d||""}</small></button>`);
+  }).join("");
 }
 // Rubriques de l'envie qui ne tiennent pas dans le temps choisi, avec la durée qu'il faudrait (parmi les choix proposés)
 function laterGroups(){
   return MOODS[M].groups.filter(g => allowed(g) && !fits(g, T)).map(g => ({g, t: TIMES.find(t => t > T && fits(g, t))})).filter(x => x.t);
 }
 // Choix du temps : jusqu'à 2 h
-const TIMES = [10, 20, 30, 45, 60, 90, 120];
+const TIMES = [10, 20, 30, 45, 60, 90, 120, 150, 180];   // jusqu'à 3 h : un film + le trajet ne tient pas dans 2 h
 // Temps habituel (choisi au premier lancement) : c'est lui qui est proposé à l'ouverture
 try{ const t0 = +JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").time; if(TIMES.includes(t0)) T = t0; }catch(e){}
 // Ouverture depuis une notification de créneau (./?t=30) : la durée est déjà choisie
@@ -2094,7 +2161,7 @@ function goToPlace(id){
   let el = document.getElementById(elId);
   if(!el){
     const p = allLoaded().find(x => x.id === id); if(!p) return;
-    if(!passFilter(p)){ FILTER.q = ""; FILTER.cu = ""; $("fq").value = ""; }
+    if(!passFilter(p)){ FILTER.q = ""; FILTER.cu = ""; FILTER.bud = ""; FILTER.when = ""; FILTER.leg = 0; $("fq").value = ""; }
     EXPANDED.add(p.g); renderResults();
     el = document.getElementById(elId); if(!el) return;
   }
@@ -2526,7 +2593,11 @@ function renderHistory(){
 renderTravel(); renderArrive(); renderGare(); renderPace();
 document.querySelectorAll(".tabico").forEach(i => i.innerHTML = ICONS.ico(i.dataset.i, 26));
 renderMoods();
+// Ville par défaut : Toulouse (place du Capitole), tant que ni le GPS ni une adresse n'ont donné mieux.
+// On en change comme avant : « Ma position » ou une adresse dans « Où es-tu ? ».
+const DEFAULT_PLACE = {lat:43.6045, lng:1.4440, label:"Toulouse"};
 if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
+else { pos = {lat:DEFAULT_PLACE.lat, lng:DEFAULT_PLACE.lng}; posLabel = DEFAULT_PLACE.label; geoState = "ok"; }
 HIST = lsLoad().filter(h => !GONE.has(h.id));
 renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();

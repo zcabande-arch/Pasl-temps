@@ -27,7 +27,11 @@ const SELS = [
   "shop=dry_cleaning","shop=laundry","shop=chemist","shop=hardware","shop=doityourself","shop=paint","craft=electronics_repair","shop=repair",
   "shop=computer","craft=watchmaker","shop=watches","shop=copyshop","craft=printer","shop=bicycle","shop=car_repair","shop=tyres",
   // Mode gare : gares de train et consignes à bagages
-  "railway=station","public_transport=station","amenity=luggage_locker","amenity=left_luggage"
+  "railway=station","public_transport=station","amenity=luggage_locker","amenity=left_luggage",
+  // Nouvelles envies (questionnaire) : sorties, cinéma, sport, concerts, brocantes, jeux, créatif et bien-être
+  "amenity=nightclub","amenity=cinema","leisure=swimming_pool","amenity=music_venue","amenity=theatre",
+  "shop=second_hand","shop=antiques","shop=charity","leisure=escape_game","shop=games","leisure=amusement_arcade",
+  "shop=video_games","leisure=bowling_alley","sport=yoga","amenity=arts_centre","craft=pottery","leisure=sauna","amenity=public_bath"
 ];
 // Gares de TRAIN seulement : pas les stations de métro ou de tram (sauf si elles ont aussi des trains)
 const NOT_TRAIN = /^(subway|light_rail|monorail|tram|funicular)$/;
@@ -49,6 +53,18 @@ function center(g){
   let x = 0, y = 0;
   for(const [lx, ly] of ring){ x += lx; y += ly; }
   return [x / ring.length, y / ring.length];
+}
+// Date de la dernière vérification sur le terrain (OpenStreetMap : check_date…), « AAAA-MM-JJ » ou ""
+function checkedOf(t){
+  const d = [t["check_date:opening_hours"], t["check_date"], t["survey:date"]].map(x => String(x || "").trim()).filter(x => /^\d{4}-\d{2}(-\d{2})?$/.test(x)).sort().pop();
+  return d ? (d.length === 7 ? d + "-01" : d) : "";
+}
+// Entrée gratuite ou payante (OpenStreetMap : fee) : 1 gratuite, 2 payante, 0 inconnu
+function feeOf(t){
+  const f = String(t.fee || "").trim().toLowerCase();
+  if(f === "no") return 1;
+  if(f && f !== "unknown") return 2;            // yes, ou un tarif
+  return 0;
 }
 const clip = (s, n) => (s && String(s).length > n ? String(s).slice(0, n) : s || "");
 function addr(t){
@@ -87,6 +103,9 @@ async function build(inputs, outDir){
     const row = [lat, lng, sels.length === 1 ? sels[0] : sels, clip(t.name, 80), clip(addr(t), 100),
       clip(t.opening_hours, 160), clip(t.website || t["contact:website"] || t.url, 120),
       clip(t.phone || t["contact:phone"], 30), clip(t.cuisine, 40), t.wheelchair === "yes" ? 1 : 0, id];
+    // [11] date de vérification, [12] entrée : 1 gratuite (fee=no), 2 payante (fee=yes…) — ajoutés seulement s'ils existent
+    const ck = checkedOf(t), fee = feeOf(t);
+    if(fee) row.push(ck, fee); else if(ck) row.push(ck);
     // Codes postaux : centre des lieux qui portent ce code (et cette commune)
     const pc = String(t["addr:postcode"] || "").trim();
     if(/^\d{5}$/.test(pc)){
