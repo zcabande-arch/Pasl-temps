@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "112";
+const APP_VERSION = "113";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -9,6 +9,18 @@ const APP_VERSION = "112";
   fetch(location.pathname, {cache: "reload"}).catch(() => {}).finally(() => location.reload());
   throw new Error("Ancienne page : rechargement");
 })();
+
+// Appli de l'App Store (coquille iOS PWABuilder) : elle pose le cookie « app-platform=iOS App Store ».
+// Dans l'appli, on retire seulement ce qui n'a pas de sens hors du site : installation depuis Safari,
+// notifications web (indisponibles dans la coquille) et lien vers la page admin. Rien d'autre ne change.
+const IN_STORE_APP = (() => {
+  try{
+    if(/(?:^|;\s*)app-platform=iOS(?:%20| )App(?:%20| )Store/.test(document.cookie)) return true;
+    if(new URLSearchParams(location.search).get("app") === "ios"){ localStorage.setItem("pasltemps.app", "ios"); return true; }
+    return localStorage.getItem("pasltemps.app") === "ios";
+  }catch(e){ return false; }
+})();
+document.documentElement.classList.toggle("store-app", IN_STORE_APP);
 
 // Chaque envie = des rubriques, chacune une recherche OpenStreetMap (étiquettes osm). stay = temps minimum sur place (min).
 // Ordre des envies : celui du questionnaire (66 utilisateurs) — cinéma et concerts rangés dans Culture, à la place
@@ -637,7 +649,7 @@ function refreshRemind(){
   renderPushAsk();
 }
 // Demande d'autorisation : bannière (au plus tous les 3 jours si « Plus tard »), et au premier « Je pars »
-const pushReady = () => !!DB && pushOk() && (!isIOS() || standalone());
+const pushReady = () => !IN_STORE_APP && !!DB && pushOk() && (!isIOS() || standalone());
 async function enablePush(){
   try{
     if(Notification.permission === "default" && await Notification.requestPermission() !== "granted") return false;
@@ -1694,7 +1706,7 @@ function moderate(walls){
 let ADMIN = false;
 async function checkAdmin(){
   const r = window.PLT && PLT.adminMe ? await PLT.adminMe() : null;
-  ADMIN = !!(r && r.account);
+  ADMIN = !IN_STORE_APP && !!(r && r.account);   // la modération se fait sur le site, jamais dans l'appli de l'App Store
   const a = $("pAdmin"); if(a) a.hidden = !ADMIN;
   if(ADMIN){ renderBlog(); renderReviews(); }
 }
