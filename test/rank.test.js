@@ -66,3 +66,33 @@ test("tri sans prix (parcs, musées…) : vérifié récemment d'abord, puis le 
   assert.deepEqual(sorted([P("proche", {near: 100}), P("vérifié", {near: 700, checked: "2026-09-01"}), P("loin", {near: 400})]),
     ["vérifié", "proche", "loin"]);
 });
+
+// ---------- Budget en montants ----------
+test("budget : gratuit, montants Google, niveaux € / €€ / €€€, catégories gratuites, inconnu", () => {
+  assert.deepEqual(RANK.budgetOf({fee: 1}), {b: "free", est: false});
+  assert.deepEqual(RANK.budgetOf({from: 8, to: 12}), {b: "10-25", est: false});      // moyenne 10
+  assert.deepEqual(RANK.budgetOf({from: 5, to: 9}), {b: "lt10", est: false});
+  assert.deepEqual(RANK.budgetOf({from: 60}), {b: "gt50", est: false});
+  assert.deepEqual(RANK.budgetOf({lvl: 1, est: true}), {b: "lt10", est: true});
+  assert.deepEqual(RANK.budgetOf({lvl: 2}), {b: "10-25", est: false});
+  assert.deepEqual(RANK.budgetOf({lvl: 3}), {b: "25-50", est: false});
+  assert.deepEqual(RANK.budgetOf({freeCat: true}), {b: "free", est: true});         // parc : supposé gratuit
+  assert.equal(RANK.budgetOf({freeCat: true, fee: 2}), null);                        // payant d'après OpenStreetMap
+  assert.equal(RANK.budgetOf({}), null);                                             // on n'invente pas
+});
+
+// ---------- Moment ----------
+test("« Ce soir » : 20 h aujourd'hui (ou maintenant si c'est plus tard)", () => {
+  const mardi14 = new Date(2026, 10, 10, 14), mardi22 = new Date(2026, 10, 10, 22);
+  assert.equal(RANK.momentDate("tonight", mardi14).getHours(), 20);
+  assert.equal(RANK.momentDate("tonight", mardi14).getDate(), 10);
+  assert.equal(+RANK.momentDate("tonight", mardi22), +mardi22);
+});
+test("« Ce week-end » : samedi 15 h qui vient (ou maintenant si on y est)", () => {
+  const w = RANK.momentDate("weekend", new Date(2026, 10, 10, 14));   // mardi
+  assert.deepEqual([w.getDay(), w.getDate(), w.getHours()], [6, 14, 15]);
+  const sam = new Date(2026, 10, 14, 11);
+  assert.equal(+RANK.momentDate("weekend", sam), +sam);
+  const dim20 = RANK.momentDate("weekend", new Date(2026, 10, 15, 20)); // dimanche soir → samedi suivant
+  assert.deepEqual([dim20.getDay(), dim20.getDate()], [6, 21]);
+});

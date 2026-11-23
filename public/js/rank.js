@@ -40,7 +40,33 @@
       || (recentlyChecked(b.checked, now) - recentlyChecked(a.checked, now))
       || (a.near - b.near);
   }
-  const api = {featured, moodOrder, isWeekend, isWeekdayEvening, recentlyChecked, placeCompare};
+  // ---------- Budget en montants ----------
+  // Tranches : free (gratuit), lt10 (moins de 10 €), 10-25, 25-50, gt50 (plus de 50 €).
+  // x : {fee (1 gratuit, 2 payant, 0 inconnu — OpenStreetMap), freeCat (rubrique d'ordinaire gratuite : parc, monument…),
+  //      from, to (fourchette Google en €), lvl (1 € … 4 €€€€), est (niveau estimé)} → {b, est} ou null (prix inconnu)
+  const BUCKETS = ["free", "lt10", "10-25", "25-50", "gt50"];
+  const byAmount = e => e < 10 ? "lt10" : e <= 25 ? "10-25" : e <= 50 ? "25-50" : "gt50";
+  function budgetOf(x){
+    if(x.fee === 1) return {b: "free", est: false};
+    if(x.from != null && isFinite(x.from)) return {b: byAmount(x.to != null && isFinite(x.to) ? (x.from + x.to) / 2 : x.from), est: false};
+    if(x.lvl >= 1) return {b: ["lt10", "10-25", "25-50", "gt50"][Math.min(x.lvl, 4) - 1], est: !!x.est};
+    if(x.freeCat && x.fee !== 2) return {b: "free", est: true};     // parc, monument, bibliothèque… : supposé gratuit
+    return null;
+  }
+  // ---------- Moment : « Ce soir », « Ce week-end » ----------
+  // → l'instant où l'on regarde si un lieu est ouvert
+  function momentDate(kind, now){
+    const d = new Date(+now);
+    if(kind === "tonight"){ const t = new Date(d); t.setHours(20, 0, 0, 0); return t > d ? t : d; }
+    if(kind === "weekend"){
+      if(isWeekend(d) && d.getHours() < 18) return d;                 // on y est déjà
+      const t = new Date(d); t.setHours(15, 0, 0, 0);
+      t.setDate(t.getDate() + ((6 - t.getDay() + 7) % 7 || 7));       // samedi prochain, 15 h
+      return t;
+    }
+    return d;
+  }
+  const api = {featured, moodOrder, isWeekend, isWeekdayEvening, recentlyChecked, placeCompare, BUCKETS, budgetOf, momentDate};
   if(typeof window !== "undefined") window.RANK = api;
   if(typeof module !== "undefined") module.exports = api;
 })();

@@ -1464,3 +1464,18 @@ input,textarea,select{font-size:max(16px,1em)}
 
 /* Lieu vérifié récemment (horaires ou présence, moins d'un an) */
 .sticker.ok{background:var(--leafbg,#E3F3E8);color:var(--leaf,#2E9E5B)}
+
+/* Filtres : budget en montants (pastilles, « Gratuit » en vert), moment, trajet maximal */
+.budget{flex-wrap:wrap}
+.budget .bchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;flex:1 1 100%;padding-bottom:2px}
+.budget .bchips::-webkit-scrollbar{display:none}
+.budget .bchips .chip{min-height:40px;padding:8px 12px;font-weight:700}
+.budget .bchips .chip small{font-weight:600;opacity:.6}
+.budget .bchips .chip.free{background:var(--leafbg,#E3F3E8);color:var(--leaf,#2E9E5B)}
+.budget .bchips .chip[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.budget .bchips .chip.free[aria-pressed="true"]{background:var(--leaf,#2E9E5B);color:#fff}
+.budget .bchips .chip:disabled{opacity:.35}
+.chip.when[aria-pressed="true"]{background:var(--acc);color:var(--accink)}
+.legrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 10px;font-size:14px}
+.legrow label{white-space:nowrap}
+.legrow input[type=range]{flex:1;min-width:150px;height:32px;accent-color:var(--acc)}

@@ -146,3 +146,21 @@ test("date de vérification : gardée seulement si elle existe (check_date, surv
   assert.equal(by("Jamais vérifié").length, 11);           // rien d'ajouté
   assert.equal(by("Date bizarre").length, 11);
 });
+
+test("entrée gratuite ou payante (fee) : gardée seulement si elle existe", async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "fee-"));
+  const f = (id, properties) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[1.444, 43.6045]}, properties:{"@type":"node", "@id":id, ...properties}});
+  fs.writeFileSync(path.join(dir, "in.geojsonseq"), [
+    f(1, {tourism:"museum", name:"Musée gratuit", fee:"no"}),
+    f(2, {tourism:"museum", name:"Musée payant", fee:"yes", check_date:"2026-01-10"}),
+    f(3, {tourism:"museum", name:"Musée 8 €", fee:"8 EUR"}),
+    f(4, {tourism:"museum", name:"Musée ?"})
+  ].join("\n"));
+  await build(path.join(dir, "in.geojsonseq"), path.join(dir, "out"));
+  const tile = JSON.parse(fs.readFileSync(path.join(dir, "out", "t", "872_28.json"), "utf8"));
+  const by = n => tile.find(x => x[3] === n);
+  assert.deepEqual(by("Musée gratuit").slice(11), ["", 1]);
+  assert.deepEqual(by("Musée payant").slice(11), ["2026-01-10", 2]);
+  assert.equal(by("Musée 8 €")[12], 2);
+  assert.equal(by("Musée ?").length, 11);
+});

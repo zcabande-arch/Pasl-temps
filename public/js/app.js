@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "111";
+const APP_VERSION = "112";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -233,7 +233,7 @@ function isPreferred(g){
 
 // Moyens de transport : vitesse en ville (m/min), détours (×), temps fixe par trajet (min : garer, attacher le vélo…)
 const TRAVEL = {
-  walk: {l:tx("À pied"), ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3000, gm:"walking",   of:tx("de marche"), way:tx("à pied"),     rings:[2,5,10,15,20]},
+  walk: {l:tx("À pied"), ico:"walk", e:"🚶", speed:80,  detour:1.3, over:0, cap:3700, gm:"walking",   of:tx("de marche"), way:tx("à pied"),     rings:[2,5,10,15,20]},
   bike: {l:tx("Vélo"), ico:"bike", e:"🚲", speed:250, detour:1.3, over:1, cap:3000, gm:"bicycling", of:tx("de vélo"), way:tx("à vélo"),     rings:[3,5,10,15,20]},
   car:  {l:tx("Voiture"), ico:"car",  e:"🚗", speed:400, detour:1.4, over:4, cap:3500, gm:"driving",   of:tx("de route"), way:tx("en voiture"), rings:[5,8,12,16,20]}
 };
@@ -675,7 +675,19 @@ async function scheduleTimerPush(){
 }
 
 // ---------- Filtres : ouverts, accessibles, cuisine, nom ----------
-const FILTER = {q:"", cu:"", pr:0};
+// Filtres : nom, cuisine, budget (tranche en €, rien de présélectionné), moment (« Ce soir », « Ce week-end »),
+// trajet maximal (minutes, 0 = selon le temps disponible)
+const FILTER = {q:"", cu:"", bud:"", when:"", leg:0};
+// Rubriques d'ordinaire gratuites (parcs, nature, monuments, lieux de culte, bibliothèques, marchés) : « supposé gratuit »
+const FREE_SELS = new Set(["leisure=park","leisure=garden","tourism=picnic_site","leisure=nature_reserve","tourism=viewpoint","leisure=common","leisure=track","historic=monument","historic=castle","amenity=place_of_worship","amenity=library","amenity=marketplace"]);
+// Tranche de budget d'un lieu (js/rank.js) : {b, est} ou null si on ne sait pas
+function budgetInfo(p){
+  const pr = priceOf(p), g = pr && pr.g, eur = g && (g.cur === "EUR" || !g.cur);
+  const grp = moodGroups().find(x => x.l === p.g) || Object.values(MOODS).flatMap(m => m.groups).find(x => x.l === p.g);
+  return RANK.budgetOf({fee: p.fee || 0, freeCat: !!grp && grp.osm.every(s => FREE_SELS.has(s)),
+    from: eur && g.from != null ? +g.from : null, to: eur && g.to ? +g.to : null, lvl: pr ? pr.lvl : null, est: !!(pr && pr.est)});
+}
+const BUDGET_LABELS = {free: "🆓 " + tx("Gratuit"), lt10: tx("moins de 10 €"), "10-25": "10–25 €", "25-50": "25–50 €", gt50: tx("plus de 50 €")};
 const isNight = () => { const h = new Date().getHours(); return h >= 20 || h < 7; };
 // Pas de choix fait : « Ouverts seulement » s'active tout seul le soir et la nuit
 const openOnlyNow = () => SET.openOnly === true || (SET.openOnly == null && isNight());
@@ -738,11 +750,14 @@ function passFilter(p, anyCuisine){
   if(openOnlyNow() && o.level === "closed") return false;
   if(SET.wcOnly && !p.wheelchair) return false;
   if(FILTER.cu && !anyCuisine && !cuisinesOf(p).includes(FILTER.cu)) return false;
-  if(FILTER.pr && PRICED.has(p.g) && priceOf(p).lvl !== FILTER.pr) return false;
+  if(FILTER.bud){ const b = budgetInfo(p); if(!b || b.b !== FILTER.bud) return false; }
+  // « Ce soir » / « Ce week-end » : on écarte ce qui sera fermé à ce moment-là (horaires inconnus : gardés)
+  if(FILTER.when && p.oh && HOURS.at(p.oh, RANK.momentDate(FILTER.when, Date.now())).state === "closed") return false;
+  if(FILTER.leg && p.walk > FILTER.leg) return false;
   if(FILTER.q && !norm(p.name).includes(norm(FILTER.q))) return false;
   return true;
 }
-const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q || FILTER.pr);
+const filtering = () => !!(SET.wcOnly || FILTER.cu || FILTER.q || FILTER.bud || FILTER.when || FILTER.leg);
 function renderFilters(){
   const F = $("filters"), list = allLoaded();
   F.hidden = !pos || !list.length && !filtering();
@@ -752,22 +767,32 @@ function renderFilters(){
     chips.push(`<button class="chip" data-f="open" aria-pressed="${openOnlyNow()}">🕐 ${tx("Ouverts à ton arrivée")}</button>`);
   if(list.some(p => p.wheelchair) || SET.wcOnly)
     chips.push(`<button class="chip" data-f="wc" aria-pressed="${!!SET.wcOnly}">${tx("♿ Accessible")}</button>`);
-  // Budget : une ligne à part, bien visible (restaurants, cafés, bars…), avec le nombre de lieux par gamme
-  const B = $("budget"), priced = [...new Map(list.filter(p => PRICED.has(p.g)).map(p => [p.id, p])).values()];
-  B.hidden = !priced.length;
-  if(priced.length){
-    const pr0 = FILTER.pr; FILTER.pr = 0;
-    const n = [1, 2, 3].map(l => priced.filter(p => passFilter(p) && priceOf(p).lvl === l).length);
-    FILTER.pr = pr0;
-    B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="seg">` +
-      `<button data-pr="0" aria-pressed="${!FILTER.pr}">${tx("Tous")}</button>` +
-      [1, 2, 3].map(l => `<button data-pr="${l}" aria-pressed="${FILTER.pr === l}"${n[l-1] || FILTER.pr === l ? "" : " disabled"}>${euros(l)}</button>`).join("") + `</div>`;
-    // « dont N estimés » : combien de lieux de cette gamme n'ont qu'un prix estimé
-    if(FILTER.pr){
-      const sel = priced.filter(p => passFilter(p)), est = sel.filter(p => priceOf(p).est).length;
+  if(list.some(p => p.oh))
+    [["weekend", "📅 " + tx("Ce week-end")], ["tonight", "🌙 " + tx("Ce soir")]].forEach(([k, l]) =>   // (ajoutés devant : « Ce soir » en premier)
+      chips.unshift(`<button class="chip when" data-when="${k}" aria-pressed="${FILTER.when === k}">${l}</button>`));
+  // Budget en montants (rien de présélectionné ; « Gratuit » en premier, bien visible), avec le nombre de lieux par tranche
+  const B = $("budget"), uniq = [...new Map(list.map(p => [p.id, p])).values()];
+  const bud0 = FILTER.bud; FILTER.bud = "";
+  const base = uniq.filter(p => passFilter(p)), info = new Map(base.map(p => [p.id, budgetInfo(p)]));
+  FILTER.bud = bud0;
+  const n = Object.fromEntries(RANK.BUCKETS.map(k => [k, base.filter(p => (info.get(p.id) || {}).b === k).length]));
+  B.hidden = !RANK.BUCKETS.some(k => n[k]) && !FILTER.bud;
+  if(!B.hidden){
+    B.innerHTML = `<span class="lbl">💶 ${tx("Budget")}</span><div class="bchips">` +
+      `<button class="chip" data-bud="" aria-pressed="${!FILTER.bud}">${tx("Tous")}</button>` +
+      RANK.BUCKETS.map(k => `<button class="chip${k === "free" ? " free" : ""}" data-bud="${k}" aria-pressed="${FILTER.bud === k}"${n[k] || FILTER.bud === k ? "" : " disabled"}>${BUDGET_LABELS[k]} <small>${n[k]}</small></button>`).join("") + `</div>`;
+    // « dont N estimés » : prix supposés (catégorie gratuite, niveau estimé)
+    if(FILTER.bud){
+      const sel = base.filter(p => (info.get(p.id) || {}).b === FILTER.bud), est = sel.filter(p => info.get(p.id).est).length;
       if(sel.length) B.insertAdjacentHTML("beforeend", `<small class="estn">${est ? tx("{n} lieux, dont {e} estimés", {n: sel.length, e: est}) : tx("{n} lieux, prix confirmés", {n: sel.length})}</small>`);
     }
   }
+  // Distance : trajet maximal réglable, jusqu'à 1 h (dans la limite du temps choisi)
+  const maxL = Math.min(60, Math.max(5, Math.ceil(maxLeg() / 5) * 5)), cur = FILTER.leg && FILTER.leg < maxL ? FILTER.leg : maxL;
+  $("legRow").hidden = !list.length;
+  $("legRow").innerHTML = `<label for="legIn">${tx("Jusqu'à {d} de trajet", {d: `<b>${fmtDur(cur)}</b>`})}</label><input id="legIn" type="range" min="5" max="${maxL}" step="5" value="${cur}" aria-label="${tx("Trajet maximal")}">`;
+  $("legIn").oninput = e => { $("legRow").querySelector("b").textContent = fmtDur(+e.target.value); };
+  $("legIn").onchange = e => { const v = +e.target.value; FILTER.leg = v >= maxL ? 0 : v; renderResults(); };
   // cuisines les plus présentes parmi les lieux affichables (les autres filtres appliqués)
   const count = {};
   new Map(list.filter(p => passFilter(p, true)).map(p => [p.id, p])).forEach(p => cuisinesOf(p).forEach(c => count[c] = (count[c] || 0) + 1));
@@ -778,16 +803,17 @@ function renderFilters(){
 }
 $("fchips").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
-  if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
+  if(b.dataset.when){ FILTER.when = FILTER.when === b.dataset.when ? "" : b.dataset.when; }
+  else if(b.dataset.f === "open"){ SET.openOnly = !openOnlyNow(); saveSet(); }
   else if(b.dataset.f === "wc"){ SET.wcOnly = !SET.wcOnly; saveSet(); }
   else if(b.dataset.cu != null) FILTER.cu = FILTER.cu === b.dataset.cu ? "" : b.dataset.cu;
   renderResults();
 });
 $("budget").addEventListener("click", e => {
-  const b = e.target.closest("button[data-pr]"); if(!b || b.disabled) return;
-  const n = +b.dataset.pr; FILTER.pr = FILTER.pr === n ? 0 : n;
+  const b = e.target.closest("button[data-bud]"); if(!b || b.disabled) return;
+  FILTER.bud = FILTER.bud === b.dataset.bud ? "" : b.dataset.bud;
   // vrais prix Google (si disponibles) pour les lieux les plus proches de chaque rubrique
-  if(FILTER.pr) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4)));
+  if(FILTER.bud) loadPrices(Object.values(LOADED).flatMap(x => (x.items || []).slice(0, 4)));
   renderResults();
 });
 $("fq").addEventListener("input", () => { FILTER.q = $("fq").value.trim(); renderResults(); });
@@ -839,7 +865,7 @@ function renderResults(){
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
       // filtre budget : les prix confirmés (Google, communauté) avant les estimations
-      .sort((a, b) => (FILTER.pr ? !!(priceOf(a) || {}).est - !!(priceOf(b) || {}).est : 0) || RANK.placeCompare(sortKey(a), sortKey(b), Date.now()));
+      .sort((a, b) => (FILTER.bud ? !!(budgetInfo(a) || {}).est - !!(budgetInfo(b) || {}).est : 0) || RANK.placeCompare(sortKey(a), sortKey(b), Date.now()));
     if(items[0] && items[0].open.level !== "closed") items[0].first = true;
     const n = items.length; total += n;
     sec.innerHTML = `<h3><span><span class="gi">${ICONS.ico(g.em, 22)}</span>${esc(tx(g.l))}${isPreferred(g) ? `<span class="pref" title="${tx("Dans tes préférences")}">♥</span>` : ""}</span> ${n?`<small>${n}</small>`:""}</h3>`;
@@ -2123,7 +2149,7 @@ function goToPlace(id){
   let el = document.getElementById(elId);
   if(!el){
     const p = allLoaded().find(x => x.id === id); if(!p) return;
-    if(!passFilter(p)){ FILTER.q = ""; FILTER.cu = ""; $("fq").value = ""; }
+    if(!passFilter(p)){ FILTER.q = ""; FILTER.cu = ""; FILTER.bud = ""; FILTER.when = ""; FILTER.leg = 0; $("fq").value = ""; }
     EXPANDED.add(p.g); renderResults();
     el = document.getElementById(elId); if(!el) return;
   }

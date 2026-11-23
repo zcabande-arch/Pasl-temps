@@ -59,6 +59,13 @@ function checkedOf(t){
   const d = [t["check_date:opening_hours"], t["check_date"], t["survey:date"]].map(x => String(x || "").trim()).filter(x => /^\d{4}-\d{2}(-\d{2})?$/.test(x)).sort().pop();
   return d ? (d.length === 7 ? d + "-01" : d) : "";
 }
+// Entrée gratuite ou payante (OpenStreetMap : fee) : 1 gratuite, 2 payante, 0 inconnu
+function feeOf(t){
+  const f = String(t.fee || "").trim().toLowerCase();
+  if(f === "no") return 1;
+  if(f && f !== "unknown") return 2;            // yes, ou un tarif
+  return 0;
+}
 const clip = (s, n) => (s && String(s).length > n ? String(s).slice(0, n) : s || "");
 function addr(t){
   const street = [t["addr:housenumber"], t["addr:street"] || t["addr:place"]].filter(Boolean).join(" ");
@@ -96,7 +103,9 @@ async function build(inputs, outDir){
     const row = [lat, lng, sels.length === 1 ? sels[0] : sels, clip(t.name, 80), clip(addr(t), 100),
       clip(t.opening_hours, 160), clip(t.website || t["contact:website"] || t.url, 120),
       clip(t.phone || t["contact:phone"], 30), clip(t.cuisine, 40), t.wheelchair === "yes" ? 1 : 0, id];
-    const ck = checkedOf(t); if(ck) row.push(ck);     // date de vérification seulement si elle existe (tuiles plus légères)
+    // [11] date de vérification, [12] entrée : 1 gratuite (fee=no), 2 payante (fee=yes…) — ajoutés seulement s'ils existent
+    const ck = checkedOf(t), fee = feeOf(t);
+    if(fee) row.push(ck, fee); else if(ck) row.push(ck);
     // Codes postaux : centre des lieux qui portent ce code (et cette commune)
     const pc = String(t["addr:postcode"] || "").trim();
     if(/^\d{5}$/.test(pc)){
