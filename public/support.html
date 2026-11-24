@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Aide · Fissa Fissa</title>
+<meta name="description" content="Aide et contact de Fissa Fissa : position, lieux, temps de trajet, compte, données personnelles.">
+<meta name="theme-color" content="#F4ECDF">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preload" href="fonts/fraunces.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css">
+<script>
+(function(){ // même mode clair / sombre que l'appli
+  var m = "auto"; try{ m = (JSON.parse(localStorage.getItem("pasltemps.settings") || "{}").mode) || "auto"; }catch(e){}
+  if(m === "light" || m === "dark") document.documentElement.setAttribute("data-theme", m);
+})();
+</script>
+<style>
+  .legal{max-width:680px;margin:0 auto;padding:22px 18px 80px}
+  .legal .back{display:inline-block;font-weight:600;text-decoration:none;border:1.5px solid var(--ink);border-radius:999px;padding:7px 16px;font-size:15px}
+  .legal h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:40px;line-height:1.05;letter-spacing:-.02em;margin:26px 0 6px}
+  .legal h1 em{color:var(--acc);font-style:italic}
+  .legal .lead{color:var(--soft);margin:0 0 18px}
+  .legal nav.toc{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+  .legal nav.toc a{font-size:14px;text-decoration:none;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px}
+  .legal section{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;margin:18px 0}
+  .legal h2{color:var(--ink);font-family:Fraunces,Georgia,serif;font-weight:600;font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  .legal h3{font-size:16px;margin:18px 0 4px;text-transform:uppercase;letter-spacing:.06em;color:var(--acc)}
+  .legal p,.legal li{font-size:16px}
+  .legal ul{padding-left:20px;margin:6px 0}
+  .legal li{margin:4px 0}
+  .legal .tldr{background:var(--accsoft);border-radius:12px;padding:10px 14px;margin:8px 0 4px}
+  .legal .small{font-size:13px;color:var(--soft)}
+  .legal .wipe{font:inherit;font-weight:600;background:var(--acc);color:var(--accink);border:0;border-radius:999px;padding:10px 18px;margin-top:6px}
+  .legal .wipemsg{font-size:14px;color:var(--soft);min-height:1em}
+  .legal .mail{display:inline-block;font-weight:700;background:var(--acc);color:var(--accink);text-decoration:none;border-radius:999px;padding:10px 18px;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="legal">
+  <a class="back" href="./">← Retour à l'appli</a>
+  <h1>Besoin d'<em>aide</em> ?</h1>
+  <p class="lead">Les réponses aux questions qu'on nous pose le plus. Si tu ne trouves pas, écris-nous : on répond en général sous quelques jours.</p>
+  <p class="small" lang="en">🇬🇧 Need help? Write to us in English or French at the address below.</p>
+  <nav class="toc" aria-label="Sommaire">
+    <a href="#marche">Comment ça marche</a><a href="#position">Ma position</a><a href="#lieux">Un lieu est faux</a><a href="#compte">Mon compte</a><a href="#contact">Nous contacter</a>
+  </nav>
+
+  <section id="marche">
+    <h2>Comment ça marche ?</h2>
+    <p>Dis à l'appli combien de temps tu as (10 minutes, 20 minutes, 1 heure…), comment tu te déplaces (à pied, à vélo, en voiture) et ce dont tu as envie. Elle te montre les lieux où tu peux aller, profiter et <strong>rentrer à l'heure</strong> : le trajet aller, le temps sur place et le retour sont comptés.</p>
+    <p>Touche un lieu pour voir le détail, puis « Je pars » pour l'itinéraire. L'appli est gratuite, sans pub, et marche sans compte.</p>
+  </section>
+
+  <section id="position">
+    <h2>Ma position n'est pas trouvée</h2>
+    <ul>
+      <li>Sur iPhone, ouvre <strong>Réglages → Fissa Fissa → Position</strong> et choisis « Lorsque l'app est active ».</li>
+      <li>Dans un navigateur, autorise la position pour fissafissa.app dans les réglages du site.</li>
+      <li>Tu peux aussi taper une adresse, un code postal ou une ville dans « Où es-tu ? » : tout marche de la même façon.</li>
+    </ul>
+    <p class="small">Ta position sert seulement à trouver ce qui est autour de toi ; elle n'est pas enregistrée. Détails dans la <a href="legal.html#confidentialite">page confidentialité</a>.</p>
+  </section>
+
+  <section id="lieux">
+    <h2>Un lieu est faux ou fermé</h2>
+    <p>Ouvre la fiche du lieu et touche <strong>« Signaler »</strong> (fermé, horaires faux, introuvable…). Ton signalement aide tout le monde.</p>
+    <p>Les lieux viennent d'<a href="https://www.openstreetmap.org" target="_blank" rel="noopener">OpenStreetMap</a>, la carte libre faite par ses utilisateurs : tu peux aussi le corriger directement là-bas.</p>
+    <p class="small">Les temps de trajet sont des estimations (vitesse moyenne, temps minimum sur place). Vérifie avant de partir si c'est important.</p>
+  </section>
+
+  <section id="compte">
+    <h2>Mon compte et mes données</h2>
+    <ul>
+      <li>Le compte est <strong>facultatif</strong> : il sert seulement à retrouver ton profil, tes favoris et ton historique sur tous tes appareils.</li>
+      <li>Pour le supprimer : <strong>Profil → Ton compte → « Supprimer mon compte »</strong>. C'est immédiat et définitif.</li>
+      <li>Pour effacer ce qui est gardé sur ton téléphone : <a href="legal.html#confidentialite">page confidentialité</a>, bouton « Tout effacer ».</li>
+    </ul>
+  </section>
+
+  <section id="contact">
+    <h2>Nous contacter</h2>
+    <p>Une question, un bug, une idée, une demande sur tes données personnelles ?</p>
+    <p><a class="mail" id="supportMail" href="mailto:pasltempssav@gmail.com?subject=Fissa%20Fissa">pasltempssav@gmail.com</a></p>
+    <p class="small">Dis-nous ce que tu faisais, sur quel appareil (iPhone, Android, ordinateur) et, si possible, joins une capture d'écran.</p>
+  </section>
+
+  <p class="small"><a href="legal.html">Mentions légales · Confidentialité · Conditions</a></p>
+</div>
+<script src="config.js"></script>
+<script>
+(function(){ // adresse du service client réglée dans config.js (sinon celle écrite plus haut)
+  var m = (window.PASLTEMPS_CONFIG || {}).contactEmail, a = document.getElementById("supportMail");
+  if(m && a){ a.href = "mailto:" + m + "?subject=Fissa%20Fissa"; a.textContent = m; }
+})();
+</script>
+</body>
+</html>
