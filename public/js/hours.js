@@ -1,7 +1,7 @@
 // Fissa Fissa — horaires d'ouverture OpenStreetMap (opening_hours) : « ouvert à telle heure ? »
 // Gère la forme courante : « Mo-Fr 07:00-19:30; Sa 08:00-12:00,14:00-18:00; Su off », « 24/7 »,
 // les horaires qui passent minuit (« 18:00-02:00 »). Tout le reste (mois, jours fériés, lever du soleil…)
-// donne « inconnu » plutôt qu'une réponse fausse. Expose window.HOURS.
+// donne « inconnu » plutôt qu'une réponse fausse. Jours fériés français (règle « PH ») si on est en France. Expose window.HOURS.
 (function(){
   const DAYS = ["Mo","Tu","We","Th","Fr","Sa","Su"];
   const DAY_FR = ["lun.","mar.","mer.","jeu.","ven.","sam.","dim."], DAY_EN = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -40,13 +40,46 @@
     return out;
   }
 
-  // → tableau de 7 jours (lundi = 0) d'intervalles en minutes, ou null si non compris
+  // ---------- Jours fériés ----------
+  // Est-on en France ? Contour simplifié (métropole), boîtes pour la Corse et l'outre-mer. L'appli donne la position avec setPos.
+  const METRO = [[51.15,2.4],[50.8,2.75],[50.78,3.2],[50.5,3.3],[50.25,4.1],[50.15,4.85],[49.55,5.6],[49.45,6.4],[49.1,7.4],[49,8.2],[48.3,7.75],
+    [47.6,7.55],[47.45,6.95],[46.9,6.4],[46.35,6.05],[46.15,5.97],[46.15,6.2],[46.3,6.75],[45.9,7.03],[45.1,6.75],[44.3,6.95],[44.1,7.6],[43.75,7.52],
+    [43,6.2],[43.15,4.8],[43.2,3.4],[42.43,3.2],[42.4,2],[42.65,0.7],[42.85,-0.7],[43.3,-1.6],[43.4,-1.8],[46,-1.7],[47.2,-2.9],[48,-5.2],[48.7,-4.9],
+    [48.95,-3],[48.65,-1.7],[49.75,-2],[49.75,-1.2],[49.6,0],[50.2,1.4],[50.95,1.5]];
+  const BOXES = [[41.3,8.5,43.05,9.6],[15.8,-61.9,16.6,-60.9],[14.3,-61.3,14.9,-60.8],[2.1,-54.6,5.8,-51.6],[-21.4,55.2,-20.8,55.9],[-13.1,44.9,-12.6,45.3]];
+  function inFrance(lat, lng){
+    if(BOXES.some(([a, b, c, d]) => lat >= a && lat <= c && lng >= b && lng <= d)) return true;
+    let inside = false;
+    for(let i = 0, j = METRO.length - 1; i < METRO.length; j = i++){
+      const [yi, xi] = METRO[i], [yj, xj] = METRO[j];
+      if((yi > lat) !== (yj > lat) && lng < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+    }
+    return inside;
+  }
+  let french = false;                          // position inconnue : aucun jour férié appliqué
+  const setPos = p => { french = !!p && inFrance(p.lat, p.lng); };
+  function easter(y){                          // dimanche de Pâques (algorithme de Meeus)
+    const a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+      g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+      l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451), n = h + l - 7 * m + 114;
+    return new Date(y, Math.floor(n / 31) - 1, n % 31 + 1);
+  }
+  const FIXED = new Set(["1-1", "5-1", "5-8", "7-14", "8-15", "11-1", "11-11", "12-25"]);
+  function isHoliday(date){
+    if(!french) return false;
+    if(FIXED.has((date.getMonth() + 1) + "-" + date.getDate())) return true;
+    const p = easter(date.getFullYear());      // lundi de Pâques, Ascension, lundi de Pentecôte
+    return [1, 39, 50].some(n => { const x = new Date(p.getFullYear(), p.getMonth(), p.getDate() + n); return x.getMonth() === date.getMonth() && x.getDate() === date.getDate(); });
+  }
+
+  // → tableau de 7 jours (lundi = 0) d'intervalles en minutes, ou null si non compris ;
+  //   .ph : horaires des jours fériés ([] = fermé), absent si rien n'est indiqué ; .always : 24 h/24 tous les jours
   function parse(oh){
     if(!oh || typeof oh !== "string") return null;
     if(cache.has(oh)) return cache.get(oh);
     let week = null;
     const src = oh.trim();
-    if(/^24\/7$/.test(src)) week = Array.from({length:7}, () => [[0, 1440]]);
+    if(/^24\/7$/.test(src)){ week = Array.from({length:7}, () => [[0, 1440]]); week.always = true; }
     else {
       week = Array.from({length:7}, () => []);
       let ok = true, any = false, prevDays = null;
@@ -66,6 +99,13 @@
         if(!rule) continue;
         if(/^"/.test(rule)) continue;                                   // commentaire : ignoré
         // jours fériés (PH) : on les retire de la liste des jours ; une règle « PH … » seule est ignorée
+        const ph = /^(?:[A-Za-z\-]+,)*PH(?:,[A-Za-z,\-]+)?\s+(.*)$/.exec(rule);
+        if(ph){
+          const v = ph[1].trim().replace(/\s*"[^"]*"$/, ""), pt = parseTimes(v);
+          if(/^(off|closed)$/i.test(v)) week.ph = [];
+          else if(v === "24/7" || v === "00:00-24:00") week.ph = [[0, 1440]];
+          else if(pt) week.ph = pt;
+        }
         rule = rule.replace(/^PH,|,PH\b/g, "");
         if(/^(PH|SH)\b/.test(rule)) continue;
         let m = /^((?:Mo|Tu|We|Th|Fr|Sa|Su)[A-Za-z,\-]*)?\s*(.*)$/.exec(rule);
@@ -92,9 +132,10 @@
   const hm = min => { min = ((min % 1440) + 1440) % 1440; const h = Math.floor(min / 60), m = min % 60; return EN() ? h + ":" + String(m).padStart(2, "0") : h + "h" + (m ? String(m).padStart(2, "0") : ""); };
 
   // Intervalles absolus (minutes depuis le début du jour de `date`), de la veille à J+7, fusionnés s'ils se touchent
-  function timeline(week, d){
+  function timeline(week, d, date){
     const iv = [];
-    for(let k = -1; k <= 7; k++) week[(d + k + 7) % 7].forEach(([a, b]) => iv.push([k * 1440 + a, k * 1440 + b]));
+    const dayOf = k => week.ph && isHoliday(new Date(date.getFullYear(), date.getMonth(), date.getDate() + k)) ? week.ph : week[(d + k + 7) % 7];
+    for(let k = -1; k <= 7; k++) dayOf(k).forEach(([a, b]) => iv.push([k * 1440 + a, k * 1440 + b]));
     iv.sort((x, y) => x[0] - y[0]);
     const out = [];
     for(const [a, b] of iv){
@@ -109,7 +150,7 @@
     const week = parse(oh);
     if(!week) return {state:"unknown"};
     const d = (date.getDay() + 6) % 7, m = date.getHours() * 60 + date.getMinutes();
-    const tl = timeline(week, d);
+    const tl = timeline(week, d, date);
     const hit = tl.find(([a, b]) => m >= a && m < b);
     if(hit) return {state:"open", closesIn: hit[1] - m, closesAt: hit[1], allDay: hit[1] - m > 6 * 1440};
     const next = tl.find(([a]) => a > m);
@@ -127,6 +168,9 @@
     // pas d'horaires sur la carte, ou dans une forme qu'on ne sait pas lire : on le dit, sans deviner
     if(s.state === "unknown") return {state:"unknown", level:"unknown", text: oh ? tx("Horaires à vérifier") : tx("Horaires non indiqués")};
     if(s.state === "open"){
+      // jour férié, et le lieu n'indique rien pour ces jours-là : on ne l'affirme pas ouvert
+      const w = parse(oh);
+      if(isHoliday(arrive) && !w.ph && !w.always) return {state:"open", level:"warn", holiday:true, text:tx("Jour férié · horaires à vérifier")};
       // late : encore ouvert à 22 h ou plus tard (mis en avant le soir)
       const late = s.allDay || s.closesAt >= 22 * 60;
       if(s.allDay) return {state:"open", level:"ok", late, text:tx("Ouvert 24h/24")};
@@ -140,7 +184,7 @@
     return {state:"closed", level:"closed", text:tx("Fermé · ouvre {w}", {w:when})};
   }
 
-  const api = {parse, at, forVisit};
+  const api = {parse, at, forVisit, setPos, isHoliday, inFrance};
   if(typeof window !== "undefined") window.HOURS = api;
   if(typeof module !== "undefined") module.exports = api;
 })();

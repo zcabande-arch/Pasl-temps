@@ -164,3 +164,21 @@ test("entrée gratuite ou payante (fee) : gardée seulement si elle existe", asy
   assert.equal(by("Musée 8 €")[12], 2);
   assert.equal(by("Musée ?").length, 11);
 });
+
+test("partie manquante : les cases absentes sont reprises de la version publiée, le reste est neuf", async () => {
+  const { merge } = require("../scripts/merge-places");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lieux-ancien-")), J = (...p) => JSON.parse(fs.readFileSync(path.join(dir, ...p), "utf8"));
+  const f = (lng, lat, id, name, pc) => "\x1e" + JSON.stringify({type:"Feature", geometry:{type:"Point", coordinates:[lng, lat]}, properties:{"@type":"node", "@id":id, amenity:"cafe", name, ...(pc ? {"addr:postcode":pc, "addr:city":name} : {})}});
+  fs.writeFileSync(path.join(dir, "old"), [f(2.35, 48.86, 1, "Fermé depuis"), f(-3.72, 40.42, 2, "Madrid", "28001"), f(-3.72, 40.42, 5, "Madrid", "28001")].join("\n"));
+  fs.writeFileSync(path.join(dir, "new"), f(2.35, 48.86, 3, "Nouveau"));
+  await build([{path: path.join(dir, "old"), cc:"es"}], path.join(dir, "p-old"));
+  await build([{path: path.join(dir, "new"), cc:"fr"}], path.join(dir, "p-fr"));
+  const r = merge(path.join(dir, "out"), [path.join(dir, "p-fr")], path.join(dir, "p-old"));
+  assert.equal(r.kept, 1); assert.equal(r.count, 3);
+  assert.deepEqual(J("out", "t", "977_47.json").map(x => x[3]), ["Nouveau"], "la case recalculée ne garde pas l'ancien lieu");
+  assert.equal(J("out", "t", "808_-75.json").length, 2);
+  assert.ok(J("out", "pc", "28.json")["28001"]);
+  assert.deepEqual(J("out", "index.json").countries.sort(), ["es", "fr"]);
+  const bad = J("p-old", "index.json"); bad.sels = ["shop=autre", ...bad.sels]; fs.writeFileSync(path.join(dir, "p-old", "index.json"), JSON.stringify(bad));
+  assert.throws(() => merge(path.join(dir, "out2"), [path.join(dir, "p-fr")], path.join(dir, "p-old")), /incompatible/);
+});

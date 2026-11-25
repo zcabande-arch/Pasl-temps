@@ -661,6 +661,7 @@
   "⏰ Ta pause est finie : il est l'heure d'être rentré·e !": "⏰ Deine Pause ist vorbei: Zeit, zurück zu sein!",
   "Ouvert 24h/24": "Rund um die Uhr geöffnet",
   "Ferme à {h}, juste après ton arrivée": "Schließt um {h}, kurz nach deiner Ankunft",
+  "Jour férié · horaires à vérifier": "Feiertag · Öffnungszeiten prüfen",
   "Ferme dans {m} min": "Schließt in {m} Min",
   "Ouvert · jusqu'à {h}": "Geöffnet · bis {h}",
   "Fermé": "Geschlossen",

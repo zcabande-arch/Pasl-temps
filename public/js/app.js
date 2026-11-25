@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "114";
+const APP_VERSION = "115";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -1292,7 +1292,7 @@ function saveRecents(){ try{ localStorage.setItem(LOC_KEY, JSON.stringify(RECENT
 function setPlace(lat, lng, label, remember){
   // Même endroit (à 60 m près) : pas besoin de relancer la recherche
   if(pos && !remember && label === posLabel && PLACES.meters(pos, {lat, lng}) < 60){ geoState = "ok"; renderWhere(); return; }
-  pos = {lat, lng}; posLabel = label; geoState = "ok";
+  pos = {lat, lng}; posLabel = label; geoState = "ok"; HOURS.setPos(pos);
   if(remember){
     RECENTS = [{lat, lng, label}, ...RECENTS.filter(r => r.label !== label)].slice(0,5);
     saveRecents();
@@ -1564,7 +1564,7 @@ async function applyBackupData(data){
     const seen = new Set(RECENTS.map(r => r.label));
     RECENTS = [...RECENTS, ...data.recents.filter(r => !seen.has(r.label))].slice(0,5);
     try{ localStorage.setItem(LOC_KEY, JSON.stringify(RECENTS)); }catch(e){}
-    if(!pos && RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; search(); }
+    if(!pos && RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; HOURS.setPos(pos); search(); }
     renderWhere();
   }
   if(data.lists){ ['fav','todo'].forEach(k => { LISTS[k] = {...(data.lists[k]||{}), ...LISTS[k]}; }); saveLists(); }
@@ -2596,8 +2596,8 @@ renderMoods();
 // Ville par défaut : Toulouse (place du Capitole), tant que ni le GPS ni une adresse n'ont donné mieux.
 // On en change comme avant : « Ma position » ou une adresse dans « Où es-tu ? ».
 const DEFAULT_PLACE = {lat:43.6045, lng:1.4440, label:"Toulouse"};
-if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; }
-else { pos = {lat:DEFAULT_PLACE.lat, lng:DEFAULT_PLACE.lng}; posLabel = DEFAULT_PLACE.label; geoState = "ok"; }
+if(RECENTS[0]){ pos = {lat:RECENTS[0].lat, lng:RECENTS[0].lng}; posLabel = RECENTS[0].label; geoState = "ok"; HOURS.setPos(pos); }
+else { pos = {lat:DEFAULT_PLACE.lat, lng:DEFAULT_PLACE.lng}; posLabel = DEFAULT_PLACE.label; geoState = "ok"; HOURS.setPos(pos); }
 HIST = lsLoad().filter(h => !GONE.has(h.id));
 renderContact(); renderReported();
 renderWhere(); renderHistory(); renderSaved(); renderTimer(); search(); loadWeather(); locate(false); initHistory();

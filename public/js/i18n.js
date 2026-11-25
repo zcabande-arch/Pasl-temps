@@ -238,7 +238,7 @@
     "⏰ Ta pause est finie : il est l'heure d'être rentré·e !": "⏰ Your break is over: time to be back!",
     // --- Horaires ---
     "Ouvert 24h/24": "Open 24/7", "Ferme à {h}, juste après ton arrivée": "Closes at {h}, just after you arrive",
-    "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",
+    "Jour férié · horaires à vérifier": "Public holiday · check opening hours", "Ferme dans {m} min": "Closes in {m} min", "Ouvert · jusqu'à {h}": "Open · until {h}", "Fermé": "Closed",
     "à {h}": "at {h}", "demain à {h}": "tomorrow at {h}", "{d} à {h}": "{d} at {h}",
     "Fermé à ton arrivée · rouvre {w}": "Closed when you arrive · reopens {w}", "Fermé · ouvre {w}": "Closed · opens {w}"
   };
