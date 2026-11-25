@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Fissa Fissa — réassemble les tuiles calculées continent par continent (scripts/build-places.js) en un seul jeu.
 // Les tuiles d'une même case venues de plusieurs continents (frontières) sont fusionnées, sans doublon.
-// Usage : node scripts/merge-places.js sortie/ partie-europe/ partie-asie/ …
+// S'il manque une partie (ou une région dans une partie), --ancien=<dossier> donne la version déjà publiée : les cases
+// absentes du nouveau jeu en sont reprises, pour qu'un pays ne disparaisse pas parce qu'un téléchargement a raté.
+// Usage : node scripts/merge-places.js sortie/ partie-france/ partie-asie/ … [--ancien=publie/]
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
@@ -9,7 +11,7 @@ const path = require("node:path");
 function readJSON(f){ return JSON.parse(fs.readFileSync(f, "utf8")); }
 const list = dir => fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith(".json")) : [];
 
-function merge(outDir, parts){
+function merge(outDir, parts, old){
   parts = parts.filter(p => fs.existsSync(path.join(p, "index.json")));
   if(!parts.length) throw new Error("aucune partie à réassembler");
   const idx = parts.map(p => readJSON(path.join(p, "index.json")));
@@ -32,12 +34,27 @@ function merge(outDir, parts){
     fs.writeFileSync(path.join(outDir, "t", f), JSON.stringify(rows));
   }
 
+  // Cases reprises de la version déjà publiée. Les lieux y désignent leurs étiquettes par un numéro : on ne reprend rien
+  // si l'ancienne liste d'étiquettes n'est pas le début de la nouvelle.
+  let kept = 0, oldIdx = null;
+  if(old && fs.existsSync(path.join(old, "index.json"))){
+    oldIdx = readJSON(path.join(old, "index.json"));
+    if(!oldIdx.sels.every((s, i) => s === idx[0].sels[i]) || oldIdx.cell !== idx[0].cell) throw new Error("ancienne version incompatible");
+    for(const f of list(path.join(old, "t"))){
+      if(where.has(f)) continue;
+      const rows = readJSON(path.join(old, "t", f));
+      fs.writeFileSync(path.join(outDir, "t", f), JSON.stringify(rows));
+      count += rows.length; kept++;
+    }
+  }
+
   // Codes postaux : par préfixe, communes de toutes les parties (sans doublon pays + commune)
-  const shards = new Set(parts.flatMap(p => list(path.join(p, "pc"))));
+  const pcParts = oldIdx ? [...parts, old] : parts;
+  const shards = new Set(pcParts.flatMap(p => list(path.join(p, "pc"))));
   let pcs = 0;
   for(const f of shards){
     const out = {};
-    for(const p of parts){
+    for(const p of pcParts){
       const file = path.join(p, "pc", f);
       if(!fs.existsSync(file)) continue;
       for(const [pc, arr] of Object.entries(readJSON(file))){
@@ -53,18 +70,20 @@ function merge(outDir, parts){
   const withFr = parts.find(p => fs.existsSync(path.join(p, "postcodes.json")) && Object.keys(readJSON(path.join(p, "postcodes.json"))).length);
   fs.writeFileSync(path.join(outDir, "postcodes.json"), withFr ? fs.readFileSync(path.join(withFr, "postcodes.json")) : "{}");
 
+  if(oldIdx) idx.push(oldIdx);
   const bbox = idx.reduce((b, i) => [Math.min(b[0], i.bbox[0]), Math.min(b[1], i.bbox[1]), Math.max(b[2], i.bbox[2]), Math.max(b[3], i.bbox[3])], [90, 180, -90, -180]);
-  const index = {...idx[0], built: new Date().toISOString(), count, tiles: where.size, postcodes: pcs, bbox,
+  const index = {...idx[0], built: new Date().toISOString(), count, tiles: where.size + kept, kept, postcodes: pcs, bbox,
     countries: [...new Set(idx.flatMap(i => i.countries || []))], parts: parts.map(p => path.basename(p))};
   fs.writeFileSync(path.join(outDir, "index.json"), JSON.stringify(index));
-  return {count, tiles: where.size, postcodes: pcs, parts: parts.length};
+  return {count, tiles: where.size + kept, kept, postcodes: pcs, parts: parts.length};
 }
 
 if(require.main === module){
-  const [outDir, ...parts] = process.argv.slice(2);
+  const args = process.argv.slice(2), o = args.find(a => a.startsWith("--ancien="));
+  const [outDir, ...parts] = args.filter(a => a !== o);
   if(!outDir || !parts.length){ console.error("Usage : node scripts/merge-places.js sortie/ partie1/ partie2/ …"); process.exit(1); }
-  const r = merge(outDir, parts);
-  console.log(`${r.parts} parties réassemblées : ${r.count} lieux, ${r.tiles} tuiles, ${r.postcodes} codes postaux`);
+  const r = merge(outDir, parts, o && o.slice(9));
+  console.log(`${r.parts} parties réassemblées : ${r.count} lieux, ${r.tiles} tuiles, ${r.postcodes} codes postaux` + (r.kept ? ` (${r.kept} tuiles reprises de la version précédente)` : ""));
 }
 
 module.exports = { merge };

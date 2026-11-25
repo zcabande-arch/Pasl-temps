@@ -662,6 +662,7 @@
   "⏰ Ta pause est finie : il est l'heure d'être rentré·e !": "⏰ Sua pausa acabou: hora de voltar!",
   "Ouvert 24h/24": "Aberto 24 h",
   "Ferme à {h}, juste après ton arrivée": "Fecha às {h}, logo depois que você chegar",
+  "Jour férié · horaires à vérifier": "Feriado · confirma o horário",
   "Ferme dans {m} min": "Fecha em {m} min",
   "Ouvert · jusqu'à {h}": "Aberto · até {h}",
   "Fermé": "Fechado",

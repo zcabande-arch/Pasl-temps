@@ -654,6 +654,7 @@
   "⏰ Ta pause est finie : il est l'heure d'être rentré·e !": "⏰ Je pauze is voorbij: tijd om terug te zijn!",
   "Ouvert 24h/24": "24/7 open",
   "Ferme à {h}, juste après ton arrivée": "Sluit om {h}, net na je aankomst",
+  "Jour férié · horaires à vérifier": "Feestdag · controleer de openingstijden",
   "Ferme dans {m} min": "Sluit over {m} min",
   "Ouvert · jusqu'à {h}": "Open · tot {h}",
   "Fermé": "Gesloten",

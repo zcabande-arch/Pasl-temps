@@ -443,7 +443,7 @@
   const towns = new Map();
   function townAt(pos){
     const k = pos.lat.toFixed(2) + "," + pos.lng.toFixed(2);
-    if(!towns.has(k)) towns.set(k, getJSON(`${NOMINATIM}/reverse?format=jsonv2&zoom=10&addressdetails=1&accept-language=${LANG()}&lat=${pos.lat}&lon=${pos.lng}`, 6000)
+    if(!towns.has(k)) towns.set(k, getJSON(`${NOMINATIM}/reverse?format=jsonv2&zoom=10&addressdetails=1&accept-language=${LANG()}&lat=${pos.lat.toFixed(2)}&lon=${pos.lng.toFixed(2)}`, 6000)
       .then(j => { const a = (j && j.address) || {}; return a.city || a.town || a.village || a.municipality || null; }));
     return towns.get(k);
   }

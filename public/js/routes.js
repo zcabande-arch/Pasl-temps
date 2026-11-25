@@ -19,7 +19,7 @@
       try{ localStorage.setItem(KEY, JSON.stringify(CACHE)); }catch(e){}
     }, 800);
   }
-  // le point de départ est arrondi à ~30 m : bouger un peu ne relance pas tout
+  // le point de départ est arrondi à ~10 m (envoyé ainsi au service) : bouger un peu ne relance pas tout
   const origin = pos => pos.lat.toFixed(4) + "," + pos.lng.toFixed(4);
   const key = (mode, pos, p) => mode + "|" + origin(pos) + "|" + (p.id || (p.lat.toFixed(5) + "," + p.lng.toFixed(5)));
 
@@ -31,7 +31,7 @@
 
   const busy = new Set();
   async function fetchChunk(mode, pos, list, signal){
-    const pts = [[pos.lng, pos.lat], ...list.map(p => [p.lng, p.lat])].map(([x, y]) => x.toFixed(6) + "," + y.toFixed(6)).join(";");
+    const pts = [[+pos.lng.toFixed(4), +pos.lat.toFixed(4)], ...list.map(p => [p.lng, p.lat])].map(([x, y]) => x.toFixed(6) + "," + y.toFixed(6)).join(";");
     const url = `${BASE}${PROFILE[mode] || "foot"}/table/v1/driving/${pts}?sources=0&annotations=duration`;
     const r = await fetch(url, {signal});
     if(!r.ok) throw {code: "route_" + r.status};
@@ -43,7 +43,7 @@
   }
   // Service « table » d'OSRM avec plusieurs sources (les lieux) et une seule destination (l'arrivée)
   async function fetchChunkTo(mode, dest, list, signal){
-    const pts = [[dest.lng, dest.lat], ...list.map(p => [p.lng, p.lat])].map(([x, y]) => x.toFixed(6) + "," + y.toFixed(6)).join(";");
+    const pts = [[+dest.lng.toFixed(4), +dest.lat.toFixed(4)], ...list.map(p => [p.lng, p.lat])].map(([x, y]) => x.toFixed(6) + "," + y.toFixed(6)).join(";");
     const src = list.map((_, i) => i + 1).join(";");
     const url = `${BASE}${PROFILE[mode] || "foot"}/table/v1/driving/${pts}?sources=${src}&destinations=0&annotations=duration`;
     const r = await fetch(url, {signal});

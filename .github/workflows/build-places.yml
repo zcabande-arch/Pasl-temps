@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: build-places
-  cancel-in-progress: true
+  cancel-in-progress: false      # une nouvelle demande attend la fin de la précédente, sans l'annuler
 
 jobs:
   partie:
@@ -29,9 +29,18 @@ jobs:
       matrix:
         include:
           # « région:pays » ; pays vide = continent entier (le pays vient de l'adresse de chaque lieu)
-          - nom: europe
+          # L'Europe en plusieurs morceaux : une seule machine ne finit pas à temps quand le serveur est lent
+          - nom: france
             obligatoire: europe/france
-            regions: "europe/france:fr europe/france/guadeloupe:fr europe/france/martinique:fr europe/france/guyane:fr europe/france/reunion:fr europe/france/mayotte:fr europe/albania:al europe/andorra:ad europe/austria:at europe/azores:pt europe/belgium:be europe/bosnia-herzegovina:ba europe/bulgaria:bg europe/croatia:hr europe/cyprus:cy europe/czech-republic:cz europe/denmark:dk europe/estonia:ee europe/faroe-islands:fo europe/finland:fi europe/germany:de europe/great-britain:gb europe/greece:gr europe/guernsey-jersey:gg europe/hungary:hu europe/iceland:is europe/ireland-and-northern-ireland:ie europe/isle-of-man:im europe/italy:it europe/kosovo:xk europe/latvia:lv europe/liechtenstein:li europe/lithuania:lt europe/luxembourg:lu europe/macedonia:mk europe/malta:mt europe/moldova:md europe/monaco:mc europe/montenegro:me europe/netherlands:nl europe/norway:no europe/poland:pl europe/portugal:pt europe/romania:ro europe/serbia:rs europe/slovakia:sk europe/slovenia:si europe/spain:es europe/sweden:se europe/switzerland:ch europe/ukraine:ua europe/turkey:tr europe/belarus:by "
+            regions: "europe/france:fr europe/france/guadeloupe:fr europe/france/martinique:fr europe/france/guyane:fr europe/france/reunion:fr europe/france/mayotte:fr"
+          - nom: europe-ouest
+            regions: "europe/belgium:be europe/denmark:dk europe/faroe-islands:fo europe/germany:de europe/great-britain:gb europe/guernsey-jersey:gg europe/iceland:is europe/ireland-and-northern-ireland:ie europe/isle-of-man:im europe/luxembourg:lu europe/netherlands:nl"
+          - nom: europe-sud
+            regions: "europe/albania:al europe/andorra:ad europe/azores:pt europe/cyprus:cy europe/greece:gr europe/italy:it europe/malta:mt europe/monaco:mc europe/portugal:pt europe/spain:es europe/turkey:tr"
+          - nom: europe-centre
+            regions: "europe/austria:at europe/bosnia-herzegovina:ba europe/croatia:hr europe/czech-republic:cz europe/hungary:hu europe/kosovo:xk europe/liechtenstein:li europe/macedonia:mk europe/montenegro:me europe/serbia:rs europe/slovakia:sk europe/slovenia:si europe/switzerland:ch"
+          - nom: europe-est-et-nord
+            regions: "europe/bulgaria:bg europe/estonia:ee europe/finland:fi europe/latvia:lv europe/lithuania:lt europe/moldova:md europe/norway:no europe/poland:pl europe/romania:ro europe/sweden:se europe/ukraine:ua europe/belarus:by"
           - nom: russie
             regions: "russia:ru"
           - nom: amerique-du-nord
@@ -61,6 +70,7 @@ jobs:
         run: |
           set -o pipefail
           node --max-old-space-size=12000 scripts/build-places.js partie/ $(cat extraits/args.txt) | tee -a "$GITHUB_STEP_SUMMARY"
+          cp extraits/manquants.txt partie/
           tar -czf partie-${{ matrix.nom }}.tgz -C partie .
           ls -lh partie-${{ matrix.nom }}.tgz
       - uses: actions/upload-artifact@v4
@@ -86,12 +96,24 @@ jobs:
           path: parties
           merge-multiple: true
       - name: Réassembler
+        env:
+          PARTIES: 11                 # nombre de parties de la liste ci-dessus
         run: |
           set -o pipefail
           for f in parties/*.tgz; do d="parties/$(basename "$f" .tgz)"; mkdir -p "$d"; tar -xzf "$f" -C "$d"; rm "$f"; done
-          # sans l'Europe (France comprise), on ne publie rien : l'ancienne version reste en ligne
-          test -f parties/partie-europe/index.json || { echo "::error::partie Europe manquante"; exit 1; }
-          node --max-old-space-size=12000 scripts/merge-places.js sortie/ parties/partie-* | tee -a "$GITHUB_STEP_SUMMARY"
+          # sans la France, on ne publie rien : l'ancienne version reste en ligne
+          test -f parties/partie-france/index.json || { echo "::error::partie France manquante"; exit 1; }
+          # partie ou région manquante : on garde ses anciennes tuiles
+          ANCIEN=""; REPO="https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git"
+          if [ "$(ls -d parties/partie-*/ | wc -l)" -lt "$PARTIES" ] || [ -n "$(cat parties/partie-*/manquants.txt)" ] ; then
+            echo "::warning::zones manquantes : $(cat parties/partie-*/manquants.txt | tr '\n' ' ') – anciennes tuiles reprises"
+            git clone -q --depth 1 -b places "$REPO" ancien
+            ANCIEN="--ancien=ancien"
+          fi
+          node --max-old-space-size=12000 scripts/merge-places.js sortie/ parties/partie-* $ANCIEN | tee -a "$GITHUB_STEP_SUMMARY"
+          # garde-fou : jamais une publication nettement plus petite que la précédente
+          AVANT=$(curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/places/index.json" | node -p 'JSON.parse(require("fs").readFileSync(0)).count')
+          node -e 'const n=require("./sortie/index.json").count,a=+process.argv[1];if(!(a>0)||n<a*0.9){console.log(`::error::${n} lieux contre ${a} avant : rien publié`);process.exit(1)}' "$AVANT"
           test -f sortie/t/977_47.json
       - name: Publier sur la branche « places »
         run: |

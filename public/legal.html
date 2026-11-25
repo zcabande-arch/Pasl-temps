@@ -41,8 +41,8 @@
 <div class="legal">
   <a class="back" href="./">← Retour à l'appli</a>
   <h1>Le <em>petit</em> texte.</h1>
-  <p class="lead">Tout ce qu'il faut savoir, écrit simplement. Dernière mise à jour : 23 novembre 2026 (appli iPhone).</p>
-  <p class="small" lang="en">🇬🇧 These terms are written in French, which is the reference language. In short: no account, no ads, no tracking; your data stays on your device.</p>
+  <p class="lead">Tout ce qu'il faut savoir, écrit simplement. Dernière mise à jour : 25 novembre 2026 (position et services utilisés).</p>
+  <p class="small" lang="en">🇬🇧 These terms are written in French, which is the reference language. In short: no account needed, no ads, no tracking. Your position is sent to map services to work out travel times (see “Confidentialité”).</p>
   <nav class="toc" aria-label="Sommaire">
     <a href="#mentions">Mentions légales</a><a href="#confidentialite">Confidentialité</a><a href="#cgu">Conditions d'utilisation</a><a href="#credits">Crédits &amp; licences</a>
   </nav>
@@ -77,21 +77,23 @@
     <p>Rien de tout ça n'est envoyé à l'éditeur. Si tu effaces les données du site dans ton navigateur (ou avec le bouton en bas), tout disparaît.</p>
 
     <h3>Ta position</h3>
-    <p>Si tu l'autorises, l'appli lit ta position GPS pour trouver ce qui est autour de toi. Le calcul se fait sur ton appareil : ta position exacte n'est pas envoyée pour une recherche en France (seule une position arrondie à ~1 km part au service météo). Tu peux refuser et taper une adresse ou un code postal à la place. Dans l'appli iPhone, c'est iOS qui te demande l'autorisation ; tu peux la changer à tout moment dans Réglages → Fissa Fissa → Position.</p>
+    <p>Si tu l'autorises, l'appli lit ta position GPS pour trouver ce qui est autour de toi. Pour calculer les vrais temps de trajet, <strong>ton point de départ, arrondi à une dizaine de mètres, est envoyé à un service de cartes</strong> (voir plus bas). Le nom de ta ville et la météo sont demandés avec une position arrondie à environ 1 km. Notre serveur ne reçoit pas ta position GPS. Sur ton appareil, l'appli garde 7 jours les trajets déjà calculés (avec ce point de départ arrondi) et 60 jours tes habitudes (quartier et heure) ; tu peux les effacer. Tu peux refuser et taper une adresse ou un code postal à la place. Dans l'appli iPhone, c'est iOS qui te demande l'autorisation ; tu peux la changer à tout moment dans Réglages → Fissa Fissa → Position.</p>
 
     <h3>Les services utilisés par l'appli</h3>
     <p>Pour fonctionner, ton navigateur contacte directement quelques services. Comme pour tout site web, ils voient ton adresse IP :</p>
     <ul>
       <li><strong>GitHub</strong> (hébergement de l'appli et des fichiers de lieux, via raw.githubusercontent.com) et, en secours, <strong>jsDelivr</strong> : ils reçoivent la zone de carte demandée (une case d'environ 5 km), pas ta position exacte.</li>
       <li><strong>Base Adresse Nationale</strong> (IGN / État français) : reçoit l'adresse, la ville ou le code postal que tu tapes dans « Où es-tu ? ». Si elle ne trouve pas (adresse à l'étranger, nom de lieu…), la recherche part à <strong>Nominatim</strong> (Fondation OpenStreetMap), et en secours à <strong>Photon</strong> (Komoot).</li>
-      <li><strong>Overpass API</strong> (serveurs OpenStreetMap) : seulement si tu cherches hors de France, reçoit la zone autour de toi.</li>
+      <li><strong>OSRM / FOSSGIS</strong> (routing.openstreetmap.de) : reçoit ton point de départ (ou d'arrivée) arrondi à une dizaine de mètres et les lieux proposés, pour calculer les temps de trajet.</li>
+      <li><strong>Nominatim</strong> (Fondation OpenStreetMap) : reçoit aussi ta position arrondie à environ 1 km, pour afficher le nom de ta ville.</li>
+      <li><strong>Overpass API</strong> (serveurs OpenStreetMap) : en secours, quand nos fichiers ne couvrent pas la zone ou la rubrique demandée (en France aussi) ; reçoit ta position et le rayon de recherche.</li>
       <li><strong>Open-Meteo</strong> : reçoit ta position arrondie à environ 1 km, pour savoir s'il pleut ou s'il fait beau autour de toi.</li>
       <li><strong>Google Maps</strong> : seulement si tu touches « Je pars » ou si tu ouvres un lieu envoyé par un pote ; tu quittes alors l'appli et les règles de Google s'appliquent.</li>
     </ul>
     <p>Certains de ces services sont situés hors de l'Union européenne (notamment aux États-Unis). Ils ont leurs propres politiques de confidentialité.</p>
 
     <h3>Ton compte (facultatif)</h3>
-    <p>Si tu te connectes avec ton adresse e-mail, l'appli garde en ligne ton adresse, ton profil (prénom, âge, genre, photo, endroits préférés), tes réglages, tes favoris, ton historique et tes signalements, pour que tu les retrouves sur tous tes appareils. Ces données sont stockées chez <strong>Cloudflare</strong> (hébergeur du serveur). Ton adresse sert uniquement à t'envoyer les liens de connexion, depuis la boîte Gmail de l'appli (<strong>Google</strong>) : pas de publicité, pas de revente. Sans connexion, rien de tout ça ne quitte ton téléphone.</p>
+    <p>Si tu te connectes avec ton adresse e-mail, l'appli garde en ligne ton adresse, ton profil (prénom, âge, genre, photo, endroits préférés), tes réglages, tes dernières adresses, tes favoris, ton historique et tes signalements, pour que tu les retrouves sur tous tes appareils. Ces données sont stockées chez <strong>Cloudflare</strong> (hébergeur du serveur). Ton adresse sert uniquement à t'envoyer les liens de connexion, depuis la boîte Gmail de l'appli (<strong>Google</strong>) : pas de publicité, pas de revente. Sans connexion, rien de tout ça ne quitte ton téléphone.</p>
     <p>Tu peux supprimer ton compte et tout ce qui est sauvegardé en ligne à tout moment : Profil → Ton compte → « Supprimer mon compte ». C'est immédiat et définitif.</p>
     <h3>Notifications</h3>
     <p>Si tu autorises les notifications, le serveur garde l'adresse technique de notification de ton appareil (fournie par Apple, Google ou Mozilla), ton fuseau horaire et ta langue, pour t'envoyer « T'as 20 minutes ? » tous les 3 jours. Quand tu lances le chrono « Je pars », il reçoit aussi l'heure de retour et le nom du lieu, pour te prévenir quand il est temps de repartir ; ces informations sont effacées dès l'envoi ou quand tu arrêtes le chrono. Pour les notifications par créneau (midi, sortie du travail ou des cours, samedi, et tes habitudes), il reçoit seulement les heures prévues et la durée proposée, jamais ta position : au plus une par jour, jamais entre 21 h et 8 h, et rien dans l'heure qui suit l'ouverture de l'appli. Le texte des notifications est chiffré pour ton appareil. Tu peux les couper à tout moment dans les réglages de l'appli ou du téléphone. Dans l'appli iPhone de l'App Store, les notifications ne sont pas encore proposées : rien de tout ça n'est envoyé.</p>

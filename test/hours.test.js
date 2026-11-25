@@ -78,3 +78,33 @@ test("23:59 = minuit, fermeture temporaire, formats non gérés → inconnu", ()
   assert.equal(H.at("sunrise-sunset", t(2, 12)).state, "unknown");
   assert.equal(H.at("Mo-Su 18:00+", t(2, 19)).state, "unknown");
 });
+
+// ---------- Jours fériés (France) ----------
+const PARIS = {lat: 48.86, lng: 2.35};
+test("jours fériés : calculés en France seulement", () => {
+  H.setPos(PARIS);
+  for(const [y, m, d] of [[2026,12,25],[2026,5,1],[2026,4,6],[2026,5,14],[2026,5,25],[2027,3,29],[2027,7,14]]) assert.equal(H.isHoliday(new Date(y, m - 1, d)), true, `${d}/${m}/${y}`);
+  assert.equal(H.isHoliday(new Date(2026, 11, 24)), false);
+  H.setPos({lat: 41.39, lng: 2.17});                                          // Barcelone
+  assert.equal(H.isHoliday(new Date(2026, 6, 14)), false);
+  H.setPos(null);
+});
+test("contour de la France : villes proches des frontières", () => {
+  for(const [n, la, lo] of [["Lille",50.63,3.06],["Strasbourg",48.573,7.752],["Nice",43.70,7.26],["Bayonne",43.49,-1.47],["Perpignan",42.69,2.9],["Brest",48.39,-4.49],["Marseille",43.3,5.37],["Toulon",43.12,5.93],["Toulouse",43.6,1.44],["Metz",49.12,6.18],["Ajaccio",41.93,8.74],["Cherbourg",49.63,-1.62],["Le Havre",49.49,0.11],["Calais",50.95,1.86],["Dunkerque",51.03,2.37],["La Rochelle",46.16,-1.15],["Annecy",45.9,6.13],["Pointe-à-Pitre",16.24,-61.53]])
+    assert.equal(H.inFrance(la, lo), true, n);
+  for(const [n, la, lo] of [["Genève",46.204,6.143],["Bruxelles",50.85,4.35],["Barcelone",41.39,2.17],["Turin",45.07,7.69],["Londres",51.5,-0.12],["Bâle",47.56,7.59],["Luxembourg",49.61,6.13],["Saint-Sébastien",43.32,-1.98]])
+    assert.equal(H.inFrance(la, lo), false, n);
+});
+test("jours fériés : règle PH appliquée, sinon « à vérifier », 24/7 inchangé", () => {
+  H.setPos(PARIS);
+  const noel = h => new Date(2026, 11, 25, h);                                // vendredi
+  for(const oh of ["Mo-Su 08:00-20:00; PH off", "Mo-Fr 08:00-20:00; Sa,Su,PH off", "Mo-Fr 08:00-20:00; PH,Su closed"])
+    assert.equal(H.forVisit(oh, 5, 10, noel(11)).level, "closed", oh);
+  assert.equal(H.at("Mo-Fr 08:00-20:00; PH 10:00-12:00", noel(11)).state, "open");
+  assert.equal(H.at("Mo-Fr 08:00-20:00; PH 10:00-12:00", noel(15)).state, "closed");
+  assert.equal(H.forVisit("Mo-Su 08:00-20:00", 5, 10, noel(11)).text, "Jour férié · horaires à vérifier");
+  assert.equal(H.forVisit("24/7", 5, 10, noel(11)).text, "Ouvert 24h/24");
+  assert.equal(H.forVisit("Mo-Su 08:00-20:00; PH off", 5, 10, new Date(2026, 11, 24, 11)).text, "Ouvert · jusqu'à 20h");
+  H.setPos(null);
+  assert.equal(H.forVisit("Mo-Su 08:00-20:00", 5, 10, noel(11)).text, "Ouvert · jusqu'à 20h");
+});
