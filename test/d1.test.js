@@ -52,3 +52,11 @@ test("prix de la communauté sur D1 ; schéma rejoué au déploiement sans perte
   await s.voteSet("osm:n7", "u2", 0);
   assert.deepEqual(await s.votesFor("osm:n7"), [1]);
 });
+
+test("D1 : « C'était bien ouvert ? » enregistré, relu, effacé avec le compte", async () => {
+  const s = d1Store(fakeD1());
+  await s.openSet("osm:n1", "u1", 1); await s.openSet("osm:n1", "u1", 0); await s.openSet("osm:n2", "u2", 1);
+  assert.deepEqual((await s.opensFor(["osm:n1", "osm:n2", "x"], 0)).map(r => [r.place, r.ok]).sort(), [["osm:n1", 0], ["osm:n2", 1]]);
+  await s.deleteAccount("u1"); await s.openSet("osm:n2", "u2", -1);
+  assert.equal((await s.opensFor(["osm:n1", "osm:n2"], 0)).length, 0);
+});

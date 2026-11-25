@@ -108,6 +108,15 @@ CREATE TABLE IF NOT EXISTS price_votes (
   at    INTEGER NOT NULL,
   PRIMARY KEY (place, uid)
 );
+-- « C'était bien ouvert ? » : une réponse par personne et par lieu (la dernière compte), gardée 180 jours.
+-- Publié seulement à partir de 3 réponses du même avis. Table ajoutée sans toucher aux autres (aucune perte).
+CREATE TABLE IF NOT EXISTS open_votes (
+  place TEXT NOT NULL,
+  uid   TEXT NOT NULL,
+  ok    INTEGER NOT NULL,
+  at    INTEGER NOT NULL,
+  PRIMARY KEY (place, uid)
+);
 -- Mesure d'audience maison (exemptée de consentement par la CNIL) : seulement des totaux par jour,
 -- sans identifiant, sans adresse IP, gardés 25 mois au plus. ev : open, search, go, done ; dim : envie ou moyen de transport.
 CREATE TABLE IF NOT EXISTS stats (

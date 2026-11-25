@@ -176,7 +176,7 @@
       if(s.allDay) return {state:"open", level:"ok", late, text:tx("Ouvert 24h/24")};
       if(s.closesIn < stayMin) return {state:"open", level:"warn", text:tx("Ferme à {h}, juste après ton arrivée", {h:hm(s.closesAt)})};
       if(n.state === "open" && n.closesIn <= 45) return {state:"open", level:"warn", text:tx("Ferme dans {m} min", {m:n.closesIn})};
-      return {state:"open", level:"ok", late, text:tx("Ouvert · jusqu'à {h}", {h:hm(s.closesAt)})};
+      return {state:"open", level:"ok", late, until:hm(s.closesAt), text:tx("Ouvert · jusqu'à {h}", {h:hm(s.closesAt)})};
     }
     if(!s.opensAt) return {state:"closed", level:"closed", text:tx("Fermé")};
     const o = s.opensAt, when = o.inDays === 0 ? tx("à {h}", {h:hm(o.min)}) : o.inDays === 1 ? tx("demain à {h}", {h:hm(o.min)}) : tx("{d} à {h}", {d:(EN() ? dayName(o.day) : DAY_FR[o.day]), h:hm(o.min)});

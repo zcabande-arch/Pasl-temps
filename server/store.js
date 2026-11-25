@@ -35,7 +35,7 @@ function openStore(file){
     getCode(email){ return q.getCode.get(email) || null; },
     codeTry(email){ q.codeTry.run(email); },
     delCode(email){ q.delCode.run(email); },
-    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.timerDelUid.run(uid); q.slotDelUid.run(uid); q.stateDelUid.run(uid); q.pushDelUid.run(uid); q.voteDelUid.run(uid); },
+    deleteAccount(uid){ q.delAccount.run(uid); q.delSessions.run(uid); q.delUserRow.run(uid); q.timerDelUid.run(uid); q.slotDelUid.run(uid); q.stateDelUid.run(uid); q.pushDelUid.run(uid); q.voteDelUid.run(uid); q.openDelUid.run(uid); },
     // Notifications
     kvGet(k){ const r = q.kvGet.get(k); return r ? r.v : null; },
     kvSet(k, v){ q.kvSet.run(k, v); },
@@ -57,6 +57,10 @@ function openStore(file){
     // Prix de la communauté
     voteSet(place, uid, lvl){ lvl ? q.voteSet.run(place, uid, lvl, Date.now()) : q.voteDel.run(place, uid); },
     votesFor(place){ return q.votesFor.all(place).map(r => r.lvl); },
+    // « C'était bien ouvert ? » (ok : 1 oui, 0 non, -1 retirer)
+    openSet(place, uid, ok){ ok < 0 ? q.openDel.run(place, uid) : q.openSet.run(place, uid, ok, Date.now()); },
+    opensFor(places, since){ return q.opensFor.all(since, JSON.stringify(places)); },
+    openPurge(before){ q.openPurge.run(before); },
     // Mesure d'audience (totaux par jour)
     statAdd(day, ev, dim){ q.statAdd.run(day, ev, dim); },
     statRange(from){ return q.statRange.all(from); },

@@ -139,6 +139,15 @@
   }
   // « C'était plutôt € / €€ / €€€ ? » (lvl 0 = retirer sa réponse) ; il faut être relié au serveur
   const priceVote = (place, lvl) => auth ? call("POST", "/api/price/vote", {place, lvl}) : Promise.resolve(null);
+  // « C'était bien ouvert ? » : lecture publique {id: {s, n, day}} ; réponse (1 oui, 0 non, -1 retirer), reliée à l'identifiant anonyme de l'appareil
+  async function openCommunity(ids){
+    if(!BASE || !ids.length) return null;
+    try{
+      const r = await fetch(BASE + "/api/open/community?ids=" + encodeURIComponent(ids.join(",")));
+      const j = await r.json(); return r.ok && j ? j.places || {} : null;
+    }catch(e){ return null; }
+  }
+  const openVote = (place, ok) => auth ? call("POST", "/api/open/vote", {place, ok}) : Promise.resolve(null);
   // Mesure d'audience anonyme : +1 au total du jour pour un événement (open, search, go, done), sans identifiant.
   // Envoyée en arrière-plan, jamais bloquante ; rien si le serveur n'est pas configuré.
   function stat(ev, dim){
@@ -154,5 +163,5 @@
     if(!res.ok) throw {code: "http_" + res.status};
     return res.json();
   }
-  window.PLT = {connect, account, push: pushApi, prices, communityPrices, priceVote, stat, adminMe, adminCall};
+  window.PLT = {connect, account, push: pushApi, prices, communityPrices, priceVote, openCommunity, openVote, stat, adminMe, adminCall};
 })();

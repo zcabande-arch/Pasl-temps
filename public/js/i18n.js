@@ -219,7 +219,7 @@
     "Activation impossible pour l'instant. Réessaie plus tard.": "Can't turn it on right now. Try again later.",
     "🔔": "🔔", "Active les notifications": "Turn on notifications", "Autoriser": "Allow", "Plus tard": "Later",
     "Gratuit": "Free", "moins de 10 €": "under €10", "plus de 50 €": "over €50", "Jusqu'à {d} de trajet": "Up to {d} away", "Trajet maximal": "Maximum travel time",
-    "✓ vérifié": "✓ verified", "Vérifié le {d}": "Verified on {d}",
+    "C'était bien ouvert ?": "Was it open?", "Oui": "Yes", "Non": "No", "Non, fermé": "No, closed", "✓ Trouvé ouvert par {n} personnes": "✓ Found open by {n} people", "✓ Vérifié en {m}": "✓ Verified in {m}", "{n} personnes l'ont trouvé fermé": "{n} people found it closed", "Horaires pas vérifiés récemment": "Hours not verified recently", "Horaires à confirmer": "Hours to be confirmed", "Sans doute ouvert · jusqu'à {h}": "Probably open · until {h}", "Sans doute ouvert": "Probably open", "✓ vérifié": "✓ verified", "Vérifié le {d}": "Verified on {d}",
     "Ce soir": "Tonight", "Ce week-end": "This weekend",
     "Jeux et créatif": "Games and creative", "Escape games, jeux, ateliers, yoga": "Escape games, games, workshops, yoga",
     "Cinéma, concerts, musées, expos": "Cinema, concerts, museums, exhibitions",
