@@ -1523,3 +1523,4 @@ input,textarea,select{font-size:max(16px,1em)}
 .go .icoimg,.see .icoimg,.idea > button .icoimg,.travel button[aria-pressed="true"] .icoimg,.trainbtn[aria-pressed="true"] .icoimg,
 .moods button[aria-pressed="true"] .icoimg,.chip[aria-pressed="true"] .icoimg,.seg [aria-pressed="true"] .icoimg{--ico-a:currentColor;--ico-k:currentColor;--ico-p:transparent}
 .ei .icoimg{width:1.25em;height:1.25em}
+.tabs button[aria-selected="true"] .icoimg{--ico-a:currentColor;--ico-k:currentColor;--ico-p:transparent}
