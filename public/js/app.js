@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "116";
+const APP_VERSION = "117";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -871,11 +871,7 @@ $("fq").addEventListener("keydown", e => { if(e.key === "Enter") $("fq").blur();
 
 function renderResults(){
   if(MOODS[M] && MOODS[M].img) document.body.style.setProperty("--catbg", `url('${new URL(moodImg(M, true), location.href).href}')`);
-  // « J'ai 20 minutes. » / « J'ai 1 heure. » / « J'ai 1 h 30. » / « J'ai 2 heures. »
-  const [num, unit] = T < 60 ? [T, tx(" minutes")] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? tx(" heure") : tx(" heures")];
-  const h1 = document.querySelector(".hero2 .display, .hero .display");
-  if(h1 && !$("unitTxt")) h1.innerHTML = `${tx("J'ai")} <em id="numTxt"></em><span id="unitTxt"></span>.`;
-  $("numTxt").textContent = num; $("unitTxt").textContent = unit;
+  renderSentence();
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = ""; $("bannerBox").innerHTML = "";
   $("whereAt").replaceChildren(...(pos ? [whereTitle()] : []));
@@ -965,6 +961,51 @@ function renderResults(){
 
 // « Alors, on fait quoi à Lyon ? » sous la carte : la ville vient du nom du lieu choisi
 // (« 12 Rue de Rivoli, 75004 Paris » → Paris), ou d'OpenStreetMap pour la position GPS
+// ---------- Accueil : une phrase, trois mots à toucher ----------
+// « J'ai 20 minutes, à pied, autour de Paris. » Chaque mot ouvre la feuille de réglage correspondante.
+function placeWord(){
+  if(!pos) return tx("où ?");
+  const k = pos.lat.toFixed(2) + "," + pos.lng.toFixed(2), town = townOf(posLabel) || (gpsTown.k === k ? gpsTown.v : null);
+  if(!town && PLACES.townAt && gpsTown.k !== k){ gpsTown = {k, v: null}; PLACES.townAt(pos).then(t => { if(gpsTown.k === k){ gpsTown.v = t; renderSentence(); } }).catch(() => {}); }
+  return town || (posLabel && posLabel !== tx("ma position") ? posLabel.split(",")[0] : tx("toi"));
+}
+function renderSentence(){
+  const h1 = $("sentence"); if(!h1) return;
+  // « J'ai 20 minutes » / « 1 heure » / « 1 h 30 » / « 2 heures » ; avec une heure de retour ou d'arrivée : « jusqu'à 14h »
+  const until = BACK_AT || (destMode() ? ARRIVE_AT : null);
+  const [num, unit] = until ? [tx("jusqu'à {h}", {h: hhmm(until)}), ""] : T < 60 ? [T, tx(" minutes")] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? tx(" heure") : tx(" heures")];
+  const w = (k, label, inner) => `<button class="w" type="button" data-s="${k}" aria-label="${esc(label)}">${inner}</button>`;
+  const parts = {
+    t: w("time", tx("Changer le temps"), `<em id="numTxt"></em><span id="unitTxt"></span>`),
+    m: w("mode", tx("Changer le moyen de transport"), esc(TR().way)),
+    p: w("place", tx("Changer de lieu"), esc(placeWord()))
+  };
+  const had = h1.contains(document.activeElement) && document.activeElement.dataset.s;      // garder le focus clavier
+  h1.innerHTML = esc(tx("J'ai {t}, {m}, autour de {p}.")).replace(/\{([tmp])\}/g, (_, k) => parts[k]);
+  if(had) h1.querySelector(`[data-s="${had}"]`).focus({preventScroll: true});
+  $("numTxt").textContent = num; $("unitTxt").textContent = unit;
+}
+const HPANELS = {time: ["hpTime", "Combien de temps ?"], mode: ["hpMode", "Comment tu te déplaces ?"], place: ["hpPlace", "Où es-tu ?"]};
+let homeOpen = null;
+function openHome(k){
+  homeOpen = k;
+  Object.entries(HPANELS).forEach(([x, [id]]) => { $(id).hidden = x !== k; });
+  $("homeTitle").textContent = tx(HPANELS[k][1]);
+  $("homeSheet").classList.add("on"); $("homeBg").classList.add("on");
+  const P = $(HPANELS[k][0]), first = P.querySelector('[aria-pressed="true"]') || P.querySelector("button, input");
+  setTimeout(() => (k === "place" && !pos ? $("whereInput") : first || $("homeOk")).focus({preventScroll: true}), 60);
+}
+function closeHome(){
+  if(!homeOpen) return;
+  const k = homeOpen; homeOpen = null;
+  $("homeSheet").classList.remove("on"); $("homeBg").classList.remove("on");
+  const b = $("sentence").querySelector(`[data-s="${k}"]`); if(b) b.focus({preventScroll: true});
+  setTimeout(() => { const c = $("sentence").querySelector(`[data-s="${k}"]`); if(c && !$("homeSheet").classList.contains("on") && !document.activeElement.closest(".sheet")) c.focus({preventScroll: true}); }, 400);
+}
+$("sentence").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if(b) openHome(b.dataset.s); });
+$("homeBg").onclick = closeHome; $("homeOk").onclick = closeHome;
+document.addEventListener("keydown", e => { if(e.key === "Escape" && homeOpen) closeHome(); });
+
 function townOf(label){
   if(!label || label === tx("ma position") || label === "ma position") return null;
   let s = String(label).replace(/\s*\([A-Z]{2}\)\s*$/, "").replace(/,\s*[A-Z]{2}\s*$/, "").replace(/\s*\(\d[\d ]*\)\s*$/, "");
@@ -1063,8 +1104,8 @@ $("dial").addEventListener("click", e => {
   if(ARRIVE_AT) clearArrive();
   T = +b.dataset.t;
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
-  const n=$("numTxt"); n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200);
-  search();
+  search(); closeHome();
+  const n=$("numTxt"); if(n){ n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200); }
 });
 function renderPace(){ document.querySelectorAll("#paceSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.pace || "normal")))); }
 $("paceSeg").addEventListener("click", e => {
@@ -1079,6 +1120,7 @@ const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
+  renderSentence();
   $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : destMode() ? tx("✦ À {d} à {h}", {d:destName(), h:hhmm(ARRIVE_AT)}) : tx("✦ Sortir, profiter, rentrer à l'heure");
 }
 function setBackBy(value){
@@ -1264,6 +1306,7 @@ function renderTravel(){
 $("travelSeg").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.travel || "walk")) return;
   SET.travel = b.dataset.v; saveSet(); renderTravel(); search();
+  setTimeout(closeHome, 260);                 // le temps de voir la bulle glisser
 });
 $("moods").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
@@ -1288,7 +1331,7 @@ $("backBtn").addEventListener("click", () => {
 });
 addEventListener("popstate", () => goStep(history.state && history.state.step === 2 ? 2 : 1, false));
 $("seeBtn").addEventListener("click", () => {
-  if(!pos){ $("whereInput").focus(); $("where").scrollIntoView({behavior: SET.motion === "off" ? "auto" : "smooth", block: "center"}); return; }
+  if(!pos){ openHome("place"); return; }
   goStep(2);
 });
 function renderSee(total, loading){
@@ -1330,7 +1373,7 @@ function saveRecents(){ try{ localStorage.setItem(LOC_KEY, JSON.stringify(RECENT
 function setPlace(lat, lng, label, remember){
   // Même endroit (à 60 m près) : pas besoin de relancer la recherche
   if(pos && !remember && label === posLabel && PLACES.meters(pos, {lat, lng}) < 60){ geoState = "ok"; renderWhere(); return; }
-  pos = {lat, lng}; posLabel = label; geoState = "ok"; HOURS.setPos(pos);
+  pos = {lat, lng}; posLabel = label; geoState = "ok"; HOURS.setPos(pos); closeHome();
   if(remember){
     RECENTS = [{lat, lng, label}, ...RECENTS.filter(r => r.label !== label)].slice(0,5);
     saveRecents();

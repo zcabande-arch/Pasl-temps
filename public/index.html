@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="116">
+<meta name="app-version" content="117">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -68,14 +68,21 @@
   <div class="col-a">
   <header class="hero2">
     <p class="kicker" id="kicker">✦ Sortir, profiter, rentrer à l'heure</p>
-    <h1 class="display">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
-    <p class="post">On fait quoi ?</p>
+    <h1 class="display sentence" id="sentence">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
   </header>
 
+  <!-- Réglages de la phrase : une feuille qui s'ouvre au toucher d'un mot (temps, transport, lieu) -->
+  <div class="sheet-bg" id="homeBg"></div>
+  <div class="sheet home-sheet" id="homeSheet" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
+    <div class="grab"></div>
+    <h2 id="homeTitle">Combien de temps ?</h2>
+    <div class="hpanel" id="hpTime">
   <div class="dial" id="dial" role="group" aria-label="Temps disponible">
 
   </div>
+  <p class="hsub">Temps sur place</p>
   <div class="seg pace" id="paceSeg" role="group" aria-label="Temps sur place"><button data-v="quick">⚡ Vite fait</button><button data-v="normal">Normal</button><button data-v="easy">🌿 Tranquille</button></div>
+      <p class="hsub">Ou bien</p>
   <div class="backby" id="backBy">
     <label for="atIn">⏰ Je dois être rentré·e à</label>
     <span class="atbox"><input type="time" id="atIn" step="300"><button class="link" id="atClear" hidden aria-label="Revenir au choix en minutes">✕</button></span>
@@ -105,8 +112,12 @@
     <p class="msg" id="gareMsg"></p>
     <button class="link" id="gareOff" type="button">Quitter le mode gare</button>
   </div>
+    </div>
+    <div class="hpanel" id="hpMode" hidden>
   <div class="seg travel" id="travelSeg" role="group" aria-label="Moyen de transport"></div>
 
+    </div>
+    <div class="hpanel" id="hpPlace" hidden>
   <div class="where" id="where">
     <p class="here" id="here">📍 Où es-tu ?</p>
     <form id="whereForm" autocomplete="off">
@@ -116,6 +127,9 @@
     <div class="wheresel" id="whereSel" hidden></div>
     <div class="row" id="whereRow"></div>
     <p class="msg" id="whereMsg"></p>
+  </div>
+    </div>
+    <button class="go hok" id="homeOk" type="button">C'est bon</button>
   </div>
 
   <h2>Envie de…</h2>
