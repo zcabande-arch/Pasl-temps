@@ -26,7 +26,7 @@
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *,*::before,*::after{box-sizing:inherit}
 body{margin:0;color:var(--ink);background:radial-gradient(130% 55% at 50% -8%, var(--glow), transparent 62%) no-repeat, var(--bg);
-  font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100%}
+  font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased;min-height:100%}
 main{max-width:560px;margin:0 auto;padding:22px 18px 130px}
 button{font:inherit;color:inherit;cursor:pointer}
 a{color:inherit}
@@ -445,14 +445,14 @@ body:not(.social-on) .entry .share{display:none!important}
 /* ---------- Style « Crème » : éditorial, doux et aéré (inspiré magazine / appli de voyage) ---------- */
 body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30);--fr:0 solid transparent;background:var(--bg)}
 .flat main{padding-left:20px;padding-right:20px}
-.flat .serif,.flat h1,.flat h2,.flat .group h3,.flat .brand,.flat .bloghead{font-family:var(--disp)}
+.flat .serif,.flat h1,.flat h2,.flat .group h3,.flat .brand,.flat .bloghead{font-family:"Fraunces",Georgia,"Times New Roman",serif}
 /* En-tête */
 .flat .brand{font-size:24px;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
 .brand::before{box-shadow:0 0 0 1px rgba(0,0,0,.08)}
 .flat .gear{background:var(--card);box-shadow:var(--sh);border:0;width:46px;height:46px}
 .hero2{padding:22px 0 6px}
 .hero2 .kicker{margin:0 0 12px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
-.hero2 .display{margin:0;font-family:var(--disp);font-weight:600;font-size:clamp(46px,13.5vw,68px);line-height:.95;letter-spacing:-.035em;color:var(--ink)}
+.hero2 .display{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(46px,13.5vw,68px);line-height:.95;letter-spacing:-.035em;color:var(--ink)}
 .hero2 .display em{font-style:italic;color:var(--acc);display:inline-block}
 .hero2 .display em.bump{animation:pop .35s ease}
 .hero2 .post{margin:12px 0 0;font-size:18px;color:var(--soft)}
@@ -470,14 +470,14 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .flat h2{font-weight:600;font-size:28px;letter-spacing:-.025em;text-transform:none;color:var(--ink);margin:0 0 16px;line-height:1.1}
 .flat h2::before{content:"✦";color:var(--acc);font-size:.55em;margin-right:8px;vertical-align:.3em}
 .flat .hist h2,.flat .saved h2{font-size:28px}
-.flat .hist h2 span{font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.flat .hist h2 span{font-family:var(--txt)}
 .flat .sheet h2::before{content:none}
 /* Envies : grandes cartes photo */
 .moods{grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:34px}
 .moods button,.flat .moods button{border-radius:26px;box-shadow:var(--sh);border:0}
 .moods button.photo{aspect-ratio:4/5;min-height:0}
 .moods button.photo::before{background:linear-gradient(to top,rgba(0,0,0,.66),rgba(0,0,0,.12) 50%,transparent 70%)}
-.moods button.photo b{font-family:var(--disp);font-size:24px;font-weight:600;letter-spacing:-.02em;padding:0 16px 2px}
+.moods button.photo b{font-family:"Fraunces",Georgia,serif;font-size:24px;font-weight:600;letter-spacing:-.02em;padding:0 16px 2px}
 .moods button.photo small{position:relative;display:block;padding:0 16px 16px;font-size:12.5px;font-weight:600;opacity:.88}
 .moods button.photo .ok{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:17px;font-weight:800;
   background:rgba(255,255,255,.26);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
@@ -499,14 +499,14 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .banner::before{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,.1) 60%,transparent)}
 .banner > *{position:relative}
 .banner .k{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;opacity:.9}
-.banner h3{margin:6px 0 4px;font-family:var(--disp);font-size:36px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.banner h3{margin:6px 0 4px;font-family:"Fraunces",Georgia,serif;font-size:36px;font-weight:600;letter-spacing:-.03em;line-height:1}
 .banner p{margin:0;font-size:14.5px;opacity:.92}
 .lay-tablet .banner,.lay-wide .banner{min-height:240px}
 /* Rubriques et lieux */
 .flat .group{margin-bottom:34px}
 .flat .group h3{font-size:24px;font-weight:600;letter-spacing:-.02em}
 .flat .group h3 .gi{width:38px;height:38px;border-radius:14px;background:var(--accsoft);margin-right:12px}
-.flat .group h3 small{border:0;background:var(--card);box-shadow:var(--sh);font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.flat .group h3 small{border:0;background:var(--card);box-shadow:var(--sh);font-family:var(--txt)}
 .flat .place,.flat .entry,.flat .card,.flat .radar,.flat .srow,.flat .rvp,.flat .rvsearch,.flat .offline,.flat .idea p{border:0;box-shadow:var(--sh)}
 .flat .place,.flat .entry,.flat .card,.flat .radar,.flat .rvp{border-radius:26px}
 .flat .srow{border-radius:22px}
@@ -539,8 +539,8 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .flat .saved{margin-top:44px}
 .flat .hist{margin-top:44px}
 
-.radar h3{justify-content:flex-start;align-items:center;gap:8px;font-family:var(--disp);font-size:20px;font-weight:600}
-.radar h3 small{margin-left:auto;font-family:"Bricolage Grotesque",system-ui,sans-serif}
+.radar h3{justify-content:flex-start;align-items:center;gap:8px;font-family:"Fraunces",Georgia,serif;font-size:20px;font-weight:600}
+.radar h3 small{margin-left:auto;font-family:var(--txt)}
 .radar h3 .ico{margin-right:0}
 
 /* Durées jusqu'à 2 h : pastilles défilantes */
@@ -585,7 +585,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 #splash.out{opacity:0;transform:scale(1.02);pointer-events:none}
 #splash .slogo{width:120px;height:auto;margin:0 0 26px -4px;opacity:0;animation:splashIn .6s 0s ease forwards}
 #splash .hello{margin:0 0 6px;font-size:20px;font-weight:600;color:var(--soft);opacity:0;animation:splashIn .6s .1s ease forwards}
-#splash .line{margin:0;font-family:var(--disp);font-weight:600;font-size:clamp(40px,11.5vw,72px);line-height:1;letter-spacing:-.035em;opacity:0;animation:splashIn .7s .35s ease forwards}
+#splash .line{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(40px,11.5vw,72px);line-height:1;letter-spacing:-.035em;opacity:0;animation:splashIn .7s .35s ease forwards}
 #splash .line em{font-style:italic;color:var(--acc)}
 #splash .fissa{margin:14px 0 0;font-weight:800;font-size:18px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);opacity:0;animation:splashIn .6s .75s ease forwards}
 @keyframes splashIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -598,7 +598,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .pphoto img{width:100%;height:100%;object-fit:cover;display:block}
 .pphoto .pcam{position:absolute;right:0;bottom:2px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--acc);color:var(--accink);font-weight:800;font-size:18px;box-shadow:0 0 0 3px var(--bg)}
 .phead .kicker{margin:0 0 10px;font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
-.phead .display{margin:0;font-family:var(--disp);font-weight:600;font-size:clamp(40px,11vw,56px);line-height:1;letter-spacing:-.03em}
+.phead .display{margin:0;font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(40px,11vw,56px);line-height:1;letter-spacing:-.03em}
 .phead .display em{font-style:italic;color:var(--acc)}
 .phead .post{margin:10px 0 0;color:var(--soft)}
 .pcard{background:var(--card);border-radius:26px;box-shadow:var(--sh);padding:20px 18px;margin:22px 0}
@@ -667,7 +667,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 #onb.in{opacity:1} #onb.out{opacity:0}
 #onb .skip{position:absolute;top:calc(16px + env(safe-area-inset-top,0px));right:20px;font-size:15px;color:var(--soft)}
 #onb .art{width:170px;height:170px;border-radius:50%;background:var(--card);display:grid;place-items:center;box-shadow:var(--sh);margin-bottom:26px}
-#onb h2{font-family:var(--disp);font-weight:600;font-size:32px;line-height:1.08;letter-spacing:-.02em;margin:0 0 10px;max-width:420px}
+#onb h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:32px;line-height:1.08;letter-spacing:-.02em;margin:0 0 10px;max-width:420px}
 #onb p{color:var(--soft);font-size:17px;margin:0 0 18px;max-width:380px}
 #onb .field{background:var(--card);box-shadow:var(--sh);max-width:320px;text-align:center;font-size:18px;margin-bottom:14px}
 #onb .dots{display:flex;gap:8px;margin:6px 0 22px}
@@ -718,7 +718,7 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 .pushask .btns{display:flex;gap:10px;align-items:center}
 
 /* « Alors, on fait quoi à Lyon ? » sous la carte */
-#whereAt .whereat{font-family:var(--disp);font-size:36px;line-height:1.08;font-weight:700;letter-spacing:-.015em;margin:4px 2px 18px;color:var(--ink)}
+#whereAt .whereat{font-family:"Fraunces",Georgia,serif;font-size:36px;line-height:1.08;font-weight:700;letter-spacing:-.015em;margin:4px 2px 18px;color:var(--ink)}
 #whereAt .whereat em{font-style:italic;color:var(--acc)}
 
 /* Deux pages sur téléphone et tablette : réglages, puis propositions (ordinateur : côte à côte) */
@@ -738,7 +738,7 @@ body:not(.lay-wide) #viewExplore.steps:not(.step2) .idea{display:none}
 .wheresel[hidden]{display:none}
 .wheresel .pin{font-size:24px}
 .wheresel .txt{flex:1;min-width:0;display:flex;flex-direction:column}
-.wheresel b{font-family:var(--disp);font-size:26px;line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
+.wheresel b{font-family:"Fraunces",Georgia,serif;font-size:26px;line-height:1.1;color:var(--ink);overflow-wrap:anywhere}
 .wheresel small{color:var(--soft);font-size:14px;margin-top:2px}
 .wheresel small:empty{display:none}
 .wheresel .ok{width:30px;height:30px;border-radius:50%;background:var(--acc);color:var(--accink);display:grid;place-items:center;font-weight:800;flex:none}
@@ -755,7 +755,7 @@ body:not(.lay-wide) #viewExplore.steps:not(.step2) .idea{display:none}
 .budget .seg button:disabled{opacity:.35}
 
 /* En haut à droite : recherche, photo de profil (→ Profil), réglages tout à droite */
-.mebtn{position:absolute;top:22px;right:14px;width:44px;height:44px;border-radius:50%;border:2px solid var(--acc);background:var(--card);box-shadow:var(--sh);padding:0;overflow:hidden;display:grid;place-items:center;z-index:2;color:var(--acc);font-family:var(--disp);font-weight:700;font-size:20px}
+.mebtn{position:absolute;top:22px;right:14px;width:44px;height:44px;border-radius:50%;border:2px solid var(--acc);background:var(--card);box-shadow:var(--sh);padding:0;overflow:hidden;display:grid;place-items:center;z-index:2;color:var(--acc);font-family:"Fraunces",Georgia,serif;font-weight:700;font-size:20px}
 .mebtn img{width:100%;height:100%;object-fit:cover;display:block}
 .mebtn,.srchbtn,.gear,.flat .gear{width:42px;height:42px}
 .srchbtn{position:absolute;top:22px;right:110px;border-radius:50%;border:0;background:var(--card);box-shadow:var(--sh);display:grid;place-items:center;z-index:2;padding:0;color:var(--ink)}
@@ -807,8 +807,8 @@ body.srch-on{overflow:hidden}
    des couleurs. Tout passe par les variables ci-dessous.
    ===================================================================== */
 body{
-  --disp:"Bricolage Grotesque",system-ui,sans-serif; --dispW:800; --dispT:none; --dispS:normal; --dispLS:-.035em; --ds:1;
-  --txt:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --disp:"Fraunces",Georgia,serif; --dispW:600; --dispT:none; --dispS:normal; --dispLS:-.02em; --ds:1;
+  --txt:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;
   --r:26px; --cardBg:var(--card); --cardB:0; --cardSh:var(--sh); --blur:none;
   --btn:var(--acc); --btnInk:var(--accink); --btnDot:transparent;
   --pill:var(--card); --pillB:0; --pillOn:var(--ink); --pillOnInk:var(--bg);
@@ -908,7 +908,7 @@ body[data-style="fraicheur"] .flat .place .emo,body[data-style="fraicheur"] .pla
 
 /* ===== Fraîcheur : reprise de l'interface de référence (appli mode menthe) ===== */
 .mestrip,.banner .circ{display:none}
-body[data-style="fraicheur"]{--disp:"Archivo",system-ui,sans-serif;--dispW:800;--dispLS:-.02em;--ds:1;--txt:"Archivo",system-ui,sans-serif;--r:26px;
+body[data-style="fraicheur"]{--disp:"Fraunces",Georgia,serif;--dispW:400;--dispLS:-.02em;--ds:1;--txt:"Archivo",system-ui,sans-serif;--r:26px;
   --cardSh:0 10px 30px -22px rgba(17,20,18,.5);--cardB:0;--pill:var(--card);--pillB:1.5px solid color-mix(in srgb,var(--ink) 14%,transparent);--pillOn:var(--acc);--pillOnInk:#fff;
   --btn:var(--acc);--btnInk:#fff;--tabBg:#111;--tabInk:rgba(255,255,255,.6);--tabOn:#fff;--tabOnInk:#111}
 /* en-tête : réglages à gauche (comme le menu ☰), titre centré, recherche + profil à droite */
@@ -919,7 +919,7 @@ body[data-style="fraicheur"] .srchbtn{right:14px;background:transparent;border:0
 /* bandeau noir : photo, prénom, compteurs */
 body[data-style="fraicheur"] #meStrip{display:flex}
 body[data-style="fraicheur"] .mestrip{align-items:center;gap:12px;background:#111;color:#fff;border-radius:999px;padding:8px 18px 8px 8px;margin:14px 0 18px}
-body[data-style="fraicheur"] .mestrip .av{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--acc);padding:0;overflow:hidden;background:#222;color:#fff;font-family:var(--disp);font-size:20px}
+body[data-style="fraicheur"] .mestrip .av{flex:none;width:46px;height:46px;border-radius:50%;border:2px solid var(--acc);padding:0;overflow:hidden;background:#222;color:#fff;font-family:"Fraunces",serif;font-size:20px}
 body[data-style="fraicheur"] .mestrip .av img{width:100%;height:100%;object-fit:cover}
 body[data-style="fraicheur"] .mestrip .nm2{flex:1;min-width:0;display:flex;flex-direction:column}
 body[data-style="fraicheur"] .mestrip .nm2 b{font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -951,7 +951,7 @@ body[data-style="fraicheur"] .banner{background:none!important;min-height:0;padd
 body[data-style="fraicheur"] .banner::before,body[data-style="fraicheur"] .banner::after{content:none}
 body[data-style="fraicheur"] .banner .circ{display:block;grid-column:1/-1;position:relative;width:min(300px,80vw);aspect-ratio:1;margin:0 auto 14px;border-radius:50%;background-size:auto,cover;background-position:center;background-clip:content-box;padding:34px;box-sizing:border-box}
 body[data-style="fraicheur"] .banner .circ svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
-body[data-style="fraicheur"] .banner .circ text{font-family:var(--disp);font-style:italic;font-size:19px;fill:var(--ink);letter-spacing:.04em}
+body[data-style="fraicheur"] .banner .circ text{font-family:"Fraunces",Georgia,serif;font-style:italic;font-size:19px;fill:var(--ink);letter-spacing:.04em}
 body[data-style="fraicheur"] .banner .wx,body[data-style="fraicheur"] .banner .k{display:none}
 body[data-style="fraicheur"] .banner h3{grid-column:1;margin:0;font-size:26px;color:var(--ink);text-shadow:none}
 body[data-style="fraicheur"] .banner p{grid-column:2;margin:0;font-weight:800;color:var(--acc);text-shadow:none;white-space:nowrap}
@@ -1372,7 +1372,7 @@ body[data-style="clear"] .chip.gps{background:rgba(255,255,255,.12)!important;bo
 .arrbox .wheresel b{font-size:20px}
 .chip.save{background:transparent;box-shadow:inset 0 0 0 1.5px var(--line)}
 .nodetour{background:var(--card);border-radius:20px;box-shadow:var(--sh);padding:18px;margin:12px 0}
-.nodetour .big{font-family:var(--disp);font-size:24px;line-height:1.15;margin:0 0 8px}
+.nodetour .big{font-family:"Fraunces",Georgia,serif;font-size:24px;line-height:1.15;margin:0 0 8px}
 .nodetour .go{display:inline-block;margin-top:6px}
 .ticket.det b{font-size:20px}
 .ticket.det span{font-size:10px;line-height:1.1;text-align:center}
@@ -1500,7 +1500,7 @@ input,textarea,select{font-size:max(16px,1em)}
 .tring .rknob:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 .tring .rmid{position:absolute;inset:22%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .tring .rl{font-size:15px;font-weight:600;color:var(--soft)}
-.tring .rmid b{font-family:var(--disp);font-size:clamp(46px,14vw,64px);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--acc);font-style:italic}
+.tring .rmid b{font-family:"Fraunces",Georgia,serif;font-size:clamp(46px,14vw,64px);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--acc);font-style:italic}
 .tring .rmid span:last-child{font-size:16px;font-weight:600;color:var(--ink)}
 .tring.fixed .rarc{stroke:var(--ink)}
 .tring.fixed .rmid b{color:var(--ink);font-size:clamp(40px,12vw,54px)}
@@ -1525,7 +1525,7 @@ input,textarea,select{font-size:max(16px,1em)}
 .ei .icoimg{width:1.25em;height:1.25em}
 .tabs button[aria-selected="true"] .icoimg{--ico-a:currentColor;--ico-k:currentColor;--ico-p:transparent}
 
-/* Titres sans Fraunces : pas d'italique imité sur les mots mis en valeur (le thème Rétro garde le sien) */
-body:not([data-style="retro"]) :is(.hero2 .display em,.phead .display em,#whereAt .whereat em,.brand em,#splash .line em,.tring .rmid b){font-style:normal}
+/* Cadran : la durée reste sur une ligne (plus petite pour « 1 h 15 ») */
 .tring .rmid b{white-space:nowrap}
 .tring .rmid b.long{font-size:clamp(34px,10vw,46px)}
+.hero2 .kicker{letter-spacing:.1em}
