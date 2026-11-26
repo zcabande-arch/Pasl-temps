@@ -1433,6 +1433,10 @@ input,textarea,select{font-size:max(16px,1em)}
 .det .dhrs .chev{font-size:12px;transition:transform .2s}
 .det .dhrs[aria-expanded="true"] .chev{transform:rotate(180deg)}
 .det .dhrs.oh-closed{color:var(--soft)}
+.det .dtrust{margin:0 0 6px;font-size:13px;color:var(--soft)}
+.det .dtrust.t-checked,.det .dtrust.t-visitors{color:var(--leaf)}
+.det .dtrust.t-doubt{color:#B76E00}
+.timer.ask .acts button{min-height:44px;padding:8px 16px}
 .det .dhrsfull p{margin:2px 0 6px;font-size:13px;color:var(--soft)}
 .det .daddr{font-size:14px;color:var(--soft)}
 .det .gowide{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-height:52px;margin-top:16px;font-size:17px;box-sizing:border-box}

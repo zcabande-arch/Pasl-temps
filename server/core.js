@@ -73,6 +73,7 @@ const { loginMail } = require("./mail");
 const push = require("./push");
 const { googlePrice, communityLevel } = require("./prices");
 const { checkCode } = require("./admin");
+const { openLevel, KEEP: OPEN_KEEP } = require("./opens");
 const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[A-Za-z]{2,24}$/;
 const LOGIN_TTL = 20 * 60_000;
 // Identifiant d'un lieu (OpenStreetMap ou Google), pour les prix de la communauté
@@ -221,6 +222,16 @@ function createApi(store, opts = {}){
       return ok({prices});
     }
 
+    // ---------- « C'était bien ouvert ? » (public en lecture) ----------
+    // GET /api/open/community?ids=… (40 au plus) → {places: {id: {s: "ok"|"doubt", n, day}}}, à partir de 3 réponses du même avis
+    if(path === "/api/open/community" && method === "GET"){
+      const ids = [...new Set(String(url.searchParams.get("ids") || "").split(",").map(s => s.trim()).filter(s => PLACE_ID.test(s)))].slice(0, 40);
+      const by = {}, places = {};
+      if(ids.length) for(const r of await store.opensFor(ids, Date.now() - OPEN_KEEP)) (by[r.place] = by[r.place] || []).push(r);
+      for(const id in by){ const c = openLevel(by[id]); if(c) places[id] = c; }
+      return ok({places});
+    }
+
     if(path === "/api/push/key" && method === "GET") return ok({key: (await push.vapidKeys(store)).publicKey});
 
     // ---------- Mesure d'audience (anonyme, sans cookie) ----------
@@ -299,6 +310,17 @@ function createApi(store, opts = {}){
       if(!PLACE_ID.test(place) || !(lvl >= 0 && lvl <= 3)) return fail(400, "bad_vote");
       await store.voteSet(place, uid, lvl);
       return ok({ok:true, community: communityLevel(await store.votesFor(place))});
+    }
+    // « C'était bien ouvert ? » ({place, ok} : 1 oui, 0 non, -1 retirer sa réponse)
+    if(path === "/api/open/vote" && method === "POST"){
+      if(!limited("open:" + uid, 1, 30, 30 / 3600) || !limited("openip:" + req.ip, 1, 60, 60 / 3600)) return fail(429, "rate_limited");
+      const b = await body(req); if(b.error) return b.error;
+      const v = b.value || {}, place = String(v.place || "");
+      if(!PLACE_ID.test(place) || ![1, 0, -1].includes(v.ok)) return fail(400, "bad_vote");
+      await store.openSet(place, uid, v.ok);
+      if(Math.random() < 0.02) await store.openPurge(Date.now() - OPEN_KEEP);
+      const list = await store.opensFor([place], Date.now() - OPEN_KEEP);
+      return ok({ok: true, community: openLevel(list)});
     }
     // Rappels « T'as l'temps ? » : s'abonner (heure locale, tous les N jours) ou se désabonner
     if(path === "/api/push/subscribe" && method === "POST"){

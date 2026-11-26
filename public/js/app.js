@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "115";
+const APP_VERSION = "116";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -365,6 +365,7 @@ function showFound(entry, groups, need){
     LOADED[g.l] = {state:"ok", items: fit};
   });
   loadCommunity(Object.values(LOADED).flatMap(x => x.items || []));
+  loadOpens(Object.values(LOADED).flatMap(x => x.items || []));
   // rubriques que le service de carte n'a pas pu chercher : en erreur (« réessayer »), jamais « rien trouvé »
   (entry.failed || []).forEach(l => { if(LOADED[l]) LOADED[l] = {state:"err", err:{code:"server_unavailable"}}; });
   if(window.NOTIF) NOTIF.writeHabitTexts();   // lieu ouvert près d'une habitude : texte gardé sur le téléphone
@@ -426,9 +427,11 @@ async function search(){
     PCACHE = [entry, ...PCACHE.filter(e => !covered(e))];
     pcSave();
     if(my !== runId) return;
-    const before = JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => p.id)));
+    // horaires ou vérification changés : à réafficher aussi
+    const sig = () => JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => [p.id, p.oh, p.checked])));
+    const before = sig();
     showFound(entry, groups, need);
-    if(!hit || JSON.stringify(Object.values(LOADED).map(x => (x.items || []).map(p => p.id))) !== before) renderResults();
+    if(!hit || sig() !== before) renderResults();
   }catch(err){
     if(my !== runId || (err && err.code === "aborted") || hit) return;   // avec des résultats déjà affichés, on garde ceux-là
     groups.forEach(g => LOADED[g.l] = {state:"err", err});
@@ -458,13 +461,14 @@ function placeEl(p){
   const rv = reviewsFor(p), who = [...new Set(rv.map(r => r.author.pseudo || "Quelqu'un"))];
   const hrs = rv.find(r => r.hours);
   const grp = findGroup(p), avg = grp && grp.avg, pr = priceOf(p);
-  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${verifiedNow(p) ? `<span class="sticker ok" title="${esc(tx("Vérifié le {d}", {d: new Date(checkedOf(p)).toLocaleDateString(I18N.lang)}))}">${tx("✓ vérifié")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
+  el.innerHTML = `<button aria-expanded="false"><span class="emo" aria-hidden="true">${ICONS.ico(p.em, 34)}</span><span class="txt"><span class="nm">${esc(p.name)}${n?`<span class="badge">${tx("fait {n}×", {n})}</span>`:""}</span><span class="tot">${dest ? `<b style="color:${band.c}">${tx("détour de {x} min", {x:p.detour})}</b> · ${tx("{d} au total", {d:fmtDur(total)})}` : `<b>${tx("{d} au total", {d:fmtDur(total)})}</b>`} · ${tx("{s} sur place", {s:fmtDur(p.stay)})}</span>${avg?`<span class="rvsc">★ ${avg.toFixed(1).replace(".",",")} <span style="color:var(--soft);font-weight:400">(${grp.rated} avis)</span></span>`:""}${p.open && p.open.text ? `<span class="oh oh-${p.open.level}">${esc(p.open.text)}</span>` : ""}<span class="sub">${p.first?`<span class="sticker">${dest ? tx("⚡ le plus petit détour") : tx("⚡ le plus proche")}</span>`:""}${p.open && p.open.late && new Date().getHours() >= 19 ? `<span class="sticker late">${tx("🌙 ouvert tard")}</span>` : ""}${verifiedNow(p) ? `<span class="sticker ok" title="${esc(trustLine(p) || tx("Vérifié le {d}", {d: new Date(checkedOf(p)).toLocaleDateString(I18N.lang)}))}">${tx("✓ vérifié")}</span>` : ""}${pr?`<span class="eur${pr.est ? " est" : ""}" title="${esc(priceTag(pr))}">${euros(pr.lvl)}${pr.est ? ` <small>${tx("estimé")}</small>` : ""}</span>`:""}${esc((p.addr||"").split(",")[0])}</span>${who.length?`<span class="pals">😋 ${esc(who.slice(0,2).join(", "))}${who.length>2?` +${who.length-2}`:""} ${who.length>1?"y sont allés":"y est allé·e"}</span>`:""}<span class="tbar" aria-hidden="true"><i class="w" style="width:${wPct}%"></i><i class="s" style="width:${sPct}%"></i><i class="w" style="width:${bPct}%"></i></span></span>${dest ? `<span class="ticket det" style="--band:${band.c}"><b>+${p.detour}</b><span>${tx("min de détour")}</span></span>` : `<span class="ticket" style="--band:${band.c}"><b>${p.walk}</b><span>min ${ICONS.ico(TR().ico, 14)}</span></span>`}</button>
     <button class="fvstar" aria-pressed="${!!LISTS.fav[p.id]}" aria-label="${tx("Favori")}" title="${tx("Favori")}">${LISTS.fav[p.id] ? "★" : "☆"}</button>
     <div class="det">
       <p class="dsum"><b>${fmtDur(total)}</b>${dest ? ` · ${tx("détour de {x} min", {x:p.detour})}` : ""}${free ? ` · <span class="free">${dest ? tx("{d} d'avance à l'arrivée", {d:fmtDur(free)}) : tx("il te restera {d}", {d:fmtDur(free)})}</span>` : ""}</p>
       <p class="dlegs">${dest ? tx("{e} Aller {w} min · {e} Jusqu'à {dest} {b} min", {e:TR().e, w:p.walk, dest:esc(destName()), b:p.back}) : tx("{e} Aller {w} min · {e} Retour {w} min", {e:TR().e, w:p.walk})}</p>
       <div class="stayadj"><span>⏱️ ${tx("{s} sur place", {s:`<b>${fmtDur(p.stay)}</b>`})}${STAY_OVR.has(p.id) ? ` <small>(${tx("ajusté")})</small>` : ""}</span><button class="ghost sm" data-d="-5" ${p.stay <= 2 ? "disabled" : ""} aria-label="${tx("5 min de moins sur place")}">−5</button><button class="ghost sm" data-d="5" ${free < 5 ? "disabled" : ""} aria-label="${tx("5 min de plus sur place")}">+5</button></div>
       ${p.open && p.open.text ? `<button class="dhrs oh-${p.open.level}" type="button" aria-expanded="false"${p.hours || hrs ? "" : " disabled"}>${esc(p.open.text)}${p.hours || hrs ? ` <span class="chev" aria-hidden="true">▾</span>` : ""}</button>` : ""}
+      ${trustLine(p) ? `<p class="dtrust t-${p.open.trust}">${esc(trustLine(p))}</p>` : ""}
       ${p.hours || hrs ? `<div class="dhrsfull" hidden>${p.hours ? `<p>🕐 ${esc(p.hours)}</p>` : ""}${hrs ? `<p>🕐 ${esc(hrs.hours)} (signalé par ${esc(hrs.author.pseudo||"un pote")}, ${esc(whenTxt(hrs.at).toLowerCase())})</p>` : ""}</div>` : ""}
       ${p.addr ? `<p class="daddr">${esc(p.addr)}</p>` : ""}
       ${pr?`<p class="legend prline">💶 <b>${euros(pr.lvl)}</b>${pr.g && pr.g.from != null ? ` · ${pr.g.from}${pr.g.to ? "–" + pr.g.to : "+"} ${pr.g.cur === "EUR" || !pr.g.cur ? "€" : esc(pr.g.cur)} ${tx("par personne")}` : ""} · <small>${esc(priceTag(pr))}</small></p>`:""}
@@ -576,6 +580,7 @@ function openReport(p){
     S.querySelector(".repname").textContent = p.name + (p.addr ? " · " + p.addr.split(",")[0] : "");
     S.querySelectorAll("[data-why]").forEach(b => b.onclick = () => {
       REPORTS[p.id] = {why:b.dataset.why, at:Date.now(), name:p.name, addr:p.addr || "", lat:p.lat, lng:p.lng};
+      if(b.dataset.why !== "nothere") voteOpen(p.id, 0);
       saveReports(); renderResults(); renderReported(); openReport(p);
     });
   } else {
@@ -591,7 +596,7 @@ function openReport(p){
       <p class="setnote small">${tx("Une correction sur OpenStreetMap arrive dans l'appli au plus tard le lundi suivant.")}</p>
       <button class="link undo">${tx("Annuler mon signalement")}</button>
       <button class="done">${tx("Terminé")}</button>`;
-    S.querySelector(".undo").onclick = () => { delete REPORTS[p.id]; saveReports(); renderResults(); renderReported(); close(); };
+    S.querySelector(".undo").onclick = () => { if(REPORTS[p.id].why !== "nothere") voteOpen(p.id, -1); delete REPORTS[p.id]; saveReports(); renderResults(); renderReported(); close(); };
   }
   S.querySelector(".done").onclick = close;
   S.scrollTop = 0; S.classList.add("on"); $("repBg").classList.add("on");
@@ -602,7 +607,7 @@ function renderReported(){
   if(!list.length){ R.innerHTML = `<p class="phelp">${tx("Aucun. Dans la fiche d'un lieu, « 🚫 Signaler » le retire de tes résultats s'il est fermé.")}</p>`; return; }
   R.innerHTML = list.map(([id, r]) => `<div class="srow"><div class="t"><b></b><small>${esc(tx(WHY[r.why] || WHY.gone))}</small></div><button class="ghost" data-id="${esc(id)}">${tx("Réafficher")}</button></div>`).join("");
   R.querySelectorAll("b").forEach((b, i) => b.textContent = list[i][1].name);
-  R.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => { delete REPORTS[b.dataset.id]; saveReports(); renderReported(); renderResults(); });
+  R.querySelectorAll("button[data-id]").forEach(b => b.onclick = () => { if(REPORTS[b.dataset.id].why !== "nothere") voteOpen(b.dataset.id, -1); delete REPORTS[b.dataset.id]; saveReports(); renderReported(); renderResults(); });
 }
 
 // ---------- Nous contacter ----------
@@ -741,6 +746,39 @@ async function loadCommunity(list){
   }
   if(got) renderResults();
 }
+// « C'était bien ouvert ? » : réponses des visiteurs pour les lieux affichés (une seule demande par lieu et par session)
+const OPENS = new Map(); let opensOff = false;
+async function loadOpens(list){
+  if(opensOff || !window.PLT || !PLT.openCommunity) return;
+  const want = [...new Set(list.filter(p => p.oh && p.id && !OPENS.has(p.id)).map(p => p.id))].slice(0, 200);
+  if(!want.length) return;
+  want.forEach(id => OPENS.set(id, null));
+  let got = 0;
+  for(let i = 0; i < want.length; i += 40){
+    const r = await PLT.openCommunity(want.slice(i, i + 40));
+    if(!r){ opensOff = true; break; }
+    Object.entries(r).forEach(([id, v]) => { OPENS.set(id, v); got++; });
+  }
+  if(got) renderResults();
+}
+function voteOpen(pid, ok){
+  if(!pid || !window.PLT || !PLT.openVote) return;
+  PLT.openVote(pid, ok).then(r => { if(r && "community" in r){ OPENS.set(pid, r.community); renderResults(); } }).catch(() => {});
+}
+// Horaires à l'arrivée + confiance (js/trust.js) : on n'affirme « Ouvert » que si c'est vérifié
+const trustOf = p => TRUST.level({oh: p.oh, checked: checkedOf(p), community: OPENS.get(p.id) || null}, Date.now());
+function openAt(p){
+  const o = TRUST.soften(HOURS.forVisit(p.oh, p.walk, p.stay), trustOf(p));
+  return o.say ? {...o, text: tx(...o.say)} : o;
+}
+function trustLine(p){
+  const c = OPENS.get(p.id), k = p.open && p.open.trust;
+  if(k === "visitors") return tx("✓ Trouvé ouvert par {n} personnes", {n: c.n});
+  if(k === "checked") return tx("✓ Vérifié en {m}", {m: new Date(checkedOf(p)).toLocaleDateString(I18N.locale, {month: "long", year: "numeric"})});
+  if(k === "doubt") return tx("{n} personnes l'ont trouvé fermé", {n: c.n});
+  if(k === "old") return tx("Horaires pas vérifiés récemment");
+  return "";
+}
 // Envoie une réponse « € / €€ / €€€ » ; le niveau publié revient si le lieu a assez de réponses
 function votePrice(pid, lvl){
   if(!pid || !window.PLT || !PLT.priceVote) return;
@@ -758,7 +796,7 @@ async function loadPrices(list){
   renderResults();
 }
 function passFilter(p, anyCuisine){
-  const o = p.open || HOURS.forVisit(p.oh, p.walk, p.stay);
+  const o = p.open || openAt(p);
   if(openOnlyNow() && o.level === "closed") return false;
   if(SET.wcOnly && !p.wheelchair) return false;
   if(FILTER.cu && !anyCuisine && !cuisinesOf(p).includes(FILTER.cu)) return false;
@@ -873,7 +911,7 @@ function renderResults(){
     const st = LOADED[g.l];
     const sec = document.createElement("section"); sec.className = "group"; sec.style.setProperty("--h", g.h);
     // Ouvert / fermé à l'arrivée : les lieux fermés passent en bas (ou disparaissent avec le filtre)
-    const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : HOURS.forVisit(p.oh, p.walk, p.stay)})) : [];
+    const all = st && st.items ? st.items.filter(p => !reportHidden(p)).map(p => ({...p, open: REPORTS[p.id] ? {level:"closed", text:tx("Signalé fermé par toi")} : openAt(p)})) : [];
     const items = all.filter(p => passFilter(p))
       // ouverts d'abord, puis horaires inconnus, puis fermés ; à rang égal, le plus proche
       // filtre budget : les prix confirmés (Google, communauté) avant les estimations
@@ -950,15 +988,15 @@ function whereTitle(){
   return h;
 }
 
-const rankOpen = p => p.open.level === "closed" ? 2 : p.open.level === "unknown" ? 1 : 0;
+const rankOpen = p => p.open.level === "closed" ? 2 : p.open.level === "unknown" || p.open.trust === "doubt" ? 1 : 0;
 // Date de vérification d'un lieu : OpenStreetMap (check_date…) ou horaires signalés par la communauté (la plus récente)
 function checkedOf(p){
   const rv = reviewsFor(p).find(r => r.hours), c = rv ? new Date(rv.at).toISOString().slice(0, 10) : "";
   return [p.checked || "", c].sort().pop();
 }
-const verifiedNow = p => RANK.recentlyChecked(checkedOf(p), Date.now());
+const verifiedNow = p => { const k = trustOf(p); return k === "visitors" || k === "checked" || k === "none" && RANK.recentlyChecked(checkedOf(p), Date.now()); };
 // Tri dans une rubrique (js/rank.js, testé) : fermé en bas ; le moins cher ; vérifié récemment ; le plus proche (ou le plus petit détour)
-const sortKey = p => ({open: rankOpen(p), lvl: (priceOf(p) || {}).lvl || null, checked: checkedOf(p), near: destMode() && p.detour != null ? p.detour * 1e6 + p.dist : p.dist});
+const sortKey = p => ({open: rankOpen(p), lvl: (priceOf(p) || {}).lvl || null, checked: trustOf(p) === "visitors" ? [checkedOf(p), OPENS.get(p.id).day].sort().pop() : checkedOf(p), near: destMode() && p.detour != null ? p.detour * 1e6 + p.dist : p.dist});
 const EXPANDED = new Set();
 function allLoaded(){ return Object.values(LOADED).flatMap(x => x.items || []).filter(p => !reportHidden(p)); }
 
@@ -2172,12 +2210,14 @@ function goToPlace(id){
 }
 
 // ---------- Chrono « Je pars » ----------
+let ASK = null;                         // « C'était bien ouvert ? » à poser : {hid, pid, name, em}
 let TIMER = null, timerTick = null, vibrated = false;
 try{ TIMER = JSON.parse(localStorage.getItem("pasltemps.timer") || "null"); }catch(e){}
 function saveTimer(){ try{ TIMER ? localStorage.setItem("pasltemps.timer", JSON.stringify(TIMER)) : localStorage.removeItem("pasltemps.timer"); }catch(e){} }
 function startTimer(p, h, total){
   stat("go", M);
-  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), stay: p.stay || 0, mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null};
+  TIMER = {start:Date.now(), T: total || T, walk:Math.max(1, p.walk||5), stay: p.stay || 0, mode:SET.travel || "walk", name:p.name, em:p.em||"📍", hid:h ? h.id : null, pid:p.id || null, oh: !!p.oh && !(p.open && p.open.level === "closed")};
+  ASK = null;
   // mode arrivée : on repart du lieu vers l'arrivée (et non vers le point de départ), pour y être à l'heure
   if(destMode() && p.back != null) Object.assign(TIMER, {T: Math.max(1, Math.round((ARRIVE_AT - Date.now()) / 60000)), back: Math.max(1, p.back), dest: destName(), arrive: ARRIVE_AT,
     ...(DEST.station && GARE.trainAt ? {train: GARE.trainAt} : {})});
@@ -2188,12 +2228,27 @@ function startTimer(p, h, total){
 }
 function stopTimer(done){
   if(done && TIMER && TIMER.hid) patch(TIMER.hid, {done:true});
+  ASK = TRUST.shouldAsk(TIMER, Date.now()) ? {hid:TIMER.hid, pid:TIMER.pid, name:TIMER.name, em:TIMER.em} : null;
   TIMER = null; saveTimer(); renderTimer();
   scheduleTimerPush();                 // annule les notifications du chrono
 }
+// Réponse gardée avec la sortie (modifiable dans l'historique) et envoyée, sans nom, au serveur
+function answerOpen(hid, pid, v){ if(hid && HIST.some(h => h.id === hid)) patch(hid, {open: v < 0 ? null : v}); voteOpen(pid, v); }
 const mmss = s => { s = Math.abs(Math.round(s)); return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0"); };
 function renderTimer(){
   const box = $("timer");
+  if(!TIMER && ASK){
+    clearInterval(timerTick); timerTick = null;
+    box.hidden = false; document.body.classList.add("timing"); box.className = "timer ask";
+    box.innerHTML = `<div class="tin" role="group" aria-label="${tx("C'était bien ouvert ?")}"><div class="top"><span class="e">${ICONS.ico(ASK.em, 28)}</span><div class="mid"><b>${tx("C'était bien ouvert ?")}</b><span></span></div></div>
+      <div class="acts"><button class="ok" data-v="1">${tx("Oui")}</button><button data-v="0">${tx("Non, fermé")}</button><button data-v="">${tx("Passer")}</button></div></div>`;
+    box.querySelector(".mid span").textContent = ASK.name;
+    box.querySelectorAll("[data-v]").forEach(b => b.onclick = () => {
+      const a = ASK, v = b.dataset.v; ASK = null; renderTimer();
+      if(v !== "") answerOpen(a.hid, a.pid, +v);
+    });
+    return;
+  }
   if(!TIMER){ box.hidden = true; document.body.classList.remove("timing"); clearInterval(timerTick); timerTick = null; return; }
   if(!timerTick) timerTick = setInterval(renderTimer, 1000);
   box.hidden = false; document.body.classList.add("timing");
@@ -2446,7 +2501,7 @@ function pickForMe(list){
   const recent = new Set(HIST.slice(0,12).map(h => h.pid));
   const scored = list.map(p => {
     let w = hourBoost(p.g, hr) * (1.4 - Math.min(1, destMode() && p.detour != null ? p.detour / maxDetour() : 2*p.walk/T) * .8);
-    const o = HOURS.forVisit(p.oh, p.walk, p.stay);
+    const o = openAt(p);
     if(o.level === "closed") w *= .01; else if(o.level === "warn") w *= .4; else if(o.level === "ok") w *= 1.2;
     if(LISTS.todo[p.id]) w *= 2.2; else if(LISTS.fav[p.id]) w *= 1.5;
     if(isPreferred(MOODS[M].groups.find(g => g.l === p.g))) w *= 1.8;
@@ -2533,7 +2588,7 @@ addEventListener("online", () => RETRY.forEach((fn, id) => write(id, fn)));
 setInterval(() => { if(store && navigator.onLine !== false) RETRY.forEach((fn, id) => write(id, fn)); }, 30000); // nouvel essai régulier
 function logVisit(p){
   const e = {id:"h"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), at:Date.now(),
-    n:p.name, q:p.g, pid:p.id, addr:p.addr, url:p.url||"", mood:M, T, done:false, note:"",
+    n:p.name, q:p.g, pid:p.id, addr:p.addr, url:p.url||"", mood:M, T, done:false, note:"", oh:!!p.oh,
     lat:+p.lat.toFixed(4), lng:+p.lng.toFixed(4)};
   HIST.unshift(e); renderHistory();
   write(e.id, () => store.add(e));
@@ -2569,6 +2624,7 @@ function renderHistory(){
       <div class="sub">${mood ? ICONS.ico(mood.e, 16) + " " : ""}${esc(tx(h.q||""))} · ${fmtDur(h.T)}${near}</div>
       <input type="text" placeholder="${tx("Un souvenir, une note… (facultatif)")}" maxlength="120">
       ${h.done && h.pid && PRICED.has(h.q) ? `<div class="prq"><span>${tx("C'était plutôt…")}</span><div class="seg">${[1,2,3].map(l => `<button type="button" data-v="${l}" aria-pressed="${h.price === l}">${euros(l)}</button>`).join("")}</div></div>` : ""}
+      ${h.done && h.pid && h.oh ? `<div class="prq opq"><span>${tx("C'était bien ouvert ?")}</span><div class="seg"><button type="button" data-o="1" aria-pressed="${h.open === 1}">${tx("Oui")}</button><button type="button" data-o="0" aria-pressed="${h.open === 0}">${tx("Non")}</button></div></div>` : ""}
       <div class="acts"><button class="tog${h.done?" on":""}">${h.done ? tx("Fait ✓") : tx("Marquer comme fait")}</button>${h.url?`<a class="ghost" style="font-size:14px;padding:4px 10px" target="_blank" rel="noopener" href="${esc(h.url)}">${tx("Site web")}</a>`:""}<button class="share">${tx("Raconter")}</button><button class="del">${tx("Supprimer")}</button></div>`;
     el.querySelector("strong").textContent = h.n;
     el.querySelector(".share").onclick = () => { composeFrom = h.id; composeOpen = true; showView("blog"); renderCompose(); $("blogCompose").scrollIntoView({behavior:"smooth"}); };
@@ -2576,7 +2632,9 @@ function renderHistory(){
     inp.addEventListener("change", () => { const v = inp.value.trim(); if(v !== (h.note||"")) patch(h.id, {note:v}); });
     inp.addEventListener("keydown", ev => { if(ev.key === "Enter") inp.blur(); });
     el.querySelector(".tog").onclick = () => patch(h.id, {done: !h.done});
-    const prq = el.querySelector(".prq");
+    const opq = el.querySelector(".opq");
+    if(opq) opq.onclick = e => { const b = e.target.closest("button"); if(!b) return; answerOpen(h.id, h.pid, h.open === +b.dataset.o ? -1 : +b.dataset.o); };
+    const prq = el.querySelector(".prq:not(.opq)");
     if(prq) prq.onclick = e => { const b = e.target.closest("button"); if(!b) return; const v = h.price === +b.dataset.v ? 0 : +b.dataset.v; patch(h.id, {price: v}); votePrice(h.pid, v); };
     el.querySelector(".del").onclick = () => removeEntry(h.id);
     L.appendChild(el);
