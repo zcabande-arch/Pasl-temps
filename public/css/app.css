@@ -1484,3 +1484,25 @@ input,textarea,select{font-size:max(16px,1em)}
 .legrow label{white-space:nowrap}
 .legrow input[type=range]{flex:1;min-width:150px;height:32px;accent-color:var(--acc)}
 .store-app .web-only{display:none !important}
+
+/* ---------- Accueil : une phrase, trois mots à toucher ---------- */
+.hero2 .display.sentence,body[data-style] .hero2 .display.sentence{font-size:calc(clamp(34px,9.6vw,52px) * var(--ds,1));line-height:1.14;letter-spacing:-.025em;margin:0 0 6px}
+.sentence .w{font:inherit;letter-spacing:inherit;color:var(--acc);background:none;border:0;padding:0;margin:0;cursor:pointer;
+  text-decoration:underline;text-decoration-thickness:.055em;text-underline-offset:.14em;text-decoration-color:color-mix(in srgb,var(--acc) 45%,transparent);border-radius:6px}
+.sentence .w em{font-style:italic;color:inherit;display:inline}
+.sentence .w:hover{text-decoration-color:var(--acc)}
+.sentence .w:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
+body[data-style="rose"] .sentence .w{color:var(--ink)}
+.home-sheet h2{margin:0 0 12px}
+.home-sheet .dial{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow:visible;margin:0 0 6px;padding:0}
+.home-sheet .dial button{padding:12px 0}
+.home-sheet .hsub{font-size:13px;font-weight:700;color:var(--soft);margin:18px 0 8px}
+.home-sheet .seg.pace{margin:0}
+.home-sheet .backby{margin:0 0 12px}
+.home-sheet .garebtn{margin:0 0 6px}
+.home-sheet .travel,.home-sheet .flat .travel{margin:4px 0 8px}
+.home-sheet .where{margin:0}
+.home-sheet .hok{display:block;width:100%;margin-top:18px;padding:13px 0;font-size:16px}
+@media (min-width:900px){ .home-sheet{bottom:auto;top:50%;border-radius:28px;transform:translateY(-40%) scale(.98);opacity:0;pointer-events:none;transition:transform .25s,opacity .2s}
+  .home-sheet.on{transform:translateY(-50%);opacity:1;pointer-events:auto} .home-sheet .grab{display:none} }
+.home-sheet #here{display:none}
