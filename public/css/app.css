@@ -680,13 +680,13 @@ body.flat{--sh:0 1px 2px rgba(28,21,18,.04),0 16px 36px -22px rgba(28,21,18,.30)
 #onb .onbpick.one button::after{content:none}
 .backby .atbox{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 /* Nombre impair d'envies : la dernière prend toute la largeur (illustration large) */
-.moods button.photo:last-child:nth-child(odd){grid-column:1 / -1;aspect-ratio:2/1;background-image:var(--lg)!important}
-.lay-tablet .moods button.photo:last-child:nth-child(odd){grid-column:auto;aspect-ratio:1/1;background-image:none}
-.lay-tablet .moods button.photo:last-child:nth-child(4n+3){grid-column:span 2;aspect-ratio:2/1;background-image:var(--lg)!important}
-.lay-tablet .moods button.photo:last-child:nth-child(4n+1){grid-column:1 / -1;aspect-ratio:4/1;background-image:var(--lg)!important}
+.moods button.photo:last-of-type:nth-of-type(odd){grid-column:1 / -1;aspect-ratio:2/1;background-image:var(--lg)!important}
+.lay-tablet .moods button.photo:last-of-type:nth-of-type(odd){grid-column:auto;aspect-ratio:1/1;background-image:none}
+.lay-tablet .moods button.photo:last-of-type:nth-of-type(4n+3){grid-column:span 2;aspect-ratio:2/1;background-image:var(--lg)!important}
+.lay-tablet .moods button.photo:last-of-type:nth-of-type(4n+1){grid-column:1 / -1;aspect-ratio:4/1;background-image:var(--lg)!important}
 .banner .evin{display:block;margin-top:6px;font-size:11px;opacity:.85}
 .lay-tablet .moods button.photo{background-position:center top!important}
-.lay-tablet .moods button.photo:last-child:is(:nth-child(4n+1),:nth-child(4n+3)){background-position:center!important}
+.lay-tablet .moods button.photo:last-of-type:is(:nth-of-type(4n+1),:nth-of-type(4n+3)){background-position:center!important}
 .lay-tablet .moods{grid-template-columns:repeat(4,1fr)}
 /* Signaler un lieu, nous contacter */
 .repname{color:var(--soft);margin:-10px 0 16px;font-size:15px}
@@ -1485,24 +1485,37 @@ input,textarea,select{font-size:max(16px,1em)}
 .legrow input[type=range]{flex:1;min-width:150px;height:32px;accent-color:var(--acc)}
 .store-app .web-only{display:none !important}
 
-/* ---------- Accueil : une phrase, trois mots à toucher ---------- */
-.hero2 .display.sentence,body[data-style] .hero2 .display.sentence{font-size:calc(clamp(34px,9.6vw,52px) * var(--ds,1));line-height:1.14;letter-spacing:-.025em;margin:0 0 6px}
-.sentence .w{font:inherit;letter-spacing:inherit;color:var(--acc);background:none;border:0;padding:0;margin:0;cursor:pointer;
-  text-decoration:underline;text-decoration-thickness:.055em;text-underline-offset:.14em;text-decoration-color:color-mix(in srgb,var(--acc) 45%,transparent);border-radius:6px}
-.sentence .w em{font-style:italic;color:inherit;display:inline}
-.sentence .w:hover{text-decoration-color:var(--acc)}
-.sentence .w:focus-visible{outline:3px solid var(--acc);outline-offset:3px}
-body[data-style="rose"] .sentence .w{color:var(--ink)}
+/* ---------- Accueil : train, durée au curseur circulaire, heure précise, transport, lieu ---------- */
+.hero3{padding:14px 0 0}
+.hero3 .kicker{margin:0}
+.trainbtn{display:inline-flex;align-items:center;gap:8px;margin:14px 0 4px;padding:11px 20px;min-height:44px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:inherit;font-size:16px;font-weight:700;box-shadow:var(--sh)}
+.trainbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.tring{position:relative;width:min(250px,66vw);aspect-ratio:1;margin:8px auto 14px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+.tring svg{width:100%;height:100%;display:block;overflow:visible}
+.tring .rtrack{fill:none;stroke:var(--line);stroke-width:14;stroke-linecap:round}
+.tring .rarc{fill:none;stroke:var(--acc);stroke-width:14;stroke-linecap:round}
+.tring .rarc,.tring .rtrack{vector-effect:non-scaling-stroke}
+.tring .rknob{position:absolute;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;background:var(--card);border:4px solid var(--acc);box-shadow:var(--sh);box-sizing:border-box;cursor:grab;transition:left .18s ease-out,top .18s ease-out;will-change:left,top}
+.tring.drag .rknob{cursor:grabbing;transition:none;transform:scale(1.12)}
+.tring .rknob:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.tring .rmid{position:absolute;inset:22%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.tring .rl{font-size:15px;font-weight:600;color:var(--soft)}
+.tring .rmid b{font-family:"Fraunces",Georgia,serif;font-size:clamp(46px,14vw,64px);font-weight:600;line-height:1;letter-spacing:-.03em;color:var(--acc);font-style:italic}
+.tring .rmid span:last-child{font-size:16px;font-weight:600;color:var(--ink)}
+.tring.fixed .rarc{stroke:var(--ink)}
+.tring.fixed .rmid b{color:var(--ink);font-size:clamp(40px,12vw,54px)}
+.no-motion .tring .rknob{transition:none}
+@media (prefers-reduced-motion:reduce){.tring .rknob{transition:none}}
+#backBy{justify-content:center;margin:0 0 6px}
+#atMsg{text-align:center}
+.arrbox{display:none!important}
+.hero3 ~ .travel,.col-a > .travel{margin:16px 0 14px}
+.placebtn{display:flex;align-items:center;gap:8px;width:100%;margin:0 0 22px;padding:12px 16px;min-height:48px;border:0;border-radius:16px;background:var(--card);box-shadow:var(--sh);color:var(--ink);font:inherit;font-size:16px;text-align:left}
+.placebtn b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.placebtn span{color:var(--acc);font-weight:700;font-size:14px}
 .home-sheet h2{margin:0 0 12px}
-.home-sheet .dial{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;overflow:visible;margin:0 0 6px;padding:0}
-.home-sheet .dial button{padding:12px 0}
-.home-sheet .hsub{font-size:13px;font-weight:700;color:var(--soft);margin:18px 0 8px}
-.home-sheet .seg.pace{margin:0}
-.home-sheet .backby{margin:0 0 12px}
-.home-sheet .garebtn{margin:0 0 6px}
-.home-sheet .travel,.home-sheet .flat .travel{margin:4px 0 8px}
 .home-sheet .where{margin:0}
+.home-sheet #here{display:none}
 .home-sheet .hok{display:block;width:100%;margin-top:18px;padding:13px 0;font-size:16px}
 @media (min-width:900px){ .home-sheet{bottom:auto;top:50%;border-radius:28px;transform:translateY(-40%) scale(.98);opacity:0;pointer-events:none;transition:transform .25s,opacity .2s}
   .home-sheet.on{transform:translateY(-50%);opacity:1;pointer-events:auto} .home-sheet .grab{display:none} }
-.home-sheet #here{display:none}

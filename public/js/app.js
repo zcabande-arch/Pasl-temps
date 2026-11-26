@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "117";
+const APP_VERSION = "118";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -871,7 +871,7 @@ $("fq").addEventListener("keydown", e => { if(e.key === "Enter") $("fq").blur();
 
 function renderResults(){
   if(MOODS[M] && MOODS[M].img) document.body.style.setProperty("--catbg", `url('${new URL(moodImg(M, true), location.href).href}')`);
-  renderSentence();
+  renderHome();
   if($("arc")) $("arc").setAttribute("stroke-dashoffset", (326.73 * (1 - T/60)).toFixed(1));
   const R = $("results"); R.innerHTML = ""; $("bannerBox").innerHTML = "";
   $("whereAt").replaceChildren(...(pos ? [whereTitle()] : []));
@@ -961,48 +961,92 @@ function renderResults(){
 
 // « Alors, on fait quoi à Lyon ? » sous la carte : la ville vient du nom du lieu choisi
 // (« 12 Rue de Rivoli, 75004 Paris » → Paris), ou d'OpenStreetMap pour la position GPS
-// ---------- Accueil : une phrase, trois mots à toucher ----------
-// « J'ai 20 minutes, à pied, autour de Paris. » Chaque mot ouvre la feuille de réglage correspondante.
+// ---------- Accueil : durée au curseur circulaire, heure précise, transport, lieu ----------
 function placeWord(){
-  if(!pos) return tx("où ?");
+  if(!pos) return tx("Où es-tu ?");
   const k = pos.lat.toFixed(2) + "," + pos.lng.toFixed(2), town = townOf(posLabel) || (gpsTown.k === k ? gpsTown.v : null);
-  if(!town && PLACES.townAt && gpsTown.k !== k){ gpsTown = {k, v: null}; PLACES.townAt(pos).then(t => { if(gpsTown.k === k){ gpsTown.v = t; renderSentence(); } }).catch(() => {}); }
-  return town || (posLabel && posLabel !== tx("ma position") ? posLabel.split(",")[0] : tx("toi"));
+  if(!town && PLACES.townAt && gpsTown.k !== k){ gpsTown = {k, v: null}; PLACES.townAt(pos).then(t => { if(gpsTown.k === k){ gpsTown.v = t; renderHome(); } }).catch(() => {}); }
+  return town || (posLabel && posLabel !== tx("ma position") ? posLabel.split(",")[0] : tx("Ma position"));
 }
-function renderSentence(){
-  const h1 = $("sentence"); if(!h1) return;
-  // « J'ai 20 minutes » / « 1 heure » / « 1 h 30 » / « 2 heures » ; avec une heure de retour ou d'arrivée : « jusqu'à 14h »
-  const until = BACK_AT || (destMode() ? ARRIVE_AT : null);
-  const [num, unit] = until ? [tx("jusqu'à {h}", {h: hhmm(until)}), ""] : T < 60 ? [T, tx(" minutes")] : T % 60 ? [fmtDur(T), ""] : [T / 60, T === 60 ? tx(" heure") : tx(" heures")];
-  const w = (k, label, inner) => `<button class="w" type="button" data-s="${k}" aria-label="${esc(label)}">${inner}</button>`;
-  const parts = {
-    t: w("time", tx("Changer le temps"), `<em id="numTxt"></em><span id="unitTxt"></span>`),
-    m: w("mode", tx("Changer le moyen de transport"), esc(TR().way)),
-    p: w("place", tx("Changer de lieu"), esc(placeWord()))
-  };
-  const had = h1.contains(document.activeElement) && document.activeElement.dataset.s;      // garder le focus clavier
-  h1.innerHTML = esc(tx("J'ai {t}, {m}, autour de {p}.")).replace(/\{([tmp])\}/g, (_, k) => parts[k]);
-  if(had) h1.querySelector(`[data-s="${had}"]`).focus({preventScroll: true});
-  $("numTxt").textContent = num; $("unitTxt").textContent = unit;
+// Crans du curseur : 5 min jusqu'à 1 h, puis 15 min jusqu'à 3 h. Le cercle va de midi (0°) à 320°.
+const RING_V = [10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 75, 90, 105, 120, 135, 150, 165, 180], RING_A = 320, RING_R = 100;
+const ringIdx = v => { let i = 0; RING_V.forEach((x, j) => { if(Math.abs(x - v) < Math.abs(RING_V[i] - v)) i = j; }); return i; };
+// angle d'une durée quelconque (heure de retour : jusqu'à 4 h, on s'arrête au bout du cercle)
+function ringAngle(v){
+  if(v <= RING_V[0]) return 0;
+  for(let j = 1; j < RING_V.length; j++) if(v <= RING_V[j]) return (j - 1 + (v - RING_V[j - 1]) / (RING_V[j] - RING_V[j - 1])) / (RING_V.length - 1) * RING_A;
+  return RING_A;
 }
-const HPANELS = {time: ["hpTime", "Combien de temps ?"], mode: ["hpMode", "Comment tu te déplaces ?"], place: ["hpPlace", "Où es-tu ?"]};
-let homeOpen = null;
-function openHome(k){
-  homeOpen = k;
-  Object.entries(HPANELS).forEach(([x, [id]]) => { $(id).hidden = x !== k; });
-  $("homeTitle").textContent = tx(HPANELS[k][1]);
-  $("homeSheet").classList.add("on"); $("homeBg").classList.add("on");
-  const P = $(HPANELS[k][0]), first = P.querySelector('[aria-pressed="true"]') || P.querySelector("button, input");
-  setTimeout(() => (k === "place" && !pos ? $("whereInput") : first || $("homeOk")).focus({preventScroll: true}), 60);
+const ringPt = a => { const r = a * Math.PI / 180; return [120 + RING_R * Math.sin(r), 120 - RING_R * Math.cos(r)]; };
+function ringLabel(v){ return v < 60 ? [v, tx("minutes")] : v % 60 ? [fmtDur(v), ""] : [v / 60, v === 60 ? tx("heure") : tx("heures")]; }
+let ringDragA = null;                         // pendant un glisser : l'angle exact du doigt (la poignée le suit sans à-coups)
+function renderRing(){
+  const until = BACK_AT || (destMode() ? ARRIVE_AT : null), a = ringDragA != null ? ringDragA : ringAngle(T), [x, y] = ringPt(a);
+  $("ringArc").setAttribute("d", a <= 0.01 ? "" : `M 120 ${120 - RING_R} A ${RING_R} ${RING_R} 0 ${a > 180 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}`);
+  const k = $("ringKnob"); k.style.left = (x / 240 * 100) + "%"; k.style.top = (y / 240 * 100) + "%";
+  const [num, unit] = ringLabel(T);
+  $("ringLbl").textContent = until ? (GARE.on && GARE.trainAt ? tx("Avant le train") : BACK_AT ? tx("Retour à") : tx("Arrivée à")) : tx("J'ai");
+  $("numTxt").textContent = until ? hhmm(until) : num; $("unitTxt").textContent = until ? tx("{d} devant toi", {d: fmtDur(T)}) : unit;
+  k.setAttribute("aria-valuenow", String(Math.min(180, T)));
+  k.setAttribute("aria-valuetext", until ? tx("jusqu'à {h}", {h: hhmm(until)}) : fmtDur(T));
+  $("ring").classList.toggle("fixed", !!until);
+}
+function renderHome(){ renderRing(); $("placeTxt").textContent = placeWord(); }
+let ringTimer = null;
+// search : false pendant un glisser (la recherche part au lâcher), sinon un peu après le dernier changement
+function setRing(v, search_ = true){
+  if(BACK_AT) setBackBy("");
+  if(GARE.on) setGare(false);
+  if(ARRIVE_AT) clearArrive();
+  const changed = v !== T;
+  T = v;
+  if(changed) document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(+x.dataset.t === T)));
+  renderRing();
+  clearTimeout(ringTimer);
+  if(search_ && changed) ringTimer = setTimeout(search, 200);
+}
+function ringAngleAt(e){
+  const r = $("ring").getBoundingClientRect(), dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
+  let a = Math.atan2(dx, -dy) * 180 / Math.PI; if(a < 0) a += 360;
+  if(a > RING_A) a = a > RING_A + (360 - RING_A) / 2 ? 0 : RING_A;          // dans le creux : vers le bout le plus proche
+  // pas de saut d'un bout à l'autre en passant par le creux pendant un glisser
+  if(ringDragA != null && Math.abs(a - ringDragA) > 180) a = ringDragA > RING_A / 2 ? RING_A : 0;
+  return a;
+}
+const ringSnap = a => RING_V[Math.round(a / RING_A * (RING_V.length - 1))];
+let ringDrag = false, startT = 0;
+function ringMove(e){ ringDragA = ringAngleAt(e); setRing(ringSnap(ringDragA), false); }
+$("ring").addEventListener("pointerdown", e => {
+  if(e.target.closest(".rmid")) return;
+  ringDrag = true; startT = T; ringDragA = null; $("ring").setPointerCapture(e.pointerId); $("ring").classList.add("drag");
+  ringMove(e); $("ringKnob").focus({preventScroll: true});
+  e.preventDefault();
+});
+$("ring").addEventListener("pointermove", e => { if(ringDrag) ringMove(e); });
+const ringEnd = () => {
+  if(!ringDrag) return;
+  ringDrag = false; ringDragA = null; $("ring").classList.remove("drag");
+  renderRing();                                 // la poignée se pose sur le cran choisi
+  if(T !== startT) search();
+};
+$("ring").addEventListener("pointerup", ringEnd); $("ring").addEventListener("pointercancel", ringEnd);
+$("ringKnob").addEventListener("keydown", e => {
+  const i = ringIdx(T), to = {ArrowRight: i + 1, ArrowUp: i + 1, ArrowLeft: i - 1, ArrowDown: i - 1, PageUp: i + 3, PageDown: i - 3, Home: 0, End: RING_V.length - 1}[e.key];
+  if(to === undefined) return;
+  e.preventDefault(); setRing(RING_V[Math.max(0, Math.min(RING_V.length - 1, to))]);
+});
+// Lieu : une feuille (adresse, « Ma position », lieux récents)
+let homeOpen = false;
+function openHome(){
+  homeOpen = true; $("homeSheet").classList.add("on"); $("homeBg").classList.add("on");
+  setTimeout(() => (pos ? $("homeSheet").querySelector("#whereRow button, #whereInput") : $("whereInput")).focus({preventScroll: true}), 60);
 }
 function closeHome(){
   if(!homeOpen) return;
-  const k = homeOpen; homeOpen = null;
-  $("homeSheet").classList.remove("on"); $("homeBg").classList.remove("on");
-  const b = $("sentence").querySelector(`[data-s="${k}"]`); if(b) b.focus({preventScroll: true});
-  setTimeout(() => { const c = $("sentence").querySelector(`[data-s="${k}"]`); if(c && !$("homeSheet").classList.contains("on") && !document.activeElement.closest(".sheet")) c.focus({preventScroll: true}); }, 400);
+  homeOpen = false; $("homeSheet").classList.remove("on"); $("homeBg").classList.remove("on");
+  $("placeBtn").focus({preventScroll: true});
 }
-$("sentence").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if(b) openHome(b.dataset.s); });
+$("placeBtn").onclick = openHome;
 $("homeBg").onclick = closeHome; $("homeOk").onclick = closeHome;
 document.addEventListener("keydown", e => { if(e.key === "Escape" && homeOpen) closeHome(); });
 
@@ -1104,7 +1148,7 @@ $("dial").addEventListener("click", e => {
   if(ARRIVE_AT) clearArrive();
   T = +b.dataset.t;
   document.querySelectorAll("#dial button").forEach(x => x.setAttribute("aria-pressed", String(x===b)));
-  search(); closeHome();
+  search(); renderRing();
   const n=$("numTxt"); if(n){ n.classList.add("bump"); setTimeout(()=>n.classList.remove("bump"),200); }
 });
 function renderPace(){ document.querySelectorAll("#paceSeg button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.v === (SET.pace || "normal")))); }
@@ -1120,7 +1164,7 @@ const hhmm = t => { const d = new Date(t), m = String(d.getMinutes()).padStart(2
 function renderBackBy(){
   $("atClear").hidden = !BACK_AT;
   $("backBy").classList.toggle("on", !!BACK_AT);
-  renderSentence();
+  renderHome();
   $("kicker").textContent = BACK_AT ? tx("✦ Retour à {h}", {h:hhmm(BACK_AT)}) : destMode() ? tx("✦ À {d} à {h}", {d:destName(), h:hhmm(ARRIVE_AT)}) : tx("✦ Sortir, profiter, rentrer à l'heure");
 }
 function setBackBy(value){
@@ -1188,6 +1232,7 @@ function clearArrive(keepMsg){
 }
 function renderArrive(){
   const on = destMode();
+  if($("ringArc")) renderRing();
   $("arrBy").classList.toggle("on", on);
   $("arrClear").hidden = !(DEST || ARR_TIME);
   $("arrBox").hidden = !(DEST || ARR_TIME || $("arrBy").classList.contains("open"));
@@ -1306,7 +1351,6 @@ function renderTravel(){
 $("travelSeg").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b || b.dataset.v === (SET.travel || "walk")) return;
   SET.travel = b.dataset.v; saveSet(); renderTravel(); search();
-  setTimeout(closeHome, 260);                 // le temps de voir la bulle glisser
 });
 $("moods").addEventListener("click", e => {
   const b = e.target.closest("button"); if(!b) return;
@@ -1331,7 +1375,7 @@ $("backBtn").addEventListener("click", () => {
 });
 addEventListener("popstate", () => goStep(history.state && history.state.step === 2 ? 2 : 1, false));
 $("seeBtn").addEventListener("click", () => {
-  if(!pos){ openHome("place"); return; }
+  if(!pos){ openHome(); return; }
   goStep(2);
 });
 function renderSee(total, loading){

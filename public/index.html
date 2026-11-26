@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="app-version" content="117">
+<meta name="app-version" content="118">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fissa Fissa</title>
 <meta name="description" content="Fissa Fissa : 10 minutes ou 2 heures devant toi ? L'appli trouve à pied, à vélo ou en voiture ce qui tient dans ta pause : boulangerie, café, parc, librairie…">
@@ -66,29 +66,34 @@
   </div>
   <div id="viewExplore">
   <div class="col-a">
-  <header class="hero2">
+  <header class="hero2 hero3">
     <p class="kicker" id="kicker">✦ Sortir, profiter, rentrer à l'heure</p>
-    <h1 class="display sentence" id="sentence">J'ai <em id="numTxt">20</em><span id="unitTxt"> minutes</span>.</h1>
   </header>
-
-  <!-- Réglages de la phrase : une feuille qui s'ouvre au toucher d'un mot (temps, transport, lieu) -->
-  <div class="sheet-bg" id="homeBg"></div>
-  <div class="sheet home-sheet" id="homeSheet" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
-    <div class="grab"></div>
-    <h2 id="homeTitle">Combien de temps ?</h2>
-    <div class="hpanel" id="hpTime">
-  <div class="dial" id="dial" role="group" aria-label="Temps disponible">
-
+  <button class="trainbtn" id="gareBtn" type="button" aria-pressed="false">🚉 Train</button>
+  <div class="where garebox" id="gareBox" hidden>
+    <p class="here">🚉 Ta gare</p>
+    <div class="row" id="gareRow"></div>
+    <div class="backby"><label for="trainAt">🕒 Mon train part à</label><span class="atbox"><input type="time" id="trainAt" step="60"></span></div>
+    <p class="here">Marge de sécurité</p>
+    <div class="seg" id="marginSeg"><button data-v="5">5 min</button><button data-v="10">10 min</button><button data-v="15">15 min</button></div>
+    <label class="valise"><input type="checkbox" id="valise"> 🧳 J'ai une valise <small>(on marche moins vite, consignes et lieux couverts d'abord)</small></label>
+    <p class="msg" id="gareMsg"></p>
+    <button class="link" id="gareOff" type="button">Quitter le mode gare</button>
   </div>
-  <p class="hsub">Temps sur place</p>
-  <div class="seg pace" id="paceSeg" role="group" aria-label="Temps sur place"><button data-v="quick">⚡ Vite fait</button><button data-v="normal">Normal</button><button data-v="easy">🌿 Tranquille</button></div>
-      <p class="hsub">Ou bien</p>
+
+  <!-- Durée : un curseur circulaire (glisser, ou flèches du clavier) -->
+  <div class="tring" id="ring">
+    <svg viewBox="0 0 240 240" aria-hidden="true"><circle class="rtrack" cx="120" cy="120" r="100"/><path class="rarc" id="ringArc" d=""/></svg>
+    <div class="rknob" id="ringKnob" role="slider" tabindex="0" aria-label="Temps disponible" aria-valuemin="10" aria-valuemax="180" aria-valuenow="20"></div>
+    <div class="rmid" aria-hidden="true"><span class="rl" id="ringLbl">J'ai</span><b id="numTxt">20</b><span id="unitTxt">minutes</span></div>
+  </div>
+  <div class="dial" id="dial" role="group" aria-label="Temps disponible" hidden></div>
   <div class="backby" id="backBy">
-    <label for="atIn">⏰ Je dois être rentré·e à</label>
+    <label for="atIn">⏰ Heure précise : je dois être rentré·e à</label>
     <span class="atbox"><input type="time" id="atIn" step="300"><button class="link" id="atClear" hidden aria-label="Revenir au choix en minutes">✕</button></span>
   </div>
   <p class="msg" id="atMsg"></p>
-  <div class="backby arrby" id="arrBy">
+  <div class="backby arrby" id="arrBy" hidden>
     <button class="link lbl" id="arrOpen" type="button">📍 Je dois être à…</button>
     <span class="atbox"><input type="time" id="arrAt" step="300" aria-label="Heure d'arrivée"><button class="link" id="arrClear" hidden aria-label="Ne plus finir ailleurs">✕</button></span>
   </div>
@@ -101,23 +106,15 @@
     <div class="row" id="arrRow"></div>
     <p class="msg" id="arrMsg"></p>
   </div>
-  <button class="chip garebtn" id="gareBtn" type="button" aria-pressed="false">🚉 Je suis en gare</button>
-  <div class="where garebox" id="gareBox" hidden>
-    <p class="here">🚉 Ta gare</p>
-    <div class="row" id="gareRow"></div>
-    <div class="backby"><label for="trainAt">🕒 Mon train part à</label><span class="atbox"><input type="time" id="trainAt" step="60"></span></div>
-    <p class="here">Marge de sécurité</p>
-    <div class="seg" id="marginSeg"><button data-v="5">5 min</button><button data-v="10">10 min</button><button data-v="15">15 min</button></div>
-    <label class="valise"><input type="checkbox" id="valise"> 🧳 J'ai une valise <small>(on marche moins vite, consignes et lieux couverts d'abord)</small></label>
-    <p class="msg" id="gareMsg"></p>
-    <button class="link" id="gareOff" type="button">Quitter le mode gare</button>
-  </div>
-    </div>
-    <div class="hpanel" id="hpMode" hidden>
   <div class="seg travel" id="travelSeg" role="group" aria-label="Moyen de transport"></div>
 
-    </div>
-    <div class="hpanel" id="hpPlace" hidden>
+  <button class="placebtn" id="placeBtn" type="button">📍 <b id="placeTxt">Ma position</b> <span>Changer</span></button>
+
+  <div class="sheet-bg" id="homeBg"></div>
+  <div class="sheet home-sheet" id="homeSheet" role="dialog" aria-modal="true" aria-labelledby="homeTitle">
+    <div class="grab"></div>
+    <h2 id="homeTitle">Où es-tu ?</h2>
+    <div class="hpanel" id="hpPlace">
   <div class="where" id="where">
     <p class="here" id="here">📍 Où es-tu ?</p>
     <form id="whereForm" autocomplete="off">
@@ -241,6 +238,8 @@
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="grab"></div>
   <h2 id="setTitle">Réglages</h2>
+  <h4>Temps sur place</h4>
+<div class="seg pace" id="paceSeg" role="group" aria-label="Temps sur place"><button data-v="quick">⚡ Vite fait</button><button data-v="normal">Normal</button><button data-v="easy">🌿 Tranquille</button></div>
   <h4>Couleurs</h4>
   <div class="swatches" id="swatches"></div>
   <h4>Apparence</h4>
