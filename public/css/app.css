@@ -1519,3 +1519,7 @@ input,textarea,select{font-size:max(16px,1em)}
 .home-sheet .hok{display:block;width:100%;margin-top:18px;padding:13px 0;font-size:16px}
 @media (min-width:900px){ .home-sheet{bottom:auto;top:50%;border-radius:28px;transform:translateY(-40%) scale(.98);opacity:0;pointer-events:none;transition:transform .25s,opacity .2s}
   .home-sheet.on{transform:translateY(-50%);opacity:1;pointer-events:auto} .home-sheet .grab{display:none} }
+/* Illustrations sur un bouton plein (accent) : une seule couleur, celle du texte, pour rester lisibles */
+.go .icoimg,.see .icoimg,.idea > button .icoimg,.travel button[aria-pressed="true"] .icoimg,.trainbtn[aria-pressed="true"] .icoimg,
+.moods button[aria-pressed="true"] .icoimg,.chip[aria-pressed="true"] .icoimg,.seg [aria-pressed="true"] .icoimg{--ico-a:currentColor;--ico-k:currentColor;--ico-p:transparent}
+.ei .icoimg{width:1.25em;height:1.25em}

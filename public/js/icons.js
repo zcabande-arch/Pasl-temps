@@ -2,6 +2,8 @@
 // Les données gardent leurs emojis (historique, posts…) : l'affichage les remplace par ces dessins.
 // Expose window.ICONS : ico(nom ou emoji, taille) → <svg>, ou l'emoji tel quel s'il n'a pas de dessin.
 (function(){
+  // dossier de l'appli (icons.js est dans js/) : les illustrations sont dans img/ico/
+  const BASE = ((document.currentScript && document.currentScript.src) || "").replace(/js\/icons\.js(\?.*)?$/, "");
   // a = trait rouge épais (accent), k = trait noir fin (cadre), f = forme rouge pleine
   const D = {
     gear:      {a:"M24 6 V11 M24 37 V42 M6 24 H11 M37 24 H42 M11.3 11.3 L14.8 14.8 M33.2 33.2 L36.7 36.7 M11.3 36.7 L14.8 33.2 M33.2 14.8 L36.7 11.3", k:"M12 24 A12 12 0 1 0 36 24 A12 12 0 1 0 12 24 M19.5 24 A4.5 4.5 0 1 0 28.5 24 A4.5 4.5 0 1 0 19.5 24"},
@@ -86,6 +88,10 @@
     dots:      {f:"M8 24 A5 5 0 1 0 18 24 A5 5 0 1 0 8 24 Z M19 24 A5 5 0 1 0 29 24 A5 5 0 1 0 19 24 Z M31 24 A3.5 3.5 0 1 0 38 24 A3.5 3.5 0 1 0 31 24 Z", k:"M8 24 A5 5 0 1 0 18 24 A5 5 0 1 0 8 24 M19 24 A5 5 0 1 0 29 24 A5 5 0 1 0 19 24 M31 24 A3.5 3.5 0 1 0 38 24 A3.5 3.5 0 1 0 31 24"},
     wrench:    {a:"M11 37 L24 24", k:"M24 24 L21 21 A10 10 0 0 1 32 7 L27 12 L28 20 L36 21 L41 16 A10 10 0 0 1 27 27 Z"}
   };
+  // Illustrations (img/ico/<nom>.png) : chaque image porte trois couches recolorables dans ses canaux
+  // (rouge = aplat, vert = trait, bleu = fonds clairs). Elles prennent les couleurs de l'endroit où elles s'affichent :
+  // --ico-a (accent), --ico-k (trait) et --ico-p (clair, la couleur des cartes par défaut), donc elles suivent le thème.
+  const IMG = new Set(["alarm", "bag", "baguette", "ban", "beer", "bell", "bike", "bolt", "books", "boot", "bottle", "bowling", "briefcase", "bug", "bulb", "calendar", "camera", "car", "carrot", "cart", "chair", "check", "cheese", "city", "clap", "clock", "cocktail", "compass", "croissant", "cross", "cup", "dice", "discoball", "dumbbell", "escape", "euro", "fire", "forest", "frame", "gamepad", "gear", "gem", "gift", "globe", "grass", "grocery", "handshake", "heart", "home", "icecream", "install", "locate", "lock", "mail", "map", "market", "masks", "monument", "moon", "note", "offline", "openbook", "palette", "party", "pasta", "pencil", "people", "phone", "pin", "plane", "plate", "printer", "rain", "recent", "run", "sandwich", "search", "shield", "shirt", "shoe", "smile", "spa", "sparkle", "speech", "sprout", "star", "stars", "suitcase", "sun", "swim", "teapot", "thread", "thumbtack", "timer", "train", "tree", "trophy", "vase", "walk", "watch", "wheelchair", "wine", "wrench", "yoga"]);
   // Emoji (dans les données) → dessin
   const FROM_EMOJI = {
     "🥐":"plate", "🌳":"tree", "🛍️":"bag", "📚":"books", "🛋️":"chair", "🏃":"shoe",
@@ -99,9 +105,32 @@
     "❤️":"heart", "💛":"heart", "♥":"heart", "📴":"offline", "🔔":"bell", "🎲":"dice", "💬":"speech", "🏙️":"city", "🍽️":"plate",
     "🗺️":"map", "🐞":"bug", "💡":"bulb", "🔒":"lock", "🛰️":"locate", "👉":"arrow", "📷":"camera", "🌱":"sprout", "🎉":"party",
     "💎":"gem", "✈️":"plane", "📲":"install", "❔":"question", "🚶":"walk", "🚗":"car", "🚲":"bike", "🌟":"star", "🏃":"shoe",
-    "🔧":"wrench", "🛠️":"wrench", "👞":"shoe"
+    "🔧":"wrench", "🛠️":"wrench", "👞":"boot",
+    // illustrations
+    "🥐":"croissant", "🏃":"run", "🌯":"sandwich", "🍝":"pasta", "🫖":"teapot", "🏪":"grocery", "🧺":"market", "🌲":"forest",
+    "🪩":"discoball", "🎭":"masks", "🎬":"clap", "🎵":"note", "🎨":"palette", "🔐":"escape", "🕹️":"gamepad", "🎳":"bowling",
+    "🧘":"yoga", "♨️":"spa", "🏊":"swim", "🧵":"thread", "👔":"shirt", "🧴":"bottle", "📱":"phone", "⌚":"watch", "🖨️":"printer",
+    "🚉":"train", "🧳":"suitcase", "🏠":"home", "💼":"briefcase", "🕒":"clock", "🕘":"recent", "🌿":"grass", "📅":"calendar",
+    "🛡️":"shield", "🌟":"stars", "🛍️":"bag", "🛋️":"chair", "🌳":"tree", "👟":"shoe", "🎁":"gift"
   };
+  let uid = 0;
+  const imgOf = name => IMG.has(name) ? name : IMG.has(FROM_EMOJI[name]) ? FROM_EMOJI[name] : null;
   function ico(name, size){
+    const im = imgOf(name);
+    if(im){
+      // un filtre par icône : flood-color lit les variables CSS de l'endroit où l'icône est posée
+      const id = "ic" + (++uid), s = size ? ` width="${size}" height="${size}"` : "";
+      return `<svg class="ico icoimg" viewBox="0 0 48 48"${s} aria-hidden="true" focusable="false">` +
+        `<filter id="${id}" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">` +
+        `<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0" result="am"/>` +
+        `<feFlood style="flood-color:var(--ico-a, #E94F3D)"/><feComposite operator="in" in2="am" result="a"/>` +
+        `<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0" result="km"/>` +
+        `<feFlood style="flood-color:var(--ico-k, currentColor)"/><feComposite operator="in" in2="km" result="k"/>` +
+        `<feColorMatrix in="SourceGraphic" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0" result="pm"/>` +
+        `<feFlood style="flood-color:var(--ico-p, var(--card, #fff))"/><feComposite operator="in" in2="pm" result="p"/>` +
+        `<feMerge><feMergeNode in="p"/><feMergeNode in="a"/><feMergeNode in="k"/></feMerge></filter>` +
+        `<image href="${BASE}img/ico/${im}.png" width="48" height="48" filter="url(#${id})"/></svg>`;
+    }
     const d = D[name] || D[FROM_EMOJI[name]];
     if(!d) return name == null ? "" : String(name).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
     const s = size ? ` width="${size}" height="${size}"` : "";
@@ -110,7 +139,7 @@
       (d.a ? `<path d="${d.a}" fill="none" stroke="var(--ico-a, #E60A00)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>` : "") +
       `<path d="${d.k}" fill="none" stroke="var(--ico-k, currentColor)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   }
-  const has = name => !!(D[name] || D[FROM_EMOJI[name]]);
+  const has = name => !!(imgOf(name) || D[name] || D[FROM_EMOJI[name]]);
 
   // ---------- Emojis de l'interface → pictos dessinés ----------
   // Les textes de l'appli gardent leurs emojis (traductions…) : à l'affichage, chaque emoji connu devient
@@ -149,5 +178,5 @@
     };
     if(document.body) start(); else document.addEventListener("DOMContentLoaded", start);
   }
-  window.ICONS = {ico, has, names: Object.keys(D), decorate};
+  window.ICONS = {ico, has, names: [...new Set([...Object.keys(D), ...IMG])], decorate};
 })();
