@@ -1,6 +1,6 @@
 // Page et code doivent être de la même version : sinon (page gardée en mémoire par le navigateur),
 // on recharge une fois la page fraîche.
-const APP_VERSION = "120";
+const APP_VERSION = "121";
 (function(){
   const m = document.querySelector('meta[name="app-version"]');
   if((m && m.content) === APP_VERSION) return;
@@ -987,6 +987,7 @@ function renderRing(){
   const [num, unit] = ringLabel(T);
   $("ringLbl").textContent = until ? (GARE.on && GARE.trainAt ? tx("Avant le train") : BACK_AT ? tx("Retour à") : tx("Arrivée à")) : tx("J'ai");
   $("numTxt").textContent = until ? hhmm(until) : num; $("unitTxt").textContent = until ? tx("{d} devant toi", {d: fmtDur(T)}) : unit;
+  $("numTxt").classList.toggle("long", String($("numTxt").textContent).length > 3);
   k.setAttribute("aria-valuenow", String(Math.min(180, T)));
   k.setAttribute("aria-valuetext", until ? tx("jusqu'à {h}", {h: hhmm(until)}) : fmtDur(T));
   $("ring").classList.toggle("fixed", !!until);
